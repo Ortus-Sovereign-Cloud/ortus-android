@@ -1,0 +1,74 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  kit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - run: ./gradlew :kit:test
+
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - name: The Ortus program at its pinned parts
+        uses: actions/checkout@v4
+        with:
+          repository: Ortus-Sovereign-Cloud/ortus
+          path: program
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            program/target
+          key: ortus-linux-${{ hashFiles('program/pins.toml', 'program/Cargo.lock') }}
+          restore-keys: ortus-linux-
+      - name: Build Ortus
+        run: |
+          cd program
+          ci/fetch.sh
+          cargo build --release -p ortus
+      - name: Start Ortus and invite Iryna
+        run: PUBLIC_HOST=10.0.2.2 ci/start-ortus.sh program/target/release/ortus
+      - name: Let the emulator use KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Tests in the emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          script: ./gradlew :app:connectedDebugAndroidTest
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: app/build/reports
