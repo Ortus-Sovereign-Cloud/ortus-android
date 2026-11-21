@@ -21,6 +21,8 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+          # Gradle's downloads kept between runs (Maven Central rate-limits).
+          cache: gradle
       # The whole check: kit tests, the app built, its licence list current
       # (the runner has an Android SDK).
       - run: ci/check.sh
@@ -43,6 +45,8 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+          # Gradle's downloads kept between runs (Maven Central rate-limits).
+          cache: gradle
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
