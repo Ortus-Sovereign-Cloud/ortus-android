@@ -19,6 +19,7 @@ GROUPS = {
     "com.google.guava": "Apache-2.0",      # listenablefuture only
     "org.jspecify": "Apache-2.0",
     "com.google.zxing": "Apache-2.0",      # QR codes (core only)
+    "com.google.auto.value": "Apache-2.0", # annotations only (from CameraX)
 }
 
 
