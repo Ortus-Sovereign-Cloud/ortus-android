@@ -1,5 +1,8 @@
 package cc.ortus.app
 
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
@@ -64,7 +67,8 @@ fun JoinScreen(model: Model, server0: String, code0: String) {
     var password by remember { mutableStateOf("") }
     var totp by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
-    Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    Column(Modifier.fillMaxSize().imePadding().padding(24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+      Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Mark()
         Text(stringResource(R.string.join_title), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Text1)
         Text(stringResource(R.string.join_lead), color = Text2)
@@ -81,7 +85,7 @@ fun JoinScreen(model: Model, server0: String, code0: String) {
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword), modifier = Modifier.fillMaxWidth().testTag("totp"))
         }
         model.error?.let { Text(it, color = Color(0xFFFF7A6E), modifier = Modifier.testTag("error")) }
-        Spacer(Modifier.weight(1f))
+      }
         when {
             !withPassword -> Button({ scope.launch { model.join(server, code) } }, enabled = !model.busy && server.isNotBlank() && code.isNotBlank(), modifier = Modifier.fillMaxWidth().height(52.dp)) {
                 Text(stringResource(R.string.join_continue))
@@ -117,6 +121,8 @@ private fun Step(done: Boolean, n: Int, title: Int, detail: Int) {
 fun WelcomeScreen(model: Model) {
     val scope = rememberCoroutineScope()
     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+      // The steps scroll on a short screen; the button stays in reach.
+      Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         Mark()
         Text(stringResource(R.string.welcome_title, model.me?.name?.substringBefore(' ') ?: ""), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Text1, modifier = Modifier.testTag("welcome"))
         Step(true, 1, R.string.welcome_code, R.string.welcome_codeDetail)
@@ -130,7 +136,7 @@ fun WelcomeScreen(model: Model) {
             }
         }
         model.error?.let { Text(it, color = Color(0xFFFF7A6E), modifier = Modifier.testTag("error")) }
-        Spacer(Modifier.weight(1f))
+      }
         Button({ scope.launch { model.makeKey() } }, enabled = !model.busy, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("makeKey")) {
             Text(stringResource(R.string.welcome_makeKey))
         }
