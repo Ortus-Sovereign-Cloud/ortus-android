@@ -2,6 +2,7 @@
 // client, the passkey encoding (WebAuthn), the models. Plain JVM, tested
 // anywhere.
 plugins {
+    `java-library`
     kotlin("jvm")
     kotlin("plugin.serialization")
 }
@@ -9,8 +10,9 @@ plugins {
 kotlin { jvmToolchain(17) }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    // Part of the kit's API (its inline calls decode with them).
+    api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
     testImplementation(kotlin("test"))
 }
 
