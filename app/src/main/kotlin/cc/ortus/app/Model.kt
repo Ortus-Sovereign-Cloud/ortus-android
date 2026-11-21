@@ -1,6 +1,7 @@
 package cc.ortus.app
 
 import android.content.Context
+import android.security.keystore.KeyPermanentlyInvalidatedException
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.compose.runtime.getValue
@@ -38,7 +39,7 @@ class Model(private val activity: FragmentActivity) {
 
     suspend fun refresh() {
         val c = client ?: return
-        try { me = c.call("GET", "/me") } catch (e: ApiError) { if (e.status == 401) signOut() } catch (_: Exception) {}
+        try { me = c.call("GET", "/me") } catch (e: ApiError) { if (e.status == 401) expired() } catch (_: Exception) {}
     }
 
     private fun keep(c: Client) {
@@ -57,16 +58,13 @@ class Model(private val activity: FragmentActivity) {
             keep(c)
             stage = Stage.Welcome
         } catch (e: Exception) {
-            error = (e as? ApiError)?.message ?: e.message
+            error = say(e)
         } finally { busy = false }
     }
 
-    private val guarded: Boolean get() =
-        BiometricManager.from(context).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS
-
-    /** Face or fingerprint before the key is used (where one is enrolled). */
+    /** The phone's lock before the key is used (none on a debug build without one). */
     private suspend fun confirm(): Boolean {
-        if (!guarded) return true
+        if (!PhoneKey.locked(context)) return BuildConfig.DEBUG
         return suspendCoroutine { done ->
             val prompt = BiometricPrompt(activity, ContextCompat.getMainExecutor(activity), object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) = done.resume(true)
@@ -77,19 +75,33 @@ class Model(private val activity: FragmentActivity) {
         }
     }
 
+    /** What to tell the person about a failure, in their language. */
+    fun say(e: Throwable): String = when {
+        e is PhoneKey.NoLock -> context.getString(R.string.key_noLock)
+        e is KeyPermanentlyInvalidatedException -> context.getString(R.string.key_invalidated)
+        e is ApiError && e.status > 0 -> e.message ?: context.getString(R.string.error_generic)
+        e is ApiError && e.code == "no_key" -> context.getString(R.string.welcome_noKey)
+        e is java.io.IOException -> context.getString(R.string.error_network)
+        else -> context.getString(R.string.error_generic)
+    }
+
     /** The phone becomes the person's key, then signs in with it. */
     suspend fun makeKey() {
         val c = client ?: return
         error = null
         busy = true
+        var made: PhoneKey? = null
         try {
-            val key = PhoneKey.make(context, guarded)
-            if (!confirm()) return
+            val key = PhoneKey.make(context).also { made = it }
+            if (!confirm()) { PhoneKey.drop(key); return }
             Passkey.register(c, key, context.getString(R.string.welcome_keyName))
+            PhoneKey.keep(context, key)
+            made = null
             signInWithKey()
             stage = Stage.In
         } catch (e: Exception) {
-            error = (e as? ApiError)?.message ?: e.message
+            made?.let { PhoneKey.drop(it) }
+            error = say(e)
         } finally { busy = false }
     }
 
@@ -97,12 +109,53 @@ class Model(private val activity: FragmentActivity) {
         val c = client ?: return
         val key = PhoneKey.load(context) ?: throw ApiError(0, "no_key", context.getString(R.string.welcome_noKey))
         if (!confirm()) throw ApiError(0, "cancelled", context.getString(R.string.welcome_noKey))
-        me = Passkey.signIn(c, key, me?.id ?: c.call<Me>("GET", "/me").id)
+        try {
+            me = Passkey.signIn(c, key, me?.id)
+        } catch (e: KeyPermanentlyInvalidatedException) {
+            // New fingerprints or face: the key is gone for good; make another.
+            PhoneKey.forget(context)
+            stage = Stage.Welcome
+            throw e
+        }
         keep(c)
     }
 
-    fun signOut() {
-        Store.clear(context)
+    /** The session ended on the server: sign in again (the key stays). */
+    private fun expired() {
+        Store.put(context, "session", null)
+        client = null
+        me = null
+        stage = Stage.Join
+    }
+
+    /** The phone holds a key of an account (it signs in with it). */
+    val hasKey: Boolean get() = PhoneKey.load(context) != null
+
+    /** Signs in again with the phone's key (after signing out, or a session that ended). */
+    suspend fun signInAgain(typed: String) {
+        error = null
+        val server = Client.serverUrl(typed) ?: run { error = context.getString(R.string.join_badServer); return }
+        busy = true
+        try {
+            val c = Client(server, transport = OkTransport)
+            client = c
+            me = null
+            signInWithKey()
+            stage = Stage.In
+        } catch (e: Exception) {
+            client = null
+            error = say(e)
+        } finally { busy = false }
+    }
+
+    /**
+     * Ends the session on the server too. The key stays: the phone is
+     * still the person's key, and signs in again with it (an administrator
+     * turns off a lost phone's key).
+     */
+    suspend fun signOut() {
+        client?.let { c -> runCatching { c.raw("POST", "/session/sign-out", kotlinx.serialization.json.JsonObject(emptyMap())) } }
+        Store.put(context, "session", null)
         client = null
         me = null
         stage = Stage.Join

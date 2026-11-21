@@ -88,4 +88,12 @@
     <string name="admin_invited">Запрошення надіслано.</string>
     <string name="doc_comments">Коментарі</string>
     <string name="doc_comment">Додати коментар</string>
+    <string name="error_network">Не вдається з\'єднатися з Ortus. Перевірте з\'єднання і спробуйте ще раз.</string>
+    <string name="error_generic">Не вдалося. Спробуйте ще раз.</string>
+    <string name="key_noLock">Спершу встановіть блокування екрана на цьому телефоні: ключ його потребує.</string>
+    <string name="key_invalidated">Ключ цього телефона більше не працює (змінено відбитки пальців або обличчя). Створіть новий ключ.</string>
+    <string name="foryou_sentBackComment">Повернено з мого телефона.</string>
+    <string name="calendar_previous">Попередній день</string>
+    <string name="calendar_next">Наступний день</string>
+    <string name="join_withPhone">Увійти за допомогою цього телефона</string>
 </resources>

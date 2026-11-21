@@ -104,11 +104,11 @@ suspend fun Client.shares(item: DriveItem): Shares = call("GET", "/drive/items/$
 suspend fun Client.share(item: DriveItem, email: String) { raw("POST", "/drive/items/${item.id}/shares", body("email" to email, "role" to "view")) }
 suspend fun Client.makeLink(item: DriveItem) { raw("POST", "/drive/items/${item.id}/link", body("expiresAt" to System.currentTimeMillis() + 30L * 86_400_000)) }
 suspend fun Client.waitingReviews(): List<Review> = call<Waiting>("GET", "/docs/reviews/mine").waiting
-suspend fun Client.decide(review: Review, approve: Boolean) { raw("POST", "/docs/reviews/${review.id}/decide", body("approve" to approve, "comment" to if (approve) "" else "Sent back from my phone.")) }
+suspend fun Client.decide(review: Review, approve: Boolean, comment: String = "") { raw("POST", "/docs/reviews/${review.id}/decide", body("approve" to approve, "comment" to comment)) }
 suspend fun Client.myTasks(): List<WorkTask> = call<Tasks>("GET", "/tasks/mine").tasks
 suspend fun Client.setDone(t: WorkTask, done: Boolean) { raw("PATCH", "/tasks/tasks/${t.id}", body("state" to if (done) "done" else "todo")) }
 suspend fun Client.notices(): List<Notice> = call<Notices>("GET", "/notifications").items
-suspend fun Client.markNoticesRead() { raw("POST", "/notifications/read", JsonObject(emptyMap())) }
+suspend fun Client.markNoticesRead() { raw("POST", "/notifications/read", body("all" to true)) }
 suspend fun Client.search(words: String): List<SearchHit> = call<SearchResults>("GET", "/search?q=" + java.net.URLEncoder.encode(words, "UTF-8")).results
 suspend fun Client.docText(doc: String): DocText = call("GET", "/docs/documents/$doc/changes")
 suspend fun Client.comments(doc: String): List<DocComment> = call<DocComments>("GET", "/docs/documents/$doc/comments").comments

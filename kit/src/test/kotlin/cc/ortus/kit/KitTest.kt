@@ -29,6 +29,14 @@ class KitTest {
         assertEquals("https://ortus.example", Client.serverUrl(" ortus.example/ "))
         assertEquals("http://127.0.0.1:8080", Client.serverUrl("http://127.0.0.1:8080"))
         assertNull(Client.serverUrl("ftp://x"))
+        // As the server's public_url reads: lower case, no default port, no path.
+        assertEquals("https://ortus.example", Client.serverUrl("HTTPS://Ortus.Example:443/inbox"))
+        assertEquals("http://10.0.2.2:7878", WebAuthn.origin("http://10.0.2.2:7878/"))
+        // The key signs only for the host it talks to, or a parent of it.
+        assertEquals("example.org", WebAuthn.checkedRpId("example.org", "https://ortus.example.org"))
+        assertEquals("ortus.example.org", WebAuthn.checkedRpId(null, "https://Ortus.example.org"))
+        kotlin.test.assertFailsWith<ApiError> { WebAuthn.checkedRpId("bank.example", "https://ortus.example.org") }
+        kotlin.test.assertFailsWith<ApiError> { WebAuthn.checkedRpId("ple.org", "https://ortus.example.org") }
     }
 
     @Test fun headersAndErrors() = runBlocking {

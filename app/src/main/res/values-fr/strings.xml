@@ -88,4 +88,12 @@
     <string name="admin_invited">Invitation envoyée.</string>
     <string name="doc_comments">Commentaires</string>
     <string name="doc_comment">Ajouter un commentaire</string>
+    <string name="error_network">Ortus est injoignable. Vérifiez la connexion et réessayez.</string>
+    <string name="error_generic">Cela n\'a pas fonctionné. Réessayez.</string>
+    <string name="key_noLock">Définissez d\'abord un verrouillage de l\'écran sur ce téléphone : la clé en a besoin.</string>
+    <string name="key_invalidated">La clé de ce téléphone ne fonctionne plus (empreintes ou visage modifiés). Créez une nouvelle clé.</string>
+    <string name="foryou_sentBackComment">Renvoyé depuis mon téléphone.</string>
+    <string name="calendar_previous">Jour précédent</string>
+    <string name="calendar_next">Jour suivant</string>
+    <string name="join_withPhone">Se connecter avec ce téléphone</string>
 </resources>

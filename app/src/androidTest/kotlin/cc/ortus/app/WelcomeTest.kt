@@ -15,11 +15,18 @@ class WelcomeTest {
 
     private val args = InstrumentationRegistry.getArguments()
 
+    /** Runs the step when there is an Ortus; in CI its absence fails. */
+    private fun need(vararg values: String) {
+        val there = values.all { it.isNotEmpty() }
+        if (!there && args.getString("ortusLive") == "1") throw AssertionError("ORTUS_SERVER and the codes are not set")
+        assumeTrue(there)
+    }
+
     /** S3.2: the code from the welcome letter, then the phone becomes the key; then her inbox and a reply. */
     @Test fun thePhoneBecomesTheKey() {
         val server = args.getString("ortusServer").orEmpty()
         val code = args.getString("ortusCode").orEmpty()
-        assumeTrue(server.isNotEmpty() && code.isNotEmpty())
+        need(server, code)
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val intent = Intent(context, MainActivity::class.java).putExtra("reset", true).putExtra("server", server).putExtra("code", code)
         ActivityScenario.launch<MainActivity>(intent).use {
@@ -50,7 +57,7 @@ class WelcomeTest {
     @Test fun anAdministratorFixesImports() {
         val server = args.getString("ortusServer").orEmpty()
         val code = args.getString("ortusAdminCode").orEmpty()
-        assumeTrue(server.isNotEmpty() && code.isNotEmpty())
+        need(server, code)
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val intent = Intent(context, MainActivity::class.java).putExtra("reset", true).putExtra("server", server).putExtra("code", code)
         ActivityScenario.launch<MainActivity>(intent).use {
@@ -74,12 +81,25 @@ class WelcomeTest {
         }
     }
 
-    /** The first screen opens in Arabic, right to left. */
+    /**
+     * The first screen in Arabic: the app set to Arabic (per-app language),
+     * its title in Arabic sits against the right edge, the start in RTL.
+     */
     @Test fun joinScreenInArabic() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val config = android.content.res.Configuration(context.resources.configuration).apply { setLocale(java.util.Locale("ar")) }
-        val ar = context.createConfigurationContext(config)
-        assert(ar.resources.getString(R.string.join_title) == "انضم إلى مؤسستك")
-        assert(config.layoutDirection == android.view.View.LAYOUT_DIRECTION_RTL)
+        val locales = context.getSystemService(android.app.LocaleManager::class.java)
+        InstrumentationRegistry.getInstrumentation().runOnMainSync { locales.applicationLocales = android.os.LocaleList.forLanguageTags("ar") }
+        try {
+            val intent = Intent(context, MainActivity::class.java).putExtra("reset", true)
+            ActivityScenario.launch<MainActivity>(intent).use {
+                val title = compose.onNodeWithText("انضم إلى مؤسستك").assertExists().fetchSemanticsNode()
+                val root = compose.onRoot().fetchSemanticsNode()
+                val gapEnd = root.boundsInRoot.right - title.boundsInRoot.right
+                val gapStart = title.boundsInRoot.left - root.boundsInRoot.left
+                assert(gapEnd < gapStart) { "the title is not at the right: start gap $gapStart, end gap $gapEnd" }
+            }
+        } finally {
+            InstrumentationRegistry.getInstrumentation().runOnMainSync { locales.applicationLocales = android.os.LocaleList.getEmptyLocaleList() }
+        }
     }
 }

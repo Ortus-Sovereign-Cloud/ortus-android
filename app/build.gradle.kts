@@ -9,7 +9,7 @@ android {
     compileSdk = 35
     defaultConfig {
         applicationId = "cc.ortus.app"
-        minSdk = 29
+        minSdk = 30
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
@@ -18,8 +18,10 @@ android {
         testInstrumentationRunnerArguments["ortusServer"] = System.getenv("ORTUS_SERVER") ?: ""
         testInstrumentationRunnerArguments["ortusCode"] = System.getenv("ORTUS_CODE") ?: ""
         testInstrumentationRunnerArguments["ortusAdminCode"] = System.getenv("ORTUS_ADMIN_CODE") ?: ""
+        // In CI the phone steps must run: a missing value fails them.
+        testInstrumentationRunnerArguments["ortusLive"] = if (System.getenv("CI") == "true") "1" else ""
     }
-    buildFeatures { compose = true }
+    buildFeatures { compose = true; buildConfig = true }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

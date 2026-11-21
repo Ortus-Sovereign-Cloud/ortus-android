@@ -35,7 +35,7 @@ val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
  * The Ortus API as the phone uses it: JSON, the session token as
  * `Authorization: Bearer`, and `X-Requested-With: ortus` on changes.
  */
-class Client(val server: String, var token: String? = null, private val transport: Transport = JvmTransport) {
+class Client(val server: String, var token: String? = null, val transport: Transport = JvmTransport) {
     companion object {
         /** The address a person typed: https added when missing. */
         fun serverUrl(typed: String): String? {
@@ -43,8 +43,9 @@ class Client(val server: String, var token: String? = null, private val transpor
             if (text.isEmpty()) return null
             if (!text.contains("://")) text = "https://$text"
             val uri = runCatching { URI(text) }.getOrNull() ?: return null
-            if (uri.scheme !in listOf("http", "https") || uri.host == null) return null
-            return text
+            if (uri.scheme?.lowercase() !in listOf("http", "https") || uri.host == null) return null
+            // An installation lives at its origin: "Ortus.Example:443/x" is https://ortus.example.
+            return WebAuthn.origin(text)
         }
     }
 

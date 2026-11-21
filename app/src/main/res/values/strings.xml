@@ -88,4 +88,12 @@
     <string name="admin_invited">Invitation sent.</string>
     <string name="doc_comments">Comments</string>
     <string name="doc_comment">Add a comment</string>
+    <string name="error_network">Ortus cannot be reached. Check the connection and try again.</string>
+    <string name="error_generic">That did not work. Try again.</string>
+    <string name="key_noLock">Set a screen lock on this phone first: the key needs it.</string>
+    <string name="key_invalidated">This phone\'s key no longer works (its fingerprints or face changed). Make a new key.</string>
+    <string name="foryou_sentBackComment">Sent back from my phone.</string>
+    <string name="calendar_previous">Previous day</string>
+    <string name="calendar_next">Next day</string>
+    <string name="join_withPhone">Sign in with this phone</string>
 </resources>

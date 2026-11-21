@@ -49,10 +49,32 @@ object WebAuthn {
         "{\"type\":${json(type)},\"challenge\":${json(challenge)},\"origin\":${json(origin)},\"crossOrigin\":false}".toByteArray()
 
     /** The relying party id of an installation: its host. */
-    fun rpId(publicUrl: String): String = java.net.URI(publicUrl).host ?: publicUrl
+    fun rpId(publicUrl: String): String = (java.net.URI(publicUrl).host ?: publicUrl).lowercase()
 
-    /** The installation's public address without a trailing slash. */
-    fun origin(publicUrl: String): String = publicUrl.trimEnd('/')
+    /**
+     * The web origin of an address, as a browser writes it (and as the
+     * server compares it with its public_url): lower-case scheme and host,
+     * the port only when not the scheme's own, no path.
+     */
+    fun origin(publicUrl: String): String {
+        val u = java.net.URI(publicUrl.trim())
+        val scheme = (u.scheme ?: "https").lowercase()
+        val host = (u.host ?: return publicUrl.trimEnd('/')).lowercase()
+        val port = u.port.takeIf { it != -1 && !(scheme == "https" && it == 443) && !(scheme == "http" && it == 80) }
+        return "$scheme://$host" + (port?.let { ":$it" } ?: "")
+    }
+
+    /**
+     * The relying party id the server asks for, when it is the host the
+     * phone talks to or a parent domain of it; otherwise the key would sign
+     * for another site, and it is refused.
+     */
+    fun checkedRpId(asked: String?, server: String): String {
+        val host = rpId(server)
+        val rp = asked?.lowercase() ?: return host
+        if (rp == host || host.endsWith(".$rp")) return rp
+        throw ApiError(0, "bad_rp", "The server asked for a key of another site.")
+    }
 
     /** COSE form of a P-256 key from its X9.63 bytes (0x04 ‖ x ‖ y). */
     fun coseKey(x963: ByteArray): ByteArray {

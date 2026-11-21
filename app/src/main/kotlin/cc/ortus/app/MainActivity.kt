@@ -26,13 +26,13 @@ val Teal = Color(0xFF4FD1C5)
 class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (intent.getBooleanExtra("reset", false)) Store.clear(this)
+        if (intent.getBooleanExtra("reset", false)) { PhoneKey.forget(this); Store.clear(this) }
         val model = Model(this)
         setContent {
             MaterialTheme(colorScheme = darkColorScheme(primary = Accent, background = Background, surface = Surface, onBackground = Text1, onSurface = Text1)) {
                 Surface(Modifier.fillMaxSize(), color = Background) {
                     when (model.stage) {
-                        Stage.Join -> JoinScreen(model, intent.getStringExtra("server") ?: "", intent.getStringExtra("code") ?: "")
+                        Stage.Join -> JoinScreen(model, intent.getStringExtra("server") ?: Store.get(this, "server") ?: "", intent.getStringExtra("code") ?: "")
                         Stage.Welcome -> WelcomeScreen(model)
                         Stage.In -> Tabs(model)
                     }
@@ -67,6 +67,10 @@ fun JoinScreen(model: Model, server0: String, code0: String) {
         Spacer(Modifier.weight(1f))
         Button({ scope.launch { model.join(server, code) } }, enabled = !model.busy && server.isNotBlank() && code.isNotBlank(), modifier = Modifier.fillMaxWidth().height(52.dp)) {
             Text(stringResource(R.string.join_continue))
+        }
+        // The phone is already their key: back in without a new invitation.
+        if (model.hasKey) OutlinedButton({ scope.launch { model.signInAgain(server) } }, enabled = !model.busy && server.isNotBlank(), modifier = Modifier.fillMaxWidth().height(52.dp).testTag("withPhone")) {
+            Text(stringResource(R.string.join_withPhone))
         }
     }
 }

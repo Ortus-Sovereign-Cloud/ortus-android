@@ -53,6 +53,12 @@ jobs:
           cd program
           ci/fetch.sh
           cargo build --release -p ortus
+      - name: The kit against a real Ortus (S3.2, S1.9, S2.4)
+        # Its own installation (the codes are single-use); ORTUS_LIVE=1
+        # makes a missing value fail rather than skip.
+        run: |
+          eval "$(env -u GITHUB_ENV ci/start-ortus.sh program/target/release/ortus | tail -1)"
+          ORTUS_LIVE=1 ./gradlew :kit:test --tests '*LiveTest*'
       - name: Start Ortus and invite Iryna
         run: PUBLIC_HOST=10.0.2.2 ci/start-ortus.sh program/target/release/ortus
       - name: Let the emulator use KVM

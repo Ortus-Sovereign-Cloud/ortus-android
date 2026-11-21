@@ -4,6 +4,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -136,7 +139,7 @@ fun ThreadScreen(model: Model, id: String) {
             OutlinedTextField(reply, { reply = it }, Modifier.weight(1f).testTag("reply"), placeholder = { Text(stringResource(R.string.thread_reply, emails.lastOrNull()?.sender ?: "")) })
             Button({ scope.launch {
                 val last = emails.lastOrNull() ?: return@launch
-                note = runCatching { model.client!!.reply(last, reply); reply = ""; sent }.getOrElse { (it as? ApiError)?.message ?: it.message }
+                note = runCatching { model.client!!.reply(last, reply); reply = ""; sent }.getOrElse { model.say(it) }
                 load()
             } }, enabled = reply.isNotBlank(), modifier = Modifier.padding(start = 8.dp).testTag("send")) { Text(stringResource(R.string.thread_send)) }
         }
@@ -197,8 +200,8 @@ fun CalendarScreen(model: Model) {
         item { Text(DateFormat.getDateInstance(DateFormat.FULL).format(Date(day)), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Text1) }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton({ day -= 86_400_000 }) { Text("‹") }
-                OutlinedButton({ day += 86_400_000 }) { Text("›") }
+                OutlinedButton({ day -= 86_400_000 }) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, stringResource(R.string.calendar_previous)) }
+                OutlinedButton({ day += 86_400_000 }) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, stringResource(R.string.calendar_next)) }
             }
         }
         if (events.isEmpty()) item { Text(stringResource(R.string.calendar_free), color = Text2) }
@@ -250,7 +253,7 @@ fun ShareScreen(model: Model, item: DriveItem) {
         ((shares?.people ?: emptyList()) + (shares?.outside ?: emptyList())).forEach { h -> Text("${h.name ?: h.email} · ${h.role ?: ""}", color = Text1) }
         Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(email, { email = it }, Modifier.weight(1f), label = { Text(stringResource(R.string.share_address)) })
-            Button({ scope.launch { note = runCatching { model.client!!.share(item, email); email = ""; null }.getOrElse { it.message }; load() } }, enabled = email.contains("@"), modifier = Modifier.padding(start = 8.dp)) { Text(stringResource(R.string.share_add)) }
+            Button({ scope.launch { note = runCatching { model.client!!.share(item, email); email = ""; null }.getOrElse { model.say(it) }; load() } }, enabled = email.contains("@"), modifier = Modifier.padding(start = 8.dp)) { Text(stringResource(R.string.share_add)) }
         }
         Text(stringResource(R.string.share_link), fontWeight = FontWeight.SemiBold, color = Text1)
         val url = shares?.link?.url
@@ -286,6 +289,7 @@ fun DocScreen(model: Model, id: String) {
 
 @Composable
 fun MoreScreen(model: Model, open: (Place) -> Unit) {
+    val scope = rememberCoroutineScope()
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(stringResource(R.string.tab_more), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Text1)
         model.me?.let { Column(Modifier.padding(vertical = 8.dp)) { Text(it.name, fontWeight = FontWeight.SemiBold, color = Text1); Text(it.email, color = Text2, modifier = Modifier.testTag("me")) } }
@@ -294,7 +298,7 @@ fun MoreScreen(model: Model, open: (Place) -> Unit) {
         row(R.string.notify_title, Place.Notifications)
         row(R.string.search_title, Place.Search)
         if (model.me?.role == "admin" || model.me?.role == "owner") row(R.string.admin_title, Place.Admin)
-        TextButton({ model.signOut() }) { Text(stringResource(R.string.more_signOut), color = androidx.compose.ui.graphics.Color(0xFFFF7A6E)) }
+        TextButton({ scope.launch { model.signOut() } }) { Text(stringResource(R.string.more_signOut), color = androidx.compose.ui.graphics.Color(0xFFFF7A6E)) }
     }
 }
 
@@ -304,7 +308,7 @@ fun ForYouScreen(model: Model) {
     var tasks by remember { mutableStateOf<List<WorkTask>>(emptyList()) }
     var note by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
-    val signed = stringResource(R.string.foryou_signed); val done = stringResource(R.string.foryou_done)
+    val signed = stringResource(R.string.foryou_signed); val done = stringResource(R.string.foryou_done); val sentBack = stringResource(R.string.foryou_sentBackComment)
     suspend fun load() {
         reviews = runCatching { model.client!!.waitingReviews() }.getOrDefault(emptyList())
         tasks = runCatching { model.client!!.myTasks() }.getOrDefault(emptyList())
@@ -321,9 +325,9 @@ fun ForYouScreen(model: Model) {
                     Text(r.name ?: "", fontWeight = FontWeight.SemiBold, color = Text1)
                     r.current?.let { Text(stringResource(R.string.foryou_step, it.n, r.steps.size), color = Text2, fontSize = 14.sp) }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton({ scope.launch { note = runCatching { model.client!!.decide(r, false); done }.getOrElse { it.message }; load() } }, Modifier.weight(1f)) { Text(stringResource(R.string.foryou_sendBack)) }
+                        OutlinedButton({ scope.launch { note = runCatching { model.client!!.decide(r, false, sentBack); done }.getOrElse { model.say(it) }; load() } }, Modifier.weight(1f)) { Text(stringResource(R.string.foryou_sendBack)) }
                         Button({ scope.launch {
-                            note = runCatching { if (r.signs) model.signInWithKey(); model.client!!.decide(r, true); if (r.signs) signed else done }.getOrElse { (it as? ApiError)?.message ?: it.message }
+                            note = runCatching { if (r.signs) model.signInWithKey(); model.client!!.decide(r, true, ""); if (r.signs) signed else done }.getOrElse { model.say(it) }
                             load()
                         } }, Modifier.weight(1f).testTag("decide")) { Text(stringResource(if (r.signs) R.string.foryou_signWithKey else R.string.foryou_approveButton)) }
                     }
@@ -383,14 +387,14 @@ fun AdminScreen(model: Model) {
         item { Text(stringResource(if (failed.isEmpty()) R.string.admin_normal else R.string.admin_needs), fontWeight = FontWeight.SemiBold, color = Text1) }
         if (failed.isNotEmpty()) {
             item { Text(stringResource(R.string.admin_failed, failed.size), color = Text1) }
-            item { Button({ scope.launch { note = runCatching { model.client!!.askOwners(failed); asked }.getOrElse { it.message }; load() } }, Modifier.testTag("askOwners")) { Text(stringResource(R.string.admin_askOwners)) } }
+            item { Button({ scope.launch { note = runCatching { model.client!!.askOwners(failed); asked }.getOrElse { model.say(it) }; load() } }, Modifier.testTag("askOwners")) { Text(stringResource(R.string.admin_askOwners)) } }
             items(failed, key = { it.id }) { a ->
                 Column {
                     Text(a.login, color = Text1); Text(a.error ?: "", color = androidx.compose.ui.graphics.Color(0xFFF5A35B), fontSize = 12.sp)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         OutlinedTextField(passwords[a.id] ?: "", { passwords[a.id] = it }, Modifier.weight(1f), label = { Text(stringResource(R.string.admin_newPassword)) },
                             visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation())
-                        Button({ scope.launch { note = runCatching { model.client!!.retry(a, passwords[a.id] ?: ""); retrying }.getOrElse { it.message }; load() } }, Modifier.padding(start = 8.dp)) { Text(stringResource(R.string.admin_retry)) }
+                        Button({ scope.launch { note = runCatching { model.client!!.retry(a, passwords[a.id] ?: ""); retrying }.getOrElse { model.say(it) }; load() } }, Modifier.padding(start = 8.dp)) { Text(stringResource(R.string.admin_retry)) }
                     }
                 }
             }
@@ -398,7 +402,7 @@ fun AdminScreen(model: Model) {
         item { Text(stringResource(R.string.admin_invite), fontWeight = FontWeight.SemiBold, color = Text1) }
         item { OutlinedTextField(name, { name = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.admin_name)) }) }
         item { OutlinedTextField(email, { email = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.share_address)) }) }
-        item { Button({ scope.launch { note = runCatching { model.client!!.invite(name, email); name = ""; email = ""; invited }.getOrElse { it.message } } }, enabled = name.isNotBlank() && email.contains("@")) { Text(stringResource(R.string.admin_inviteButton)) } }
+        item { Button({ scope.launch { note = runCatching { model.client!!.invite(name, email); name = ""; email = ""; invited }.getOrElse { model.say(it) } } }, enabled = name.isNotBlank() && email.contains("@")) { Text(stringResource(R.string.admin_inviteButton)) } }
         note?.let { item { Text(it, color = Text2, modifier = Modifier.testTag("note")) } }
     }
 }

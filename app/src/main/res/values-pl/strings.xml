@@ -88,4 +88,12 @@
     <string name="admin_invited">Wysłano zaproszenie.</string>
     <string name="doc_comments">Komentarze</string>
     <string name="doc_comment">Dodaj komentarz</string>
+    <string name="error_network">Nie można połączyć się z Ortus. Sprawdź połączenie i spróbuj ponownie.</string>
+    <string name="error_generic">To się nie udało. Spróbuj ponownie.</string>
+    <string name="key_noLock">Najpierw ustaw blokadę ekranu w tym telefonie: klucz jej wymaga.</string>
+    <string name="key_invalidated">Klucz tego telefonu już nie działa (zmieniono odciski palców lub twarz). Utwórz nowy klucz.</string>
+    <string name="foryou_sentBackComment">Odesłane z mojego telefonu.</string>
+    <string name="calendar_previous">Poprzedni dzień</string>
+    <string name="calendar_next">Następny dzień</string>
+    <string name="join_withPhone">Zaloguj się tym telefonem</string>
 </resources>

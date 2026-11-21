@@ -88,4 +88,12 @@
     <string name="admin_invited">أُرسلت الدعوة.</string>
     <string name="doc_comments">التعليقات</string>
     <string name="doc_comment">أضف تعليقًا</string>
+    <string name="error_network">تعذّر الوصول إلى Ortus. تحقّق من الاتصال وحاول مجددًا.</string>
+    <string name="error_generic">لم ينجح ذلك. حاول مجددًا.</string>
+    <string name="key_noLock">اضبط قفل الشاشة على هذا الهاتف أولًا: المفتاح يحتاج إليه.</string>
+    <string name="key_invalidated">لم يعد مفتاح هذا الهاتف يعمل (تغيّرت البصمات أو الوجه). أنشئ مفتاحًا جديدًا.</string>
+    <string name="foryou_sentBackComment">أُعيد من هاتفي.</string>
+    <string name="calendar_previous">اليوم السابق</string>
+    <string name="calendar_next">اليوم التالي</string>
+    <string name="join_withPhone">سجّل الدخول بهذا الهاتف</string>
 </resources>

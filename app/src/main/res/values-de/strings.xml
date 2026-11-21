@@ -88,4 +88,12 @@
     <string name="admin_invited">Einladung gesendet.</string>
     <string name="doc_comments">Kommentare</string>
     <string name="doc_comment">Kommentar hinzufügen</string>
+    <string name="error_network">Ortus ist nicht erreichbar. Prüfen Sie die Verbindung und versuchen Sie es erneut.</string>
+    <string name="error_generic">Das hat nicht geklappt. Versuchen Sie es erneut.</string>
+    <string name="key_noLock">Richten Sie zuerst eine Displaysperre ein: Der Schlüssel braucht sie.</string>
+    <string name="key_invalidated">Der Schlüssel dieses Telefons funktioniert nicht mehr (Fingerabdrücke oder Gesicht wurden geändert). Erstellen Sie einen neuen Schlüssel.</string>
+    <string name="foryou_sentBackComment">Von meinem Telefon zurückgeschickt.</string>
+    <string name="calendar_previous">Vorheriger Tag</string>
+    <string name="calendar_next">Nächster Tag</string>
+    <string name="join_withPhone">Mit diesem Telefon anmelden</string>
 </resources>
