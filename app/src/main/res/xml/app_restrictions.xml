@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Managed configuration: the installation an organisation's device
+     management sets, filled in on the join screen. -->
+<restrictions xmlns:android="http://schemas.android.com/apk/res/android">
+    <restriction
+        android:key="server"
+        android:title="@string/join_server"
+        android:restrictionType="string"
+        android:defaultValue="" />
+</restrictions>

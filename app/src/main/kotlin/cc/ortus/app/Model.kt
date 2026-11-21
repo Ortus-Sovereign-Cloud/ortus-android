@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import cc.ortus.kit.ApiError
+import cc.ortus.kit.Discovery
 import cc.ortus.kit.InvitationLink
 import cc.ortus.kit.Client
 import cc.ortus.kit.Me
@@ -64,8 +65,16 @@ class Model(private val activity: FragmentActivity) {
         activity.lifecycleScope.launch { join(invitation.server, invitation.code) }
     }
 
-    suspend fun join(typed: String, code: String) {
+    suspend fun join(typed0: String, code: String) {
         error = null
+        // A work email instead of the address: the organisation names its installation.
+        var typed = typed0
+        if (typed.contains("@")) {
+            busy = true
+            val found = Discovery.find(typed, OkTransport)
+            busy = false
+            typed = found ?: run { error = context.getString(R.string.join_notFound); return }
+        }
         val server = Client.serverUrl(typed) ?: run { error = context.getString(R.string.join_badServer); return }
         busy = true
         try {

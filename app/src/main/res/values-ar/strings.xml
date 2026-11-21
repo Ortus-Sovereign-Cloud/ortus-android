@@ -3,7 +3,7 @@
 <resources>
     <string name="join_title">انضم إلى مؤسستك</string>
     <string name="join_lead">اكتب عنوان Ortus لمؤسستك والرمز من رسالة الترحيب.</string>
-    <string name="join_server">العنوان، مثل ortus.ministry.gov</string>
+    <string name="join_server">العنوان أو بريدك المهني، مثل ortus.ministry.gov</string>
     <string name="join_code">الرمز من رسالة الترحيب</string>
     <string name="join_continue">متابعة</string>
     <string name="join_badServer">هذا ليس عنوانًا.</string>
@@ -104,4 +104,5 @@
     <string name="join_wrong">هذا العنوان وكلمة المرور غير متطابقين.</string>
     <string name="join_withCode">استخدم الرمز من رسالة الترحيب</string>
     <string name="join_badLink">هذه ليست دعوة Ortus.</string>
+    <string name="join_notFound">لم يُعثر على Ortus لهذا البريد. اكتب العنوان من رسالة الترحيب.</string>
 </resources>

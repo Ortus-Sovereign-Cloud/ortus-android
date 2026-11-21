@@ -3,7 +3,7 @@
 <resources>
     <string name="join_title">Приєднайтеся до організації</string>
     <string name="join_lead">Введіть адресу Ortus вашої організації та код із вітального листа.</string>
-    <string name="join_server">Адреса, напр. ortus.ministry.gov</string>
+    <string name="join_server">Адреса або ваша робоча пошта, наприклад ortus.ministry.gov</string>
     <string name="join_code">Код із вітального листа</string>
     <string name="join_continue">Далі</string>
     <string name="join_badServer">Це не адреса.</string>
@@ -104,4 +104,5 @@
     <string name="join_wrong">Ця адреса і пароль не збігаються.</string>
     <string name="join_withCode">Використати код із вітального листа</string>
     <string name="join_badLink">Це не запрошення до Ortus.</string>
+    <string name="join_notFound">Для цієї пошти Ortus не знайдено. Введіть адресу з вітального листа.</string>
 </resources>

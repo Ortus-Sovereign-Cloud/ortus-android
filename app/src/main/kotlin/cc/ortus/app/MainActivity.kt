@@ -38,6 +38,11 @@ class MainActivity : FragmentActivity() {
         intent.dataString?.let { model?.open(it) }
     }
 
+    /** The installation an organisation's device management set, if any. */
+    private fun managedServer(): String? =
+        (getSystemService(RESTRICTIONS_SERVICE) as? android.content.RestrictionsManager)
+            ?.applicationRestrictions?.getString("server")?.trim()?.takeIf { it.isNotEmpty() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (intent.getBooleanExtra("reset", false)) { PhoneKey.forget(this); Store.clear(this) }
@@ -48,7 +53,7 @@ class MainActivity : FragmentActivity() {
             MaterialTheme(colorScheme = darkColorScheme(primary = Accent, background = Background, surface = Surface, onBackground = Text1, onSurface = Text1)) {
                 Surface(Modifier.fillMaxSize(), color = Background) {
                     when (model.stage) {
-                        Stage.Join -> JoinScreen(model, intent.getStringExtra("server") ?: Store.get(this, "server") ?: "", intent.getStringExtra("code") ?: "")
+                        Stage.Join -> JoinScreen(model, intent.getStringExtra("server") ?: managedServer() ?: Store.get(this, "server") ?: "", intent.getStringExtra("code") ?: "")
                         Stage.Welcome -> WelcomeScreen(model)
                         Stage.In -> Tabs(model)
                     }

@@ -3,7 +3,7 @@
 <resources>
     <string name="join_title">Ihrer Organisation beitreten</string>
     <string name="join_lead">Geben Sie die Ortus-Adresse Ihrer Organisation und den Code aus Ihrem Willkommensbrief ein.</string>
-    <string name="join_server">Adresse, z. B. ortus.ministry.gov</string>
+    <string name="join_server">Adresse oder Ihre dienstliche E-Mail, z. B. ortus.ministry.gov</string>
     <string name="join_code">Code aus dem Willkommensbrief</string>
     <string name="join_continue">Weiter</string>
     <string name="join_badServer">Das ist keine Adresse.</string>
@@ -104,4 +104,5 @@
     <string name="join_wrong">Adresse und Passwort passen nicht zusammen.</string>
     <string name="join_withCode">Den Code aus meinem Willkommensbrief verwenden</string>
     <string name="join_badLink">Das ist keine Ortus-Einladung.</string>
+    <string name="join_notFound">Für diese E-Mail wurde kein Ortus gefunden. Geben Sie die Adresse aus Ihrem Willkommensbrief ein.</string>
 </resources>

@@ -17,6 +17,31 @@ class InvitationLinkTest {
         assertEquals("https://work.ministry.example:8443", InvitationLink.parse("https://work.ministry.example:8443/welcome/accept#$code")?.server)
     }
 
+    @Test fun theSharedAppLink() {
+        assertEquals(InvitationLink("https://work.ministry.gov:8443", code), InvitationLink.parse("https://join.ortus.cc/i#s=https%3A%2F%2Fwork.ministry.gov%3A8443&c=$code"))
+        assertNull(InvitationLink.parse("https://join.ortus.cc/i#s=ftp%3A%2F%2Fx&c=$code"))
+        assertNull(InvitationLink.parse("https://join.ortus.cc/i#c=$code"))
+    }
+
+    @Test fun discoveryAsksTheOrganisation() {
+        assertEquals(listOf("https://ministry.gov/.well-known/ortus", "https://ortus.ministry.gov/.well-known/ortus"), Discovery.candidates(" Olena@Ministry.gov "))
+        assertEquals(emptyList(), Discovery.candidates("not an address"))
+        assertEquals(emptyList(), Discovery.candidates("a@evil.example/x"))
+        assertEquals("https://work.ministry.gov", Discovery.server("""{"server":"https://Work.Ministry.gov/"}""".toByteArray()))
+        assertNull(Discovery.server("""{"server":"http://work.ministry.gov"}""".toByteArray()), "https only")
+        assertNull(Discovery.server("<html>".toByteArray()))
+        // The first place that answers with an installation wins.
+        val asked = mutableListOf<String>()
+        val found = kotlinx.coroutines.runBlocking {
+            Discovery.find("olena@ministry.gov") { _, url, _, _ ->
+                asked += url
+                if (url.startsWith("https://ortus.")) 200 to """{"server":"https://work.ministry.gov"}""".toByteArray() else 404 to ByteArray(0)
+            }
+        }
+        assertEquals("https://work.ministry.gov", found)
+        assertEquals(2, asked.size)
+    }
+
     @Test fun anythingElseIsNot() {
         for (text in listOf(
             "",
