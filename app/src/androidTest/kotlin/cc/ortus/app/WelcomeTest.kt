@@ -61,12 +61,12 @@ class WelcomeTest {
             compose.onNodeWithText("More").performClick()
             compose.waitUntil(10_000) { compose.onAllNodesWithText("iryna@ministry.example").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("Mail").performClick()
-            compose.waitUntil(20_000) { compose.onAllNodesWithText("Gauge report and updated shelter agreement").fetchSemanticsNodes().isNotEmpty() }
+            waitFor("Anna's mail in the inbox") { compose.onAllNodesWithText("Gauge report and updated shelter agreement").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("Gauge report and updated shelter agreement").performClick()
             compose.waitUntil(10_000) { compose.onAllNodesWithTag("reply").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithTag("reply").performTextInput("Thanks, will review")
             compose.onNodeWithTag("send").performClick()
-            compose.waitUntil(20_000) { compose.onAllNodesWithText("Sent.").fetchSemanticsNodes().isNotEmpty() }
+            waitFor("the reply sent") { compose.onAllNodesWithText("Sent.").fetchSemanticsNodes().isNotEmpty() }
             // S1.9: she signs the flood plan with the phone's key.
             androidx.test.espresso.Espresso.pressBack()
             compose.onNodeWithText("More").performClick()
