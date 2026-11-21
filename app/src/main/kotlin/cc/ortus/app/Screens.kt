@@ -133,8 +133,9 @@ fun ThreadScreen(model: Model, id: String) {
                     }
                 }
             }
-            note?.let { item { Text(it, color = Text2, modifier = Modifier.testTag("note")) } }
         }
+        // What the reply did, beside the field (the list's end may be off screen).
+        note?.let { Text(it, color = Text2, modifier = Modifier.padding(horizontal = 16.dp).testTag("note")) }
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(reply, { reply = it }, Modifier.weight(1f).testTag("reply"), placeholder = { Text(stringResource(R.string.thread_reply, emails.lastOrNull()?.sender ?: "")) })
             Button({ scope.launch {
