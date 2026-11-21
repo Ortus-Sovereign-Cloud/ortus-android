@@ -104,7 +104,7 @@
     <string name="join_wrong">That address and password do not match.</string>
     <string name="join_withCode">Use the code from my welcome letter</string>
     <string name="join_badLink">That is not an Ortus invitation.</string>
-    <string name="join_scan">Scan the invitation's QR code</string>
+    <string name="join_scan">Scan the invitation\'s QR code</string>
     <string name="join_scanCancel">Cancel</string>
     <string name="join_notFound">No Ortus was found for that email. Type the address from your welcome letter.</string>
 </resources>
