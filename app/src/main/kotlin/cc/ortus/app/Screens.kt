@@ -385,6 +385,8 @@ fun AdminScreen(model: Model) {
     LazyColumn(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text(stringResource(R.string.admin_title), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Text1) }
         item { Text(stringResource(if (failed.isEmpty()) R.string.admin_normal else R.string.admin_needs), fontWeight = FontWeight.SemiBold, color = Text1) }
+        // What the last action did, where it is seen (not under the list).
+        note?.let { item { Text(it, color = Text2, modifier = Modifier.testTag("note")) } }
         if (failed.isNotEmpty()) {
             item { Text(stringResource(R.string.admin_failed, failed.size), color = Text1) }
             item { Button({ scope.launch { note = runCatching { model.client!!.askOwners(failed); asked }.getOrElse { model.say(it) }; load() } }, Modifier.testTag("askOwners")) { Text(stringResource(R.string.admin_askOwners)) } }
@@ -403,6 +405,5 @@ fun AdminScreen(model: Model) {
         item { OutlinedTextField(name, { name = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.admin_name)) }) }
         item { OutlinedTextField(email, { email = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.share_address)) }) }
         item { Button({ scope.launch { note = runCatching { model.client!!.invite(name, email); name = ""; email = ""; invited }.getOrElse { model.say(it) } } }, enabled = name.isNotBlank() && email.contains("@")) { Text(stringResource(R.string.admin_inviteButton)) } }
-        note?.let { item { Text(it, color = Text2, modifier = Modifier.testTag("note")) } }
     }
 }
