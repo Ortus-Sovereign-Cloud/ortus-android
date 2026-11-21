@@ -39,6 +39,25 @@ class WelcomeTest {
         }
     }
 
+    /** A check that always runs (Kotlin's assert is off on Android). */
+    private fun check(ok: Boolean, what: String) { if (!ok) throw AssertionError(what) }
+
+    /** Each import account as login:state:copied, from the server. */
+    private fun importStates(server: String, token: String): String {
+        val c = java.net.URL("$server/api/v1/mail/admin/imports").openConnection() as java.net.HttpURLConnection
+        c.setRequestProperty("Authorization", "Bearer $token")
+        val imports = org.json.JSONObject(c.inputStream.bufferedReader().readText()).getJSONArray("imports")
+        val out = mutableListOf<String>()
+        for (i in 0 until imports.length()) {
+            val accounts = imports.getJSONObject(i).getJSONArray("accounts")
+            for (j in 0 until accounts.length()) {
+                val a = accounts.getJSONObject(j)
+                out += "${a.getString("login")}:${a.getString("state")}:${minOf(a.optInt("copied", 0), 1)}"
+            }
+        }
+        return out.sorted().joinToString(",")
+    }
+
     /** Runs the step when there is an Ortus; in CI its absence fails. */
     private fun need(vararg values: String) {
         val there = values.all { it.isNotEmpty() }
@@ -82,7 +101,8 @@ class WelcomeTest {
         val server = args.getString("ortusServer").orEmpty()
         val code = args.getString("ortusAdminCode").orEmpty()
         val passwords = args.getString("ortusImportPasswords").orEmpty()
-        need(server, code, passwords)
+        val owner = args.getString("ortusOwnerSession").orEmpty()
+        need(server, code, passwords, owner)
         val right = passwords.split(",").associate { it.substringBefore("=") to it.substringAfter("=") }
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val intent = Intent(context, MainActivity::class.java).putExtra("reset", true).putExtra("server", server).putExtra("code", code)
@@ -103,7 +123,7 @@ class WelcomeTest {
                 return false
             }
             // Both imports fail on their own.
-            assert(admin { compose.onAllNodesWithText("2 mailboxes failed").fetchSemanticsNodes().isNotEmpty() }) { "two failures" }
+            check(admin { compose.onAllNodesWithText("2 mailboxes failed").fetchSemanticsNodes().isNotEmpty() }, "two failures")
             compose.onNodeWithTag("askOwners").performClick()
             compose.waitUntil(20_000) { compose.onAllNodesWithText("The owners have a reconnect link in their inbox.").fetchSemanticsNodes().isNotEmpty() }
             // He puts in the right passwords and retries both.
@@ -115,10 +135,19 @@ class WelcomeTest {
             }
             // Both copy: nothing fails again (a wrong password fails in seconds).
             androidx.test.espresso.Espresso.pressBack()
-            assert(admin { compose.onAllNodesWithText("All systems normal").fetchSemanticsNodes().isNotEmpty() }) { "the imports still fail" }
+            check(admin { compose.onAllNodesWithText("All systems normal").fetchSemanticsNodes().isNotEmpty() }, "the imports still fail")
             Thread.sleep(15_000)
             androidx.test.espresso.Espresso.pressBack()
-            assert(admin { compose.onAllNodesWithText("All systems normal").fetchSemanticsNodes().isNotEmpty() }) { "an import failed again" }
+            check(admin { compose.onAllNodesWithText("All systems normal").fetchSemanticsNodes().isNotEmpty() }, "an import failed again")
+            // And the mail came: both accounts copied, each with its old
+            // mail (asked of the server, as the owner).
+            var states = ""
+            for (i in 0 until 90) {
+                states = importStates(server, owner)
+                if (states == "olha.old@ministry.example:done:1,petro.old@ministry.example:done:1") break
+                Thread.sleep(1000)
+            }
+            check(states == "olha.old@ministry.example:done:1,petro.old@ministry.example:done:1", "the imports: $states")
         }
     }
 
@@ -137,7 +166,7 @@ class WelcomeTest {
                 val root = compose.onRoot().fetchSemanticsNode()
                 val gapEnd = root.boundsInRoot.right - title.boundsInRoot.right
                 val gapStart = title.boundsInRoot.left - root.boundsInRoot.left
-                assert(gapEnd < gapStart) { "the title is not at the right: start gap $gapStart, end gap $gapEnd" }
+                check(gapEnd < gapStart, "the title is not at the right: start gap $gapStart, end gap $gapEnd")
             }
         } finally {
             InstrumentationRegistry.getInstrumentation().runOnMainSync { locales.applicationLocales = android.os.LocaleList.getEmptyLocaleList() }

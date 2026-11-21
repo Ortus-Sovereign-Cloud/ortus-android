@@ -19,6 +19,7 @@ android {
         testInstrumentationRunnerArguments["ortusCode"] = System.getenv("ORTUS_CODE") ?: ""
         testInstrumentationRunnerArguments["ortusAdminCode"] = System.getenv("ORTUS_ADMIN_CODE") ?: ""
         testInstrumentationRunnerArguments["ortusImportPasswords"] = System.getenv("ORTUS_IMPORT_PASSWORDS") ?: ""
+        testInstrumentationRunnerArguments["ortusOwnerSession"] = System.getenv("ORTUS_OWNER_SESSION") ?: ""
         // In CI the phone steps must run: a missing value fails them.
         testInstrumentationRunnerArguments["ortusLive"] = if (System.getenv("CI") == "true") "1" else ""
     }
