@@ -1,6 +1,6 @@
 # Licences of what the Ortus Android app ships
 
-The app is MIT OR Apache-2.0. These are the 116 libraries it carries (its release runtime classpath), with their licences.
+The app is MIT OR Apache-2.0. These are the 126 libraries it carries (its release runtime classpath), with their licences.
 
 | Group | Library | Version | Licence |
 | --- | --- | --- | --- |
@@ -16,6 +16,11 @@ The app is MIT OR Apache-2.0. These are the 116 libraries it carries (its releas
 | androidx.arch.core | core-runtime | 2.2.0 | Apache-2.0 |
 | androidx.autofill | autofill | 1.0.0 | Apache-2.0 |
 | androidx.biometric | biometric | 1.1.0 | Apache-2.0 |
+| androidx.camera | camera-camera2 | 1.4.2 | Apache-2.0 |
+| androidx.camera | camera-core | 1.4.2 | Apache-2.0 |
+| androidx.camera | camera-lifecycle | 1.4.2 | Apache-2.0 |
+| androidx.camera | camera-video | 1.4.2 | Apache-2.0 |
+| androidx.camera | camera-view | 1.4.2 | Apache-2.0 |
 | androidx.collection | collection | 1.5.0 | Apache-2.0 |
 | androidx.collection | collection-jvm | 1.5.0 | Apache-2.0 |
 | androidx.collection | collection-ktx | 1.5.0 | Apache-2.0 |
@@ -51,6 +56,7 @@ The app is MIT OR Apache-2.0. These are the 116 libraries it carries (its releas
 | androidx.compose.ui | ui-util | 1.8.2 | Apache-2.0 |
 | androidx.compose.ui | ui-util-android | 1.8.2 | Apache-2.0 |
 | androidx.concurrent | concurrent-futures | 1.1.0 | Apache-2.0 |
+| androidx.concurrent | concurrent-futures-ktx | 1.1.0 | Apache-2.0 |
 | androidx.core | core | 1.13.1 | Apache-2.0 |
 | androidx.core | core-ktx | 1.13.1 | Apache-2.0 |
 | androidx.core | core-viewtree | 1.0.0 | Apache-2.0 |
@@ -59,6 +65,7 @@ The app is MIT OR Apache-2.0. These are the 116 libraries it carries (its releas
 | androidx.customview | customview-poolingcontainer | 1.0.0 | Apache-2.0 |
 | androidx.drawerlayout | drawerlayout | 1.0.0 | Apache-2.0 |
 | androidx.emoji2 | emoji2 | 1.4.0 | Apache-2.0 |
+| androidx.exifinterface | exifinterface | 1.3.2 | Apache-2.0 |
 | androidx.fragment | fragment | 1.2.5 | Apache-2.0 |
 | androidx.graphics | graphics-path | 1.0.1 | Apache-2.0 |
 | androidx.interpolator | interpolator | 1.0.0 | Apache-2.0 |
@@ -96,12 +103,15 @@ The app is MIT OR Apache-2.0. These are the 116 libraries it carries (its releas
 | androidx.savedstate | savedstate-compose-android | 1.3.0 | Apache-2.0 |
 | androidx.savedstate | savedstate-ktx | 1.3.0 | Apache-2.0 |
 | androidx.startup | startup-runtime | 1.1.1 | Apache-2.0 |
-| androidx.tracing | tracing | 1.0.0 | Apache-2.0 |
+| androidx.tracing | tracing | 1.2.0 | Apache-2.0 |
+| androidx.tracing | tracing-ktx | 1.2.0 | Apache-2.0 |
 | androidx.vectordrawable | vectordrawable | 1.1.0 | Apache-2.0 |
 | androidx.vectordrawable | vectordrawable-animated | 1.1.0 | Apache-2.0 |
 | androidx.versionedparcelable | versionedparcelable | 1.1.1 | Apache-2.0 |
 | androidx.viewpager | viewpager | 1.0.0 | Apache-2.0 |
+| com.google.auto.value | auto-value-annotations | 1.6.3 | Apache-2.0 |
 | com.google.guava | listenablefuture | 1.0 | Apache-2.0 |
+| com.google.zxing | core | 3.5.3 | Apache-2.0 |
 | com.squareup.okhttp3 | okhttp | 4.12.0 | Apache-2.0 |
 | com.squareup.okio | okio | 3.6.0 | Apache-2.0 |
 | com.squareup.okio | okio-jvm | 3.6.0 | Apache-2.0 |
