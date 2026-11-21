@@ -103,4 +103,5 @@
     <string name="join_signIn">Увійти</string>
     <string name="join_wrong">Ця адреса і пароль не збігаються.</string>
     <string name="join_withCode">Використати код із вітального листа</string>
+    <string name="join_badLink">Це не запрошення до Ortus.</string>
 </resources>

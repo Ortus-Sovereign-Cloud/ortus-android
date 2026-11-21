@@ -103,4 +103,5 @@
     <string name="join_signIn">تسجيل الدخول</string>
     <string name="join_wrong">هذا العنوان وكلمة المرور غير متطابقين.</string>
     <string name="join_withCode">استخدم الرمز من رسالة الترحيب</string>
+    <string name="join_badLink">هذه ليست دعوة Ortus.</string>
 </resources>

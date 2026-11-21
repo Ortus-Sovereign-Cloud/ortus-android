@@ -96,6 +96,20 @@ class WelcomeTest {
         }
     }
 
+    /** An invitation page on the phone hands the app its link (ortus://join): the app joins with it. */
+    @Test fun anInvitationLinkOpensTheApp() {
+        val server = args.getString("ortusServer").orEmpty()
+        val code = args.getString("ortusLinkCode").orEmpty()
+        need(server, code)
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val link = android.net.Uri.Builder().scheme("ortus").authority("join")
+            .appendQueryParameter("server", server).appendQueryParameter("code", code).build()
+        val intent = Intent(Intent.ACTION_VIEW, link, context, MainActivity::class.java).putExtra("reset", true)
+        ActivityScenario.launch<MainActivity>(intent).use {
+            waitFor("the welcome screen after the link") { compose.onAllNodesWithTag("welcome").fetchSemanticsNodes().isNotEmpty() }
+        }
+    }
+
     /** S2.4: the IT administrator fixes the two failed mailbox imports from the phone. */
     @Test fun anAdministratorFixesImports() {
         val server = args.getString("ortusServer").orEmpty()

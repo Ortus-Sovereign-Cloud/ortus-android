@@ -30,10 +30,20 @@ val Accent = Color(0xFF8C9EFF)
 val Teal = Color(0xFF4FD1C5)
 
 class MainActivity : FragmentActivity() {
+    private var model: Model? = null
+
+    /** An invitation link while the app is open. */
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        intent.dataString?.let { model?.open(it) }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (intent.getBooleanExtra("reset", false)) { PhoneKey.forget(this); Store.clear(this) }
         val model = Model(this)
+        this.model = model
+        intent?.dataString?.let { model.open(it) }
         setContent {
             MaterialTheme(colorScheme = darkColorScheme(primary = Accent, background = Background, surface = Surface, onBackground = Text1, onSurface = Text1)) {
                 Surface(Modifier.fillMaxSize(), color = Background) {
@@ -67,6 +77,10 @@ fun JoinScreen(model: Model, server0: String, code0: String) {
     var password by remember { mutableStateOf("") }
     var totp by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
+    // An invitation handed to the app fills in what it joins with.
+    LaunchedEffect(model.handed) {
+        model.handed?.let { server = it.server; code = it.code; withPassword = false }
+    }
     Column(Modifier.fillMaxSize().imePadding().padding(24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
       Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Mark()

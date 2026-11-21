@@ -17,6 +17,7 @@ android {
         // The phone tests reach an Ortus on the CI machine.
         testInstrumentationRunnerArguments["ortusServer"] = System.getenv("ORTUS_SERVER") ?: ""
         testInstrumentationRunnerArguments["ortusCode"] = System.getenv("ORTUS_CODE") ?: ""
+        testInstrumentationRunnerArguments["ortusLinkCode"] = System.getenv("ORTUS_LINK_CODE") ?: ""
         testInstrumentationRunnerArguments["ortusAdminCode"] = System.getenv("ORTUS_ADMIN_CODE") ?: ""
         testInstrumentationRunnerArguments["ortusImportPasswords"] = System.getenv("ORTUS_IMPORT_PASSWORDS") ?: ""
         testInstrumentationRunnerArguments["ortusOwnerSession"] = System.getenv("ORTUS_OWNER_SESSION") ?: ""

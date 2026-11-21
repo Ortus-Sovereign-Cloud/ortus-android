@@ -103,4 +103,5 @@
     <string name="join_signIn">Anmelden</string>
     <string name="join_wrong">Adresse und Passwort passen nicht zusammen.</string>
     <string name="join_withCode">Den Code aus meinem Willkommensbrief verwenden</string>
+    <string name="join_badLink">Das ist keine Ortus-Einladung.</string>
 </resources>

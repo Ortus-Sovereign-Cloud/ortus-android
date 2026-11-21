@@ -9,11 +9,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.lifecycleScope
 import cc.ortus.kit.ApiError
+import cc.ortus.kit.InvitationLink
 import cc.ortus.kit.Client
 import cc.ortus.kit.Me
 import cc.ortus.kit.Passkey
 import kotlin.coroutines.resume
+import kotlinx.coroutines.launch
 import kotlin.coroutines.suspendCoroutine
 
 enum class Stage { Join, Welcome, In }
@@ -45,6 +48,20 @@ class Model(private val activity: FragmentActivity) {
     private fun keep(c: Client) {
         Store.put(context, "server", c.server)
         Store.put(context, "session", c.token)
+    }
+
+    /** The invitation the app was last handed (its link). */
+    var handed by mutableStateOf<InvitationLink?>(null)
+
+    /** An invitation handed to the app: when no one is signed in here, its person joins at once. */
+    fun open(text: String) {
+        val invitation = InvitationLink.parse(text) ?: run {
+            if (stage == Stage.Join) error = context.getString(R.string.join_badLink)
+            return
+        }
+        if (stage != Stage.Join || busy) return
+        handed = invitation
+        activity.lifecycleScope.launch { join(invitation.server, invitation.code) }
     }
 
     suspend fun join(typed: String, code: String) {

@@ -10,10 +10,24 @@
         android:dataExtractionRules="@xml/backup"
         android:networkSecurityConfig="@xml/network"
         android:theme="@android:style/Theme.Material.NoActionBar">
-        <activity android:name=".MainActivity" android:exported="true" android:windowSoftInputMode="adjustResize">
+        <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop" android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- ortus://join?server=…&code=…, which an invitation page offers on a phone. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="ortus" android:host="join" />
+            </intent-filter>
+            <!-- Invitation links on ortus.cc (its /.well-known/assetlinks.json names the app). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="ortus.cc" android:path="/welcome/accept" />
             </intent-filter>
         </activity>
     </application>
