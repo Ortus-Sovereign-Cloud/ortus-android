@@ -36,6 +36,41 @@ class WelcomeTest {
             compose.onNodeWithTag("reply").performTextInput("Thanks, will review")
             compose.onNodeWithTag("send").performClick()
             compose.waitUntil(20_000) { compose.onAllNodesWithText("Sent.").fetchSemanticsNodes().isNotEmpty() }
+            // S1.9: she signs the flood plan with the phone's key.
+            androidx.test.espresso.Espresso.pressBack()
+            compose.onNodeWithText("More").performClick()
+            compose.onNodeWithText("For you").performClick()
+            compose.waitUntil(20_000) { compose.onAllNodesWithText("Flood response plan 2026").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithTag("decide").performClick()
+            compose.waitUntil(20_000) { compose.onAllNodesWithText("Signed.").fetchSemanticsNodes().isNotEmpty() }
+        }
+    }
+
+    /** S2.4: the IT administrator fixes failed mailbox imports from the phone. */
+    @Test fun anAdministratorFixesImports() {
+        val server = args.getString("ortusServer").orEmpty()
+        val code = args.getString("ortusAdminCode").orEmpty()
+        assumeTrue(server.isNotEmpty() && code.isNotEmpty())
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val intent = Intent(context, MainActivity::class.java).putExtra("reset", true).putExtra("server", server).putExtra("code", code)
+        ActivityScenario.launch<MainActivity>(intent).use {
+            compose.onNodeWithText("Continue").performClick()
+            compose.waitUntil(20_000) { compose.onAllNodesWithTag("makeKey").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithTag("makeKey").performClick()
+            compose.waitUntil(20_000) { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText("More").performClick()
+            compose.waitUntil(10_000) { compose.onAllNodesWithText("Admin").fetchSemanticsNodes().isNotEmpty() }
+            // The import fails on its own: open Admin again until it shows.
+            var shown = false
+            for (i in 0 until 12) {
+                compose.onNodeWithText("Admin").performClick()
+                shown = runCatching { compose.waitUntil(5_000) { compose.onAllNodesWithTag("askOwners").fetchSemanticsNodes().isNotEmpty() } }.isSuccess
+                if (shown) break
+                androidx.test.espresso.Espresso.pressBack()
+            }
+            assert(shown)
+            compose.onNodeWithTag("askOwners").performClick()
+            compose.waitUntil(20_000) { compose.onAllNodesWithText("The owners have a reconnect link in their inbox.").fetchSemanticsNodes().isNotEmpty() }
         }
     }
 

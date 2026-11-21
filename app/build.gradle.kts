@@ -17,6 +17,7 @@ android {
         // The phone tests reach an Ortus on the CI machine.
         testInstrumentationRunnerArguments["ortusServer"] = System.getenv("ORTUS_SERVER") ?: ""
         testInstrumentationRunnerArguments["ortusCode"] = System.getenv("ORTUS_CODE") ?: ""
+        testInstrumentationRunnerArguments["ortusAdminCode"] = System.getenv("ORTUS_ADMIN_CODE") ?: ""
     }
     buildFeatures { compose = true }
     compileOptions {
@@ -42,5 +43,6 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
