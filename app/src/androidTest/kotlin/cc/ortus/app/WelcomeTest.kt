@@ -15,6 +15,19 @@ class WelcomeTest {
 
     private val args = InstrumentationRegistry.getArguments()
 
+    /**
+     * Waits for [ready]; when the app shows an error instead (or time runs
+     * out), fails with the error's text, so CI says what went wrong.
+     */
+    private fun waitFor(what: String, ready: () -> Boolean) {
+        val error = { compose.onAllNodesWithTag("error").fetchSemanticsNodes() }
+        runCatching { compose.waitUntil(20_000) { ready() || error().isNotEmpty() } }
+        if (!ready()) {
+            val text = error().flatMap { it.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.Text).orEmpty() }.joinToString { it.text }
+            throw AssertionError("$what did not show; the app says: ${text.ifEmpty { "(nothing)" }}")
+        }
+    }
+
     /** Runs the step when there is an Ortus; in CI its absence fails. */
     private fun need(vararg values: String) {
         val there = values.all { it.isNotEmpty() }
@@ -31,9 +44,9 @@ class WelcomeTest {
         val intent = Intent(context, MainActivity::class.java).putExtra("reset", true).putExtra("server", server).putExtra("code", code)
         ActivityScenario.launch<MainActivity>(intent).use {
             compose.onNodeWithText("Continue").performClick()
-            compose.waitUntil(20_000) { compose.onAllNodesWithTag("welcome").fetchSemanticsNodes().isNotEmpty() }
+            waitFor("the welcome screen") { compose.onAllNodesWithTag("welcome").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithTag("makeKey").performClick()
-            compose.waitUntil(20_000) { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
+            waitFor("the tab bar after making the key") { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("More").performClick()
             compose.waitUntil(10_000) { compose.onAllNodesWithText("iryna@ministry.example").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("Mail").performClick()
@@ -62,9 +75,9 @@ class WelcomeTest {
         val intent = Intent(context, MainActivity::class.java).putExtra("reset", true).putExtra("server", server).putExtra("code", code)
         ActivityScenario.launch<MainActivity>(intent).use {
             compose.onNodeWithText("Continue").performClick()
-            compose.waitUntil(20_000) { compose.onAllNodesWithTag("makeKey").fetchSemanticsNodes().isNotEmpty() }
+            waitFor("the welcome screen") { compose.onAllNodesWithTag("makeKey").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithTag("makeKey").performClick()
-            compose.waitUntil(20_000) { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
+            waitFor("the tab bar after making the key") { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("More").performClick()
             compose.waitUntil(10_000) { compose.onAllNodesWithText("Admin").fetchSemanticsNodes().isNotEmpty() }
             // The import fails on its own: open Admin again until it shows.
