@@ -25,7 +25,14 @@ class WelcomeTest {
         runCatching { compose.waitUntil(20_000) { ready() || error().isNotEmpty() } }
         if (!ready()) {
             val text = error().flatMap { it.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.Text).orEmpty() }.joinToString { it.text }
-            throw AssertionError("$what did not show; the app says: ${text.ifEmpty { "(nothing)" }}")
+            val screen = compose.onAllNodes(androidx.compose.ui.test.isRoot()).fetchSemanticsNodes().flatMap { root ->
+                fun walk(n: androidx.compose.ui.semantics.SemanticsNode): List<String> =
+                    n.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.Text).orEmpty().map { it.text } +
+                        listOfNotNull(n.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.TestTag)?.let { "#$it" }) +
+                        n.children.flatMap { walk(it) }
+                walk(root)
+            }
+            throw AssertionError("$what did not show; the app says: ${text.ifEmpty { "(nothing)" }}; on screen: ${screen.joinToString(" | ")}")
         }
     }
 

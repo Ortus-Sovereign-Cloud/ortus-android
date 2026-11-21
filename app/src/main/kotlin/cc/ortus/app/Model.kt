@@ -93,7 +93,11 @@ class Model(private val activity: FragmentActivity) {
         var made: PhoneKey? = null
         try {
             val key = PhoneKey.make(context).also { made = it }
-            if (!confirm()) { PhoneKey.drop(key); return }
+            if (!confirm()) {
+                PhoneKey.drop(key)
+                error = context.getString(R.string.welcome_noKey)
+                return
+            }
             Passkey.register(c, key, context.getString(R.string.welcome_keyName))
             PhoneKey.keep(context, key)
             made = null
@@ -101,6 +105,7 @@ class Model(private val activity: FragmentActivity) {
             stage = Stage.In
         } catch (e: Exception) {
             made?.let { PhoneKey.drop(it) }
+            android.util.Log.w("ortus", "making the key failed", e)
             error = say(e)
         } finally { busy = false }
     }
