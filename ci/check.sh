@@ -19,5 +19,5 @@ for group in $deps; do
   esac
 done
 ./gradlew :kit:test -q
-if [ -n "${ANDROID_HOME:-}" ]; then ./gradlew :app:assembleDebug -q; else echo "check: no Android SDK here; the app and its emulator tests run in CI"; fi
+if [ -n "${ANDROID_HOME:-}" ]; then ./gradlew :app:assembleDebug :app:assembleRelease :app:assembleDebugAndroidTest -q; else echo "check: no Android SDK here; the app and its emulator tests run in CI"; fi
 echo "all checks passed"

@@ -1,6 +1,7 @@
 package cc.ortus.app
 
 import android.content.Intent
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.test.core.app.ActivityScenario
