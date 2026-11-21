@@ -71,4 +71,31 @@ class LiveTest {
         client.askOwners(failed)
         client.retry(failed.single(), "the right one")
     }
+
+    /** Signing in on the phone with a password and the authenticator's code. */
+    @Test fun aPasswordAndACode() = runBlocking {
+        val server = env("ORTUS_SERVER") ?: return@runBlocking
+        val secret = env("ORTUS_OWNER_TOTP") ?: return@runBlocking
+        val client = Client(server)
+        kotlin.test.assertFailsWith<ApiError> { Passkey.password(client, "taras@ministry.example", "not it") }
+        val ticket = Passkey.password(client, "taras@ministry.example", "flood-plan-2026-ministry")
+        val me = Passkey.code(client, ticket, totp(secret))
+        assertEquals("taras@ministry.example", me.email)
+        assertEquals(me.id, client.call<Me>("GET", "/me").id)
+    }
+
+    private fun totp(secret: String): String {
+        val alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+        var bits = 0; var value = 0
+        val key = java.io.ByteArrayOutputStream()
+        for (c in secret.uppercase().trimEnd('=')) {
+            value = (value shl 5) or alphabet.indexOf(c); bits += 5
+            if (bits >= 8) { key.write((value shr (bits - 8)) and 0xff); bits -= 8 }
+        }
+        val mac = javax.crypto.Mac.getInstance("HmacSHA1").apply { init(javax.crypto.spec.SecretKeySpec(key.toByteArray(), "HmacSHA1")) }
+            .doFinal(java.nio.ByteBuffer.allocate(8).putLong(System.currentTimeMillis() / 30_000).array())
+        val o = mac.last().toInt() and 15
+        val n = ((mac[o].toInt() and 0x7f) shl 24) or ((mac[o + 1].toInt() and 0xff) shl 16) or ((mac[o + 2].toInt() and 0xff) shl 8) or (mac[o + 3].toInt() and 0xff)
+        return "%06d".format(n % 1_000_000)
+    }
 }

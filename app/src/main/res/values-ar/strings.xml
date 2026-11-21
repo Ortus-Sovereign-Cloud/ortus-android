@@ -96,4 +96,11 @@
     <string name="calendar_previous">اليوم السابق</string>
     <string name="calendar_next">اليوم التالي</string>
     <string name="join_withPhone">سجّل الدخول بهذا الهاتف</string>
+    <string name="join_withPassword">سجّل الدخول بكلمة مرور</string>
+    <string name="join_email">عنوانك</string>
+    <string name="join_password">كلمة المرور</string>
+    <string name="join_totp">الرمز من تطبيق المصادقة</string>
+    <string name="join_signIn">تسجيل الدخول</string>
+    <string name="join_wrong">هذا العنوان وكلمة المرور غير متطابقين.</string>
+    <string name="join_withCode">استخدم الرمز من رسالة الترحيب</string>
 </resources>

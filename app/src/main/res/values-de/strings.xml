@@ -96,4 +96,11 @@
     <string name="calendar_previous">Vorheriger Tag</string>
     <string name="calendar_next">Nächster Tag</string>
     <string name="join_withPhone">Mit diesem Telefon anmelden</string>
+    <string name="join_withPassword">Mit Passwort anmelden</string>
+    <string name="join_email">Ihre Adresse</string>
+    <string name="join_password">Passwort</string>
+    <string name="join_totp">Code aus Ihrer Authenticator-App</string>
+    <string name="join_signIn">Anmelden</string>
+    <string name="join_wrong">Adresse und Passwort passen nicht zusammen.</string>
+    <string name="join_withCode">Den Code aus meinem Willkommensbrief verwenden</string>
 </resources>

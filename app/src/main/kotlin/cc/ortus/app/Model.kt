@@ -128,6 +128,43 @@ class Model(private val activity: FragmentActivity) {
         stage = Stage.Join
     }
 
+    /** The ticket between the password and the one-time code. */
+    var ticket by mutableStateOf<String?>(null)
+    private var pending: Client? = null
+
+    /** Signing in with a password: then the code from the authenticator app. */
+    suspend fun signInWithPassword(typed: String, email: String, password: String) {
+        error = null
+        val server = Client.serverUrl(typed) ?: run { error = context.getString(R.string.join_badServer); return }
+        busy = true
+        try {
+            val c = Client(server, transport = OkTransport)
+            ticket = Passkey.password(c, email, password)
+            pending = c
+        } catch (e: Exception) {
+            error = if (e is ApiError && e.status == 401) context.getString(R.string.join_wrong) else say(e)
+        } finally { busy = false }
+    }
+
+    suspend fun signInWithCode(code: String) {
+        val c = pending ?: return
+        val t = ticket ?: return
+        error = null
+        busy = true
+        try {
+            me = Passkey.code(c, t, code)
+            client = c
+            keep(c)
+            ticket = null
+            pending = null
+            // A phone that is not yet their key becomes it next.
+            stage = if (hasKey) Stage.In else Stage.Welcome
+        } catch (e: Exception) {
+            if (e is ApiError && e.code == "ticket_expired") ticket = null
+            error = say(e)
+        } finally { busy = false }
+    }
+
     /** The phone holds a key of an account (it signs in with it). */
     val hasKey: Boolean get() = PhoneKey.load(context) != null
 

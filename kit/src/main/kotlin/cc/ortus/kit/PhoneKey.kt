@@ -17,6 +17,22 @@ object Passkey {
         return me
     }
 
+    /**
+     * The password step of signing in: the ticket for the one-time code
+     * (a password alone never signs in to Ortus).
+     */
+    suspend fun password(client: Client, email: String, password: String): String {
+        val answer: kotlinx.serialization.json.JsonObject = client.call("POST", "/session/password", body("email" to email.trim(), "password" to password))
+        return (answer["ticket"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: throw ApiError(0, "no_ticket", "")
+    }
+
+    /** The one-time code step: signed in, the session kept. */
+    suspend fun code(client: Client, ticket: String, code: String): Me {
+        val me: Me = client.call("POST", "/session/code", body("ticket" to ticket, "code" to code.filter { it.isDigit() }))
+        client.token = me.session_token ?: throw ApiError(0, "no_session", "")
+        return me
+    }
+
     /** Registers the key as a passkey of the signed-in person. */
     suspend fun register(client: Client, key: Signer, name: String) {
         val options: CreationOptions = client.call("POST", "/me/passkeys/options", body())

@@ -96,4 +96,11 @@
     <string name="calendar_previous">Попередній день</string>
     <string name="calendar_next">Наступний день</string>
     <string name="join_withPhone">Увійти за допомогою цього телефона</string>
+    <string name="join_withPassword">Увійти з паролем</string>
+    <string name="join_email">Ваша адреса</string>
+    <string name="join_password">Пароль</string>
+    <string name="join_totp">Код із застосунку автентифікації</string>
+    <string name="join_signIn">Увійти</string>
+    <string name="join_wrong">Ця адреса і пароль не збігаються.</string>
+    <string name="join_withCode">Використати код із вітального листа</string>
 </resources>

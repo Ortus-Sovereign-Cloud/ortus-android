@@ -96,4 +96,11 @@
     <string name="calendar_previous">Jour précédent</string>
     <string name="calendar_next">Jour suivant</string>
     <string name="join_withPhone">Se connecter avec ce téléphone</string>
+    <string name="join_withPassword">Se connecter avec un mot de passe</string>
+    <string name="join_email">Votre adresse</string>
+    <string name="join_password">Mot de passe</string>
+    <string name="join_totp">Code de votre application d\'authentification</string>
+    <string name="join_signIn">Se connecter</string>
+    <string name="join_wrong">Cette adresse et ce mot de passe ne correspondent pas.</string>
+    <string name="join_withCode">Utiliser le code de ma lettre de bienvenue</string>
 </resources>

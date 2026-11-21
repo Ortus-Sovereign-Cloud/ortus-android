@@ -57,3 +57,27 @@ class KitTest {
         assertEquals("Anna", rooms.title(rooms.rooms[1]))
     }
 }
+
+/** Signing in with a password: the ticket, then the one-time code. */
+class PasswordTest {
+    @kotlin.test.Test fun passwordThenCode() = kotlinx.coroutines.runBlocking {
+        val sent = mutableListOf<Pair<String, String>>()
+        val answers = ArrayDeque(listOf("""{"next":"code","ticket":"t1"}""", """{"id":"u1","email":"iryna@ministry.example","name":"Iryna","role":"member","session_token":"s1"}"""))
+        val transport = object : Transport {
+            override fun send(method: String, url: String, headers: Map<String, String>, body: ByteArray?): Pair<Int, ByteArray> {
+                sent += url.substringAfter("/api/v1") to String(body ?: ByteArray(0))
+                return 200 to answers.removeFirst().toByteArray()
+            }
+        }
+        val client = Client("https://ortus.example", transport = transport)
+        val ticket = Passkey.password(client, " iryna@ministry.example ", "pw")
+        kotlin.test.assertEquals("t1", ticket)
+        val me = Passkey.code(client, ticket, "123 456")
+        kotlin.test.assertEquals("s1", client.token)
+        kotlin.test.assertEquals("iryna@ministry.example", me.email)
+        kotlin.test.assertEquals("/session/password", sent[0].first)
+        kotlin.test.assertTrue(sent[0].second.contains("\"email\":\"iryna@ministry.example\""), sent[0].second)
+        kotlin.test.assertEquals("/session/code", sent[1].first)
+        kotlin.test.assertTrue(sent[1].second.contains("\"code\":\"123456\""), sent[1].second)
+    }
+}

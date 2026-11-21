@@ -1,5 +1,8 @@
 package cc.ortus.app
 
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -56,21 +59,46 @@ fun Mark() {
 fun JoinScreen(model: Model, server0: String, code0: String) {
     var server by remember { mutableStateOf(server0) }
     var code by remember { mutableStateOf(code0) }
+    var withPassword by remember { mutableStateOf(false) }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var totp by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Mark()
         Text(stringResource(R.string.join_title), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Text1)
         Text(stringResource(R.string.join_lead), color = Text2)
         OutlinedTextField(server, { server = it }, label = { Text(stringResource(R.string.join_server)) }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("server"))
-        OutlinedTextField(code, { code = it }, label = { Text(stringResource(R.string.join_code)) }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("code"))
+        if (!withPassword) {
+            OutlinedTextField(code, { code = it }, label = { Text(stringResource(R.string.join_code)) }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("code"))
+        } else if (model.ticket == null) {
+            OutlinedTextField(email, { email = it }, label = { Text(stringResource(R.string.join_email)) }, singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), modifier = Modifier.fillMaxWidth().testTag("email"))
+            OutlinedTextField(password, { password = it }, label = { Text(stringResource(R.string.join_password)) }, singleLine = true,
+                visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), modifier = Modifier.fillMaxWidth().testTag("password"))
+        } else {
+            OutlinedTextField(totp, { totp = it }, label = { Text(stringResource(R.string.join_totp)) }, singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword), modifier = Modifier.fillMaxWidth().testTag("totp"))
+        }
         model.error?.let { Text(it, color = Color(0xFFFF7A6E), modifier = Modifier.testTag("error")) }
         Spacer(Modifier.weight(1f))
-        Button({ scope.launch { model.join(server, code) } }, enabled = !model.busy && server.isNotBlank() && code.isNotBlank(), modifier = Modifier.fillMaxWidth().height(52.dp)) {
-            Text(stringResource(R.string.join_continue))
+        when {
+            !withPassword -> Button({ scope.launch { model.join(server, code) } }, enabled = !model.busy && server.isNotBlank() && code.isNotBlank(), modifier = Modifier.fillMaxWidth().height(52.dp)) {
+                Text(stringResource(R.string.join_continue))
+            }
+            model.ticket == null -> Button({ scope.launch { model.signInWithPassword(server, email, password) } }, enabled = !model.busy && server.isNotBlank() && email.contains("@") && password.isNotEmpty(), modifier = Modifier.fillMaxWidth().height(52.dp).testTag("signIn")) {
+                Text(stringResource(R.string.join_signIn))
+            }
+            else -> Button({ scope.launch { model.signInWithCode(totp) } }, enabled = !model.busy && totp.length >= 6, modifier = Modifier.fillMaxWidth().height(52.dp).testTag("signInCode")) {
+                Text(stringResource(R.string.join_signIn))
+            }
         }
         // The phone is already their key: back in without a new invitation.
         if (model.hasKey) OutlinedButton({ scope.launch { model.signInAgain(server) } }, enabled = !model.busy && server.isNotBlank(), modifier = Modifier.fillMaxWidth().height(52.dp).testTag("withPhone")) {
             Text(stringResource(R.string.join_withPhone))
+        }
+        TextButton({ withPassword = !withPassword; model.ticket = null; model.error = null }, Modifier.fillMaxWidth().testTag("togglePassword")) {
+            Text(stringResource(if (withPassword) R.string.join_withCode else R.string.join_withPassword))
         }
     }
 }
