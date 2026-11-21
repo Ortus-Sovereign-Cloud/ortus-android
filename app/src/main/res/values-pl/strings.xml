@@ -104,5 +104,7 @@
     <string name="join_wrong">Ten adres i hasło nie pasują do siebie.</string>
     <string name="join_withCode">Użyj kodu z listu powitalnego</string>
     <string name="join_badLink">To nie jest zaproszenie do Ortus.</string>
+    <string name="join_scan">Zeskanuj kod QR zaproszenia</string>
+    <string name="join_scanCancel">Anuluj</string>
     <string name="join_notFound">Nie znaleziono Ortus dla tego adresu e-mail. Wpisz adres z listu powitalnego.</string>
 </resources>

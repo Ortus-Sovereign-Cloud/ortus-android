@@ -104,5 +104,7 @@
     <string name="join_wrong">هذا العنوان وكلمة المرور غير متطابقين.</string>
     <string name="join_withCode">استخدم الرمز من رسالة الترحيب</string>
     <string name="join_badLink">هذه ليست دعوة Ortus.</string>
+    <string name="join_scan">مسح رمز QR للدعوة</string>
+    <string name="join_scanCancel">إلغاء</string>
     <string name="join_notFound">لم يُعثر على Ortus لهذا البريد. اكتب العنوان من رسالة الترحيب.</string>
 </resources>

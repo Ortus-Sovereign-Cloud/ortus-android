@@ -42,6 +42,18 @@ class InvitationLinkTest {
         assertEquals(2, asked.size)
     }
 
+    @Test fun aQrCodeInACameraFrame() {
+        val text = "https://join.ortus.cc/i#s=https%3A%2F%2Fwork.ministry.gov&c=$code"
+        val matrix = com.google.zxing.qrcode.QRCodeWriter().encode(text, com.google.zxing.BarcodeFormat.QR_CODE, 300, 300)
+        // A camera frame: the code in its brightness plane, wider rows than the image.
+        val (width, height, stride) = Triple(320, 300, 336)
+        val luma = ByteArray(stride * height) { 0xFF.toByte() }
+        for (y in 0 until 300) for (x in 0 until 300) if (matrix[x, y]) luma[y * stride + x + 10] = 0
+        assertEquals(InvitationLink("https://work.ministry.gov", code), QrCode.invitation(luma, width, height, stride))
+        // A frame with no code in it.
+        assertNull(QrCode.invitation(ByteArray(stride * height) { 0x80.toByte() }, width, height, stride))
+    }
+
     @Test fun anythingElseIsNot() {
         for (text in listOf(
             "",

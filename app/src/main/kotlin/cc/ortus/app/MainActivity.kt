@@ -81,7 +81,10 @@ fun JoinScreen(model: Model, server0: String, code0: String) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var totp by remember { mutableStateOf("") }
+    var scanning by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
     val scope = rememberCoroutineScope()
+    if (scanning) CodeScanner(found = { scanning = false; model.open(it) }, close = { scanning = false })
     // An invitation handed to the app fills in what it joins with.
     LaunchedEffect(model.handed) {
         model.handed?.let { server = it.server; code = it.code; withPassword = false }
@@ -94,6 +97,10 @@ fun JoinScreen(model: Model, server0: String, code0: String) {
         OutlinedTextField(server, { server = it }, label = { Text(stringResource(R.string.join_server)) }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("server"))
         if (!withPassword) {
             OutlinedTextField(code, { code = it }, label = { Text(stringResource(R.string.join_code)) }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("code"))
+            // The invitation's QR code, read by the camera.
+            if (hasCamera(context)) OutlinedButton({ scanning = true }, enabled = !model.busy, modifier = Modifier.fillMaxWidth().testTag("scan")) {
+                Text(stringResource(R.string.join_scan))
+            }
         } else if (model.ticket == null) {
             OutlinedTextField(email, { email = it }, label = { Text(stringResource(R.string.join_email)) }, singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), modifier = Modifier.fillMaxWidth().testTag("email"))
