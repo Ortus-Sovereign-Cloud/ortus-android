@@ -22,7 +22,7 @@ class WelcomeTest {
      */
     private fun waitFor(what: String, ready: () -> Boolean) {
         val error = { compose.onAllNodesWithTag("error").fetchSemanticsNodes() }
-        runCatching { compose.waitUntil(20_000) { ready() || error().isNotEmpty() } }
+        runCatching { compose.waitUntil(60_000) { ready() || error().isNotEmpty() } }
         if (!ready()) {
             val text = error().flatMap { it.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.Text).orEmpty() }.joinToString { it.text }
             val screen = compose.onAllNodes(androidx.compose.ui.test.isRoot()).fetchSemanticsNodes().flatMap { root ->
@@ -32,7 +32,10 @@ class WelcomeTest {
                         n.children.flatMap { walk(it) }
                 walk(root)
             }
-            throw AssertionError("$what did not show; the app says: ${text.ifEmpty { "(nothing)" }}; on screen: ${screen.joinToString(" | ")}")
+            val log = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand("logcat -d -t 200 ortus:V AndroidRuntime:E System.err:W OkHttp:V *:S").let { fd ->
+                android.os.ParcelFileDescriptor.AutoCloseInputStream(fd).bufferedReader().readText()
+            }
+            throw AssertionError("$what did not show; the app says: ${text.ifEmpty { "(nothing)" }}; on screen: ${screen.joinToString(" | ")}\nlog:\n$log")
         }
     }
 

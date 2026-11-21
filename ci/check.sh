@@ -19,5 +19,12 @@ for group in $deps; do
   esac
 done
 ./gradlew :kit:test -q
-if [ -n "${ANDROID_HOME:-}" ]; then ./gradlew :app:assembleDebug :app:assembleRelease :app:assembleDebugAndroidTest -q; else echo "check: no Android SDK here; the app and its emulator tests run in CI"; fi
+if [ -n "${ANDROID_HOME:-}" ]; then
+  ./gradlew :app:assembleDebug :app:assembleRelease :app:assembleDebugAndroidTest -q
+  # Every library the app ships, with its licence, kept current.
+  python3 tools/licences.py > build/LICENSES.md
+  cmp -s build/LICENSES.md LICENSES.md || { echo "check: LICENSES.md is stale: python3 tools/licences.py > LICENSES.md" >&2; exit 1; }
+else
+  echo "check: no Android SDK here; the app, its licence list and its emulator tests run in CI"
+fi
 echo "all checks passed"

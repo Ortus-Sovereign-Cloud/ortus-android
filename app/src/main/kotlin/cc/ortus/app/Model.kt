@@ -75,6 +75,8 @@ class Model(private val activity: FragmentActivity) {
         }
     }
 
+    private fun step(what: String) { android.util.Log.i("ortus", "key: $what") }
+
     /** What to tell the person about a failure, in their language. */
     fun say(e: Throwable): String = when {
         e is PhoneKey.NoLock -> context.getString(R.string.key_noLock)
@@ -92,16 +94,21 @@ class Model(private val activity: FragmentActivity) {
         busy = true
         var made: PhoneKey? = null
         try {
+            step("make the key (phone locked: ${PhoneKey.locked(context)})")
             val key = PhoneKey.make(context).also { made = it }
+            step("confirm")
             if (!confirm()) {
                 PhoneKey.drop(key)
                 error = context.getString(R.string.welcome_noKey)
                 return
             }
+            step("register")
             Passkey.register(c, key, context.getString(R.string.welcome_keyName))
             PhoneKey.keep(context, key)
             made = null
+            step("sign in with it")
             signInWithKey()
+            step("signed in")
             stage = Stage.In
         } catch (e: Exception) {
             made?.let { PhoneKey.drop(it) }

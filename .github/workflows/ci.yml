@@ -21,7 +21,9 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - run: ./gradlew :kit:test
+      # The whole check: kit tests, the app built, its licence list current
+      # (the runner has an Android SDK).
+      - run: ci/check.sh
 
   android:
     runs-on: ubuntu-latest
