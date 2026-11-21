@@ -30,10 +30,14 @@ jobs:
     timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
+      - name: The program commit the tests run against
+        id: pin
+        run: echo "ortus=$(sed -n 's/^ortus = "\([0-9a-f]\{40\}\)"$/\1/p' pins.toml)" >> "$GITHUB_OUTPUT"
       - name: The Ortus program at its pinned parts
         uses: actions/checkout@v4
         with:
           repository: Ortus-Sovereign-Cloud/ortus
+          ref: ${{ steps.pin.outputs.ortus }}
           path: program
       - uses: actions/setup-java@v4
         with:

@@ -77,11 +77,13 @@ class WelcomeTest {
         }
     }
 
-    /** S2.4: the IT administrator fixes failed mailbox imports from the phone. */
+    /** S2.4: the IT administrator fixes the two failed mailbox imports from the phone. */
     @Test fun anAdministratorFixesImports() {
         val server = args.getString("ortusServer").orEmpty()
         val code = args.getString("ortusAdminCode").orEmpty()
-        need(server, code)
+        val passwords = args.getString("ortusImportPasswords").orEmpty()
+        need(server, code, passwords)
+        val right = passwords.split(",").associate { it.substringBefore("=") to it.substringAfter("=") }
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val intent = Intent(context, MainActivity::class.java).putExtra("reset", true).putExtra("server", server).putExtra("code", code)
         ActivityScenario.launch<MainActivity>(intent).use {
@@ -91,17 +93,32 @@ class WelcomeTest {
             waitFor("the tab bar after making the key") { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("More").performClick()
             compose.waitUntil(10_000) { compose.onAllNodesWithText("Admin").fetchSemanticsNodes().isNotEmpty() }
-            // The import fails on its own: open Admin again until it shows.
-            var shown = false
-            for (i in 0 until 12) {
-                compose.onNodeWithText("Admin").performClick()
-                shown = runCatching { compose.waitUntil(5_000) { compose.onAllNodesWithTag("askOwners").fetchSemanticsNodes().isNotEmpty() } }.isSuccess
-                if (shown) break
-                androidx.test.espresso.Espresso.pressBack()
+            // Opens Admin until it shows what is wanted (the list loads once per opening).
+            fun admin(until: () -> Boolean): Boolean {
+                for (i in 0 until 12) {
+                    compose.onNodeWithText("Admin").performClick()
+                    if (runCatching { compose.waitUntil(5_000) { until() } }.isSuccess) return true
+                    androidx.test.espresso.Espresso.pressBack()
+                }
+                return false
             }
-            assert(shown)
+            // Both imports fail on their own.
+            assert(admin { compose.onAllNodesWithText("2 mailboxes failed").fetchSemanticsNodes().isNotEmpty() }) { "two failures" }
             compose.onNodeWithTag("askOwners").performClick()
             compose.waitUntil(20_000) { compose.onAllNodesWithText("The owners have a reconnect link in their inbox.").fetchSemanticsNodes().isNotEmpty() }
+            // He puts in the right passwords and retries both.
+            for (login in right.keys.sorted()) {
+                compose.waitUntil(10_000) { compose.onAllNodesWithTag("password-$login").fetchSemanticsNodes().isNotEmpty() }
+                compose.onNodeWithTag("password-$login").performScrollTo().performTextInput(right.getValue(login))
+                compose.onNodeWithTag("retry-$login").performScrollTo().performClick()
+                compose.waitUntil(20_000) { compose.onAllNodesWithText("Trying again.").fetchSemanticsNodes().isNotEmpty() }
+            }
+            // Both copy: nothing fails again (a wrong password fails in seconds).
+            androidx.test.espresso.Espresso.pressBack()
+            assert(admin { compose.onAllNodesWithText("All systems normal").fetchSemanticsNodes().isNotEmpty() }) { "the imports still fail" }
+            Thread.sleep(15_000)
+            androidx.test.espresso.Espresso.pressBack()
+            assert(admin { compose.onAllNodesWithText("All systems normal").fetchSemanticsNodes().isNotEmpty() }) { "an import failed again" }
         }
     }
 

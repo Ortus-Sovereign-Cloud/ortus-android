@@ -52,7 +52,7 @@ import kotlinx.serialization.json.add
 @Serializable data class DocComment(val id: String, val author: String? = null, val body: String, val quote: String? = null, val resolved: Boolean? = null)
 @Serializable data class DocComments(val comments: List<DocComment>)
 
-@Serializable data class ImportAccount(val id: String, val login: String, val target: String, val state: String, val error: String? = null) { val failed get() = state == "failed" }
+@Serializable data class ImportAccount(val id: String, val login: String, val target: String, val state: String, val error: String? = null, val copied: Int = 0) { val failed get() = state == "failed" }
 @Serializable data class MailImport(val id: String, val host: String, val accounts: List<ImportAccount>)
 @Serializable data class Imports(val imports: List<MailImport>)
 

@@ -54,22 +54,37 @@ class LiveTest {
         assertEquals(emptyList(), signer.waitingReviews().map { it.id })
     }
 
-    /** S2.4: an administrator's phone fixes failed mailbox imports. */
-    @Test fun anAdministratorAsksTheOwners() = runBlocking {
+    /**
+     * S2.4: an administrator's phone fixes the two failed mailbox imports:
+     * the owners are asked, the right passwords go in, and the mail comes.
+     */
+    @Test fun anAdministratorFixesTheImports() = runBlocking {
         val server = env("ORTUS_SERVER") ?: return@runBlocking
         val code = env("ORTUS_ADMIN_CODE") ?: return@runBlocking
+        val right = (env("ORTUS_IMPORT_PASSWORDS") ?: return@runBlocking).split(",").associate { it.substringBefore("=") to it.substringAfter("=") }
         val client = Client(server)
         Passkey.join(client, code)
-        // The import fails on its own (the old server does not answer).
+        suspend fun accounts() = client.imports().flatMap { it.accounts }
+        // Both fail on their own (the passwords Taras was given are wrong).
         var failed = emptyList<ImportAccount>()
         for (i in 0 until 60) {
-            failed = client.imports().flatMap { it.accounts }.filter { it.failed }
-            if (failed.isNotEmpty()) break
+            failed = accounts().filter { it.failed }
+            if (failed.size == 2) break
             kotlinx.coroutines.delay(1000)
         }
-        assertEquals(listOf("iryna.old"), failed.map { it.login })
+        assertEquals(listOf("olha.old@ministry.example", "petro.old@ministry.example"), failed.map { it.login }.sorted())
+        assertEquals(setOf("login_failed"), failed.map { it.error }.toSet())
         client.askOwners(failed)
-        client.retry(failed.single(), "the right one")
+        for (a in failed) client.retry(a, right.getValue(a.login))
+        // Both copy, each with the mail from the old server.
+        var done = emptyList<ImportAccount>()
+        for (i in 0 until 90) {
+            done = accounts()
+            if (done.all { it.state == "done" }) break
+            kotlinx.coroutines.delay(1000)
+        }
+        assertEquals(listOf("done", "done"), done.map { it.state }, done.toString())
+        kotlin.test.assertTrue(done.all { it.copied >= 1 }, done.toString())
     }
 
     /** Signing in on the phone with a password and the authenticator's code. */
@@ -78,6 +93,10 @@ class LiveTest {
         val secret = env("ORTUS_OWNER_TOTP") ?: return@runBlocking
         val client = Client(server)
         kotlin.test.assertFailsWith<ApiError> { Passkey.password(client, "taras@ministry.example", "not it") }
+        // A code is taken once (the start script used this window's to
+        // confirm the app): the next window's code.
+        val window = System.currentTimeMillis() / 30_000
+        while (System.currentTimeMillis() / 30_000 == window) kotlinx.coroutines.delay(500)
         val ticket = Passkey.password(client, "taras@ministry.example", "flood-plan-2026-ministry")
         val me = Passkey.code(client, ticket, totp(secret))
         assertEquals("taras@ministry.example", me.email)

@@ -394,9 +394,9 @@ fun AdminScreen(model: Model) {
                 Column {
                     Text(a.login, color = Text1); Text(a.error ?: "", color = androidx.compose.ui.graphics.Color(0xFFF5A35B), fontSize = 12.sp)
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        OutlinedTextField(passwords[a.id] ?: "", { passwords[a.id] = it }, Modifier.weight(1f), label = { Text(stringResource(R.string.admin_newPassword)) },
+                        OutlinedTextField(passwords[a.id] ?: "", { passwords[a.id] = it }, Modifier.weight(1f).testTag("password-${a.login}"), label = { Text(stringResource(R.string.admin_newPassword)) },
                             visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation())
-                        Button({ scope.launch { note = runCatching { model.client!!.retry(a, passwords[a.id] ?: ""); retrying }.getOrElse { model.say(it) }; load() } }, Modifier.padding(start = 8.dp)) { Text(stringResource(R.string.admin_retry)) }
+                        Button({ scope.launch { note = runCatching { model.client!!.retry(a, passwords[a.id] ?: ""); retrying }.getOrElse { model.say(it) }; load() } }, Modifier.padding(start = 8.dp).testTag("retry-${a.login}")) { Text(stringResource(R.string.admin_retry)) }
                     }
                 }
             }
