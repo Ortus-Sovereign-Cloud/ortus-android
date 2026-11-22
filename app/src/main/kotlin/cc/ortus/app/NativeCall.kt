@@ -250,12 +250,11 @@ class NativeCall(private val context: Context, private val client: Client, priva
         session = null
         if (s != null) CoroutineScope(Dispatchers.IO).launch { runCatching { client.leaveCall(s) } }
         scope.cancel()
+        // The views may still hold the tracks for a moment: close the
+        // connection and the camera, and let the rest go with the process.
         runCatching { capturer?.stopCapture() }
-        capturer?.dispose()
-        helper?.dispose()
-        channel?.dispose()
-        pc?.dispose()
-        factory?.dispose()
+        runCatching { channel?.close() }
+        runCatching { pc?.close() }
         @Suppress("DEPRECATION")
         run {
             audio.isSpeakerphoneOn = false

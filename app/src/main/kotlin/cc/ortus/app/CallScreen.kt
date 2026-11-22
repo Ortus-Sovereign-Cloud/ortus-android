@@ -113,7 +113,7 @@ private fun Tile(name: String?, track: VideoTrack?, mirror: Boolean, modifier: M
                         track.addSink(this)
                     }
                 },
-                onRelease = { v -> track.removeSink(v); v.release() },
+                onRelease = { v -> runCatching { track.removeSink(v) }; runCatching { v.release() } },
                 modifier = Modifier.fillMaxSize(),
             )
         }

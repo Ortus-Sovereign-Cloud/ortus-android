@@ -83,7 +83,7 @@ jobs:
           arch: x86_64
           target: google_apis
           # On a failure, the app's own log lines say why.
-          script: ./gradlew :app:connectedDebugAndroidTest || (adb logcat -d -s ortus:V AndroidRuntime:E System.err:W | tail -n 120; exit 1)
+          script: ./gradlew :app:connectedDebugAndroidTest || (adb logcat -d -s ortus:V AndroidRuntime:E System.err:W DEBUG:I libc:F org.webrtc.Logging:W | tail -n 300; exit 1)
       # On a failure, whether the test server still answers, and its log.
       - if: failure()
         run: |
