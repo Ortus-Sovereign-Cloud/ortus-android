@@ -486,7 +486,24 @@ fun ComposeScreen(model: Model, done: () -> Unit) {
         suggestions = if (q.length < 2) emptyList() else runCatching { model.client!!.suggest(q) }.getOrDefault(emptyList()).filter { it.email.lowercase() !in to }.take(5)
     }
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        item { Text(stringResource(R.string.compose_title), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Text1) }
+        item {
+            // Cancel and Send at the top: the keyboard never covers them.
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.compose_title), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Text1, modifier = Modifier.weight(1f))
+                OutlinedButton(done) { Text(stringResource(R.string.compose_cancel)) }
+                Button({
+                    if (address(typed)) add(typed)
+                    val id = from ?: return@Button
+                    sending = true
+                    scope.launch {
+                        runCatching { model.client!!.send(id, to.toList(), subject, text) }
+                            .onSuccess { model.mailNote = sentText; done() }
+                            .onFailure { error = model.say(it) }
+                        sending = false
+                    }
+                }, enabled = !sending && from != null && (to.isNotEmpty() || address(typed)), modifier = Modifier.testTag("sendMessage")) { Text(stringResource(R.string.compose_send)) }
+            }
+        }
         if (identities?.isEmpty() == true) item { Text(stringResource(R.string.compose_noAddress), color = Color(0xFFFF6B6B), modifier = Modifier.testTag("noAddress")) }
         identities?.takeIf { it.size > 1 }?.let { list ->
             item {
@@ -515,21 +532,5 @@ fun ComposeScreen(model: Model, done: () -> Unit) {
         item { OutlinedTextField(subject, { subject = it }, Modifier.fillMaxWidth().testTag("subject"), label = { Text(stringResource(R.string.compose_subject)) }, singleLine = true) }
         item { OutlinedTextField(text, { text = it }, Modifier.fillMaxWidth().heightIn(min = 140.dp).testTag("message"), label = { Text(stringResource(R.string.compose_message)) }) }
         error?.let { e -> item { Text(e, color = Color(0xFFFF6B6B), modifier = Modifier.testTag("error")) } }
-        item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(done) { Text(stringResource(R.string.compose_cancel)) }
-                Button({
-                    if (address(typed)) add(typed)
-                    val id = from ?: return@Button
-                    sending = true
-                    scope.launch {
-                        runCatching { model.client!!.send(id, to.toList(), subject, text) }
-                            .onSuccess { model.mailNote = sentText; done() }
-                            .onFailure { error = model.say(it) }
-                        sending = false
-                    }
-                }, enabled = !sending && from != null && (to.isNotEmpty() || address(typed)), modifier = Modifier.testTag("sendMessage")) { Text(stringResource(R.string.compose_send)) }
-            }
-        }
     }
 }

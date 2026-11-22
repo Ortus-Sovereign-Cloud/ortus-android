@@ -103,6 +103,7 @@ class WelcomeTest {
             compose.onNodeWithText("taras@ministry.example").performClick()
             compose.onNodeWithTag("subject").performTextInput("Depot keys")
             compose.onNodeWithTag("message").performTextInput("The keys are with the guard.")
+            androidx.test.espresso.Espresso.closeSoftKeyboard()
             compose.onNodeWithTag("sendMessage").performClick()
             waitFor("the new message sent") { compose.onAllNodesWithText("Sent.").fetchSemanticsNodes().isNotEmpty() }
             // S1.9: she signs the flood plan with the phone's key.
