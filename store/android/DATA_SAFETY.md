@@ -29,3 +29,11 @@ declare it, as "processed" for the app's function.
 The camera is used only to scan sign-in and invitation codes; frames are
 read on the phone and never sent. The phone's key (a passkey in the
 Android Keystore, guarded by the screen lock) never leaves the phone.
+
+Notifications: when the organisation turns them on, the phone gives its
+UnifiedPush endpoint (from the distributor app the person chose) to the
+organisation's server, which posts a reference to it; the phone fetches the
+text from that server. Nothing goes to the publisher or to Google, so the
+answers above stay as they are. Offline reading keeps copies of recent
+mail, chats and calendar in the app's own cache on the phone, deleted on
+sign-out.
