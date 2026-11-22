@@ -46,10 +46,14 @@ class MainActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (intent.getBooleanExtra("reset", false)) { PhoneKey.forget(this); Store.clear(this) }
+        // The launch link and the test reset belong to the first start only:
+        // when the screen is made again (a rotation, a configuration change),
+        // a used one-time code must not be tried again, nor the key forgotten.
+        val first = savedInstanceState == null
+        if (first && intent.getBooleanExtra("reset", false)) { PhoneKey.forget(this); Store.clear(this) }
         val model = Model(this)
         this.model = model
-        intent?.dataString?.let { model.open(it) }
+        if (first) intent?.dataString?.let { model.open(it) }
         setContent {
             MaterialTheme(colorScheme = darkColorScheme(primary = Accent, background = Background, surface = Surface, onBackground = Text1, onSurface = Text1)) {
                 Surface(Modifier.fillMaxSize(), color = Background) {
