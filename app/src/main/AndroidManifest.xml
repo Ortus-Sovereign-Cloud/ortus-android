@@ -7,6 +7,8 @@
     <!-- Calls: others hear you (the web call page in the app). -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- WebRTC follows network changes (Wi-Fi to mobile) during a call. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Notifications while the app is closed (asked once, after sign-in). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
