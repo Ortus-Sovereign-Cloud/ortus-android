@@ -20,12 +20,13 @@ done
 # Dependencies are Apache-2.0 or MIT (AndroidX, Kotlin, kotlinx, OkHttp,
 # ZXing core: reviewed 2026-11-21, Apache-2.0, pure Java, no native code;
 # UnifiedPush connector 2.5.0: reviewed 2026-11-22, Apache-2.0, needs only
-# kotlin-stdlib);
+# kotlin-stdlib; WebRTC (io.github.webrtc-sdk) 150.7871.04: BSD-3-Clause,
+# allowed by the owner 2026-11-22 for native calls, no dependencies);
 # a new one needs a licence review.
 deps="$(grep -ho '"[a-z][a-zA-Z0-9.-]*:[a-zA-Z0-9.-]*:\?[^"]*"' kit/build.gradle.kts app/build.gradle.kts | tr -d '"' | cut -d: -f1 | sort -u)"
 for group in $deps; do
   case "$group" in
-    androidx.*|org.jetbrains.kotlinx|com.squareup.okhttp3|com.google.zxing|org.unifiedpush.android) ;;
+    androidx.*|org.jetbrains.kotlinx|com.squareup.okhttp3|com.google.zxing|org.unifiedpush.android|io.github.webrtc-sdk) ;;
     *) echo "check: $group needs a licence review" >&2; exit 1 ;;
   esac
 done

@@ -131,4 +131,15 @@
     <string name="push_new">Щось нове в Ortus</string>
     <string name="push_channel">Повідомлення та згадки</string>
     <string name="offline_banner">Немає зв\'язку: показано збережене на телефоні</string>
+    <string name="call_connected">З\'єднано</string>
+    <string name="call_connecting">З\'єднання…</string>
+    <string name="call_joining">Приєднання…</string>
+    <string name="call_alone">Тут ще нікого немає</string>
+    <string name="call_mute">Вимкнути мікрофон</string>
+    <string name="call_unmute">Увімкнути мікрофон</string>
+    <string name="call_cameraOff">Вимкнути камеру</string>
+    <string name="call_cameraOn">Увімкнути камеру</string>
+    <string name="call_speaker">Гучномовець</string>
+    <string name="call_earpiece">Динамік телефона</string>
+    <string name="call_hangUp">Вийти</string>
 </resources>

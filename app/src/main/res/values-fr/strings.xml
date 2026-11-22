@@ -131,4 +131,15 @@
     <string name="push_new">Du nouveau dans Ortus</string>
     <string name="push_channel">Messages et mentions</string>
     <string name="offline_banner">Hors ligne : ce que le téléphone a gardé</string>
+    <string name="call_connected">Connecté</string>
+    <string name="call_connecting">Connexion…</string>
+    <string name="call_joining">Connexion à l\'appel…</string>
+    <string name="call_alone">Personne d\'autre pour l\'instant</string>
+    <string name="call_mute">Couper le micro</string>
+    <string name="call_unmute">Activer le micro</string>
+    <string name="call_cameraOff">Caméra éteinte</string>
+    <string name="call_cameraOn">Caméra allumée</string>
+    <string name="call_speaker">Haut-parleur</string>
+    <string name="call_earpiece">Écouteur</string>
+    <string name="call_hangUp">Quitter</string>
 </resources>

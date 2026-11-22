@@ -169,6 +169,11 @@ class WelcomeTest {
             compose.onAllNodesWithText("phone-calls", substring = true)[0].performClick()
             compose.onNodeWithTag("call").performClick()
             waitFor("the call screen") { compose.onAllNodesWithTag("call").fetchSemanticsNodes().isNotEmpty() && compose.onAllNodesWithText("Close").fetchSemanticsNodes().isNotEmpty() }
+            // Natively: the phone joined and the media node answered its offer.
+            waitFor("the media node's answer") { compose.onAllNodesWithTag("answered").fetchSemanticsNodes().isNotEmpty() || compose.onAllNodesWithTag("callError").fetchSemanticsNodes().isNotEmpty() }
+            check(compose.onAllNodesWithTag("callError").fetchSemanticsNodes().isEmpty(), "the call failed")
+            compose.onNodeWithTag("mute").performClick()
+            compose.onNodeWithTag("hangUp").performClick()
         }
     }
 

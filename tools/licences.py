@@ -21,6 +21,7 @@ GROUPS = {
     "com.google.zxing": "Apache-2.0",      # QR codes (core only)
     "com.google.auto.value": "Apache-2.0", # annotations only (from CameraX)
     "org.unifiedpush.android": "Apache-2.0", # UnifiedPush connector
+    "io.github.webrtc-sdk": "BSD-3-Clause",  # WebRTC (Google's, built by webrtc-sdk)
 }
 
 
@@ -42,7 +43,7 @@ def main():
     rows = sorted(libs)
     bad = [r for r in rows if licence(r[0]) is None]
     print("# Licences of what the Ortus Android app ships\n")
-    print(f"The app is MIT OR Apache-2.0. These are the {len(rows)} libraries it carries (its release runtime classpath), with their licences.\n")
+    print(f"The app is MIT OR Apache-2.0. These are the {len(rows)} libraries it carries (its release runtime classpath), with their licences. WebRTC (BSD-3-Clause) is the one that is neither, allowed for native calls.\n")
     print("| Group | Library | Version | Licence |\n| --- | --- | --- | --- |")
     for g, a, v in rows:
         print(f"| {g} | {a} | {v} | {licence(g) or '(not checked)'} |")

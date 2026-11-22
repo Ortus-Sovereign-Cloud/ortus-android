@@ -1,6 +1,6 @@
 # Licences of what the Ortus Android app ships
 
-The app is MIT OR Apache-2.0. These are the 127 libraries it carries (its release runtime classpath), with their licences.
+The app is MIT OR Apache-2.0. These are the 128 libraries it carries (its release runtime classpath), with their licences. WebRTC (BSD-3-Clause) is the one that is neither, allowed for native calls.
 
 | Group | Library | Version | Licence |
 | --- | --- | --- | --- |
@@ -115,6 +115,7 @@ The app is MIT OR Apache-2.0. These are the 127 libraries it carries (its releas
 | com.squareup.okhttp3 | okhttp | 4.12.0 | Apache-2.0 |
 | com.squareup.okio | okio | 3.6.0 | Apache-2.0 |
 | com.squareup.okio | okio-jvm | 3.6.0 | Apache-2.0 |
+| io.github.webrtc-sdk | android | 150.7871.04 | BSD-3-Clause |
 | org.jetbrains | annotations | 23.0.0 | Apache-2.0 |
 | org.jetbrains.kotlin | kotlin-stdlib | 2.1.21 | Apache-2.0 |
 | org.jetbrains.kotlin | kotlin-stdlib-common | 2.1.21 | Apache-2.0 |

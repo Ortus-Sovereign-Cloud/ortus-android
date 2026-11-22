@@ -131,4 +131,15 @@
     <string name="push_new">شيء جديد في Ortus</string>
     <string name="push_channel">الرسائل والإشارات</string>
     <string name="offline_banner">دون اتصال: يظهر ما احتفظ به الهاتف</string>
+    <string name="call_connected">متصل</string>
+    <string name="call_connecting">جارٍ الاتصال…</string>
+    <string name="call_joining">جارٍ الانضمام…</string>
+    <string name="call_alone">لا أحد غيرك هنا بعد</string>
+    <string name="call_mute">كتم</string>
+    <string name="call_unmute">إلغاء الكتم</string>
+    <string name="call_cameraOff">إيقاف الكاميرا</string>
+    <string name="call_cameraOn">تشغيل الكاميرا</string>
+    <string name="call_speaker">مكبّر الصوت</string>
+    <string name="call_earpiece">سماعة الأذن</string>
+    <string name="call_hangUp">مغادرة</string>
 </resources>

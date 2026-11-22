@@ -66,6 +66,10 @@ dependencies {
     // Notifications without Google services (UnifiedPush, Apache-2.0; 2.x
     // needs only the Kotlin library, 3.x brings Tink and protobuf).
     implementation("org.unifiedpush.android:connector:2.5.0")
+    // Calls natively: Google's WebRTC (BSD-3-Clause; the owner allowed it
+    // 2026-11-22), as built by webrtc-sdk (Google publishes no Android
+    // builds any more). 150.7871.04 of 2026-10-23.
+    implementation("io.github.webrtc-sdk:android:150.7871.04")
     androidTestImplementation(platform("androidx.compose:compose-bom:2025.05.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
