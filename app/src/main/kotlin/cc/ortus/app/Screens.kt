@@ -1,6 +1,10 @@
 package cc.ortus.app
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,6 +36,7 @@ sealed class Place {
     data class Folder(val id: String?, val title: String) : Place()
     data class Share(val item: DriveItem) : Place()
     data class Doc(val id: String) : Place()
+    data object Compose : Place()
     data object ForYou : Place()
     data object Notifications : Place()
     data object Search : Place()
@@ -71,6 +76,7 @@ fun Tabs(model: Model) {
                 is Place.Folder -> FolderScreen(model, top.id, top.title, open)
                 is Place.Share -> ShareScreen(model, top.item)
                 is Place.Doc -> DocScreen(model, top.id)
+                Place.Compose -> ComposeScreen(model, back)
                 Place.ForYou -> ForYouScreen(model)
                 Place.Notifications -> NotificationsScreen(model)
                 Place.Search -> SearchScreen(model)
@@ -95,7 +101,12 @@ fun InboxScreen(model: Model, open: (Place) -> Unit) {
     val names = mapOf("inbox" to R.string.folder_inbox, "sent" to R.string.folder_sent, "archive" to R.string.folder_archive, "trash" to R.string.folder_trash)
     val sent = folder == "sent"
     LazyColumn {
-        item { Title(stringResource(names.getValue(folder))) }
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.weight(1f)) { Title(stringResource(names.getValue(folder))) }
+                Button({ open(Place.Compose) }, Modifier.padding(end = 16.dp).testTag("compose")) { Text(stringResource(R.string.compose_title)) }
+            }
+        }
         item {
             Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FOLDERS.forEach { f ->
@@ -103,6 +114,7 @@ fun InboxScreen(model: Model, open: (Place) -> Unit) {
                 }
             }
         }
+        model.mailNote?.let { n -> item { Text(n, color = Text2, modifier = Modifier.padding(horizontal = 16.dp).testTag("note")) } }
         if (emails.isEmpty()) item { Text(stringResource(R.string.inbox_empty), color = Text2, modifier = Modifier.padding(16.dp)) }
         items(emails, key = { it.id }) { e ->
             // In Sent: whom it went to, and how its delivery goes.
@@ -140,6 +152,17 @@ fun ThreadScreen(model: Model, id: String) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) { Avatar(e.sender, 36); Text(e.sender, fontWeight = FontWeight.SemiBold, color = Text1) }
                     Text(e.ortusText ?: e.preview ?: "", color = Text1)
+                    // How a message one sent is getting to each recipient outside.
+                    e.ortusDelivery?.takeIf { it.isNotEmpty() }?.forEach { d ->
+                        val to = d.recipient ?: ""
+                        val (label, color) = when (d.state) {
+                            "sent" -> stringResource(R.string.delivery_done, to) to Color(0xFF4FD1C5)
+                            "bounced" -> stringResource(R.string.delivery_notDone, to) to Color(0xFFFF6B6B)
+                            "deferred" -> stringResource(R.string.delivery_retrying, to) to Color(0xFFFFA94D)
+                            else -> stringResource(R.string.delivery_sendingTo, to) to Text2
+                        }
+                        Text(label, color = color, fontSize = 13.sp, modifier = Modifier.testTag("delivery"))
+                    }
                     e.ortusInvite?.takeIf { it.method == "REQUEST" && !it.cancelled }?.let { inv ->
                         Surface(color = Surface, shape = MaterialTheme.shapes.medium) {
                             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -427,5 +450,80 @@ fun AdminScreen(model: Model) {
         item { OutlinedTextField(name, { name = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.admin_name)) }) }
         item { OutlinedTextField(email, { email = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.share_address)) }) }
         item { Button({ scope.launch { note = runCatching { model.client!!.invite(name, email); name = ""; email = ""; invited }.getOrElse { model.say(it) } } }, enabled = name.isNotBlank() && email.contains("@")) { Text(stringResource(R.string.admin_inviteButton)) } }
+    }
+}
+
+
+/** MobileCompose: a new message. To with suggestions as one types, From when one has more than one address, Subject and text. */
+@Composable
+fun ComposeScreen(model: Model, done: () -> Unit) {
+    var identities by remember { mutableStateOf<List<Identity>?>(null) }
+    var from by remember { mutableStateOf<Identity?>(null) }
+    val to = remember { mutableStateListOf<String>() }
+    var typed by remember { mutableStateOf("") }
+    var suggestions by remember { mutableStateOf<List<Suggestion>>(emptyList()) }
+    var subject by remember { mutableStateOf("") }
+    var text by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+    var sending by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val sentText = stringResource(R.string.thread_sent)
+    fun address(s: String) = s.trim().let { a -> a.indexOf('@') > 0 && a.substringAfter('@').contains('.') && ' ' !in a }
+    fun add(s: String) { val a = s.trim().lowercase(); if (address(a) && a !in to) to.add(a); typed = ""; suggestions = emptyList() }
+    LaunchedEffect(Unit) {
+        val found = runCatching { model.client!!.identities() }.getOrDefault(emptyList())
+        identities = found
+        from = found.firstOrNull()
+    }
+    LaunchedEffect(typed) {
+        val q = typed.trim()
+        suggestions = if (q.length < 2) emptyList() else runCatching { model.client!!.suggest(q) }.getOrDefault(emptyList()).filter { it.email.lowercase() !in to }.take(5)
+    }
+    LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        item { Text(stringResource(R.string.compose_title), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Text1) }
+        if (identities?.isEmpty() == true) item { Text(stringResource(R.string.compose_noAddress), color = Color(0xFFFF6B6B), modifier = Modifier.testTag("noAddress")) }
+        identities?.takeIf { it.size > 1 }?.let { list ->
+            item {
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(R.string.compose_from), color = Text2)
+                    list.forEach { i -> FilterChip(selected = from?.id == i.id, onClick = { from = i }, label = { Text(i.email) }) }
+                }
+            }
+        }
+        items(to.toList(), key = { it }) { a ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(a, color = Text1, modifier = Modifier.weight(1f))
+                TextButton({ to.remove(a) }) { Text("×") }
+            }
+        }
+        item {
+            OutlinedTextField(typed, { typed = it }, Modifier.fillMaxWidth().testTag("to"), label = { Text(stringResource(R.string.compose_to)) }, singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next), keyboardActions = KeyboardActions(onNext = { add(typed) }))
+        }
+        items(suggestions, key = { "s-" + it.email }) { p ->
+            Column(Modifier.fillMaxWidth().clickable { add(p.email) }.padding(vertical = 6.dp)) {
+                Text(p.shown, color = Text1)
+                Text(p.email, color = Text2, fontSize = 12.sp)
+            }
+        }
+        item { OutlinedTextField(subject, { subject = it }, Modifier.fillMaxWidth().testTag("subject"), label = { Text(stringResource(R.string.compose_subject)) }, singleLine = true) }
+        item { OutlinedTextField(text, { text = it }, Modifier.fillMaxWidth().heightIn(min = 140.dp).testTag("message"), label = { Text(stringResource(R.string.compose_message)) }) }
+        error?.let { e -> item { Text(e, color = Color(0xFFFF6B6B), modifier = Modifier.testTag("error")) } }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(done) { Text(stringResource(R.string.compose_cancel)) }
+                Button({
+                    if (address(typed)) add(typed)
+                    val id = from ?: return@Button
+                    sending = true
+                    scope.launch {
+                        runCatching { model.client!!.send(id, to.toList(), subject, text) }
+                            .onSuccess { model.mailNote = sentText; done() }
+                            .onFailure { error = model.say(it) }
+                        sending = false
+                    }
+                }, enabled = !sending && from != null && (to.isNotEmpty() || address(typed)), modifier = Modifier.testTag("sendMessage")) { Text(stringResource(R.string.compose_send)) }
+            }
+        }
     }
 }

@@ -11,8 +11,9 @@ android {
         applicationId = "cc.ortus.app"
         minSdk = 30
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        // Each release a higher number (CI passes its run number).
+        versionCode = (System.getenv("ORTUS_VERSION_CODE") ?: "1").toInt()
+        versionName = "1.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // The phone tests reach an Ortus on the CI machine.
         testInstrumentationRunnerArguments["ortusServer"] = System.getenv("ORTUS_SERVER") ?: ""
@@ -23,6 +24,20 @@ android {
         testInstrumentationRunnerArguments["ortusOwnerSession"] = System.getenv("ORTUS_OWNER_SESSION") ?: ""
         // In CI the phone steps must run: a missing value fails them.
         testInstrumentationRunnerArguments["ortusLive"] = if (System.getenv("CI") == "true") "1" else ""
+    }
+    // The Play upload key, only where a release is built (its keystore and
+    // passwords come from CI secrets; nothing secret is in the repository).
+    val upload = System.getenv("ORTUS_UPLOAD_KEYSTORE")?.takeIf { file(it).exists() }
+    if (upload != null) {
+        signingConfigs {
+            create("upload") {
+                storeFile = file(upload)
+                storePassword = System.getenv("ORTUS_UPLOAD_STORE_PASSWORD")
+                keyAlias = System.getenv("ORTUS_UPLOAD_KEY_ALIAS")
+                keyPassword = System.getenv("ORTUS_UPLOAD_KEY_PASSWORD")
+            }
+        }
+        buildTypes { getByName("release") { signingConfig = signingConfigs.getByName("upload") } }
     }
     buildFeatures { compose = true; buildConfig = true }
     compileOptions {

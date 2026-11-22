@@ -114,4 +114,16 @@
     <string name="folder_trash">Trash</string>
     <string name="delivery_failed">Not delivered</string>
     <string name="delivery_trying">Sending</string>
+    <string name="compose_title">New message</string>
+    <string name="compose_from">From</string>
+    <string name="compose_to">To</string>
+    <string name="compose_subject">Subject</string>
+    <string name="compose_message">Message</string>
+    <string name="compose_send">Send</string>
+    <string name="compose_cancel">Cancel</string>
+    <string name="compose_noAddress">You cannot send mail from here yet: your account has no address in this organisation\'s mail. An administrator can give you one.</string>
+    <string name="delivery_done">Delivered to %1$s</string>
+    <string name="delivery_notDone">Not delivered to %1$s</string>
+    <string name="delivery_retrying">Not delivered to %1$s yet; trying again</string>
+    <string name="delivery_sendingTo">Sending to %1$s…</string>
 </resources>

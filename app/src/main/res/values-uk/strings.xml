@@ -114,4 +114,16 @@
     <string name="folder_trash">Кошик</string>
     <string name="delivery_failed">Не доставлено</string>
     <string name="delivery_trying">Надсилається</string>
+    <string name="compose_title">Новий лист</string>
+    <string name="compose_from">Від</string>
+    <string name="compose_to">Кому</string>
+    <string name="compose_subject">Тема</string>
+    <string name="compose_message">Повідомлення</string>
+    <string name="compose_send">Надіслати</string>
+    <string name="compose_cancel">Скасувати</string>
+    <string name="compose_noAddress">Ви ще не можете надсилати звідси пошту: ваш обліковий запис не має адреси в пошті цієї організації. Її може дати адміністратор.</string>
+    <string name="delivery_done">Доставлено до %1$s</string>
+    <string name="delivery_notDone">Не доставлено до %1$s</string>
+    <string name="delivery_retrying">Ще не доставлено до %1$s; пробуємо знову</string>
+    <string name="delivery_sendingTo">Надсилання до %1$s…</string>
 </resources>

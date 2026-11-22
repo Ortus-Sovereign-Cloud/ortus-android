@@ -114,4 +114,16 @@
     <string name="folder_trash">المهملات</string>
     <string name="delivery_failed">لم تُسلَّم</string>
     <string name="delivery_trying">قيد الإرسال</string>
+    <string name="compose_title">رسالة جديدة</string>
+    <string name="compose_from">من</string>
+    <string name="compose_to">إلى</string>
+    <string name="compose_subject">الموضوع</string>
+    <string name="compose_message">الرسالة</string>
+    <string name="compose_send">إرسال</string>
+    <string name="compose_cancel">إلغاء</string>
+    <string name="compose_noAddress">لا يمكنك إرسال البريد من هنا بعد: ليس لحسابك عنوان في بريد هذه المؤسسة. يمكن للمسؤول أن يمنحك عنوانًا.</string>
+    <string name="delivery_done">سُلِّمت إلى %1$s</string>
+    <string name="delivery_notDone">لم تُسلَّم إلى %1$s</string>
+    <string name="delivery_retrying">لم تُسلَّم إلى %1$s بعد؛ نعيد المحاولة</string>
+    <string name="delivery_sendingTo">جارٍ الإرسال إلى %1$s…</string>
 </resources>

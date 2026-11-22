@@ -51,6 +51,9 @@ class Model(private val activity: FragmentActivity) {
         Store.put(context, "session", c.token)
     }
 
+    /** What the last new message did ("Sent."), shown in Mail. */
+    var mailNote by mutableStateOf<String?>(null)
+
     /** The invitation the app was last handed (its link). */
     var handed by mutableStateOf<InvitationLink?>(null)
 

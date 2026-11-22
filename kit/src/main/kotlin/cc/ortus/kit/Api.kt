@@ -84,6 +84,47 @@ suspend fun Client.thread(id: String): List<Email> {
     return json.decodeFromJsonElement(kotlinx.serialization.serializer<List<Email>>(), got["e"]?.get("list") ?: JsonArray(emptyList()))
 }
 
+/** An address one may send from. */
+@Serializable data class Identity(val id: String, val name: String? = null, val email: String)
+/** Someone to write to, as Compose suggests them. */
+@Serializable data class Suggestion(val name: String? = null, val email: String) { val shown get() = name?.ifEmpty { null } ?: email }
+@Serializable private data class Suggestions(val people: List<Suggestion> = emptyList())
+
+/** The addresses one may send from (none: no mail address here). */
+suspend fun Client.identities(): List<Identity> {
+    val got = jmap(buildJsonArray { add(call("Identity/get", JsonObject(emptyMap()), "i")) })
+    return json.decodeFromJsonElement(kotlinx.serialization.serializer<List<Identity>>(), got["i"]?.get("list") ?: JsonArray(emptyList()))
+}
+
+/** People to write to whose name or address starts with `query`. */
+suspend fun Client.suggest(query: String): List<Suggestion> =
+    json.decodeFromJsonElement(Suggestions.serializer(), raw("GET", "/mail/people?q=${java.net.URLEncoder.encode(query, "UTF-8")}")).people
+
+/** Sends a new message from `identity` to `to`. */
+suspend fun Client.send(identity: Identity, to: List<String>, subject: String, text: String) {
+    val boxes = jmap(buildJsonArray { add(call("Mailbox/get", JsonObject(emptyMap()), "b")) })
+    val drafts = boxes["b"]?.get("list")?.jsonArray?.firstOrNull { it.jsonObject["role"]?.jsonPrimitive?.contentOrNull == "drafts" }?.jsonObject?.get("id")?.jsonPrimitive?.content
+        ?: throw ApiError(0, "notSent", "Not sent.")
+    val draft = buildJsonObject {
+        put("mailboxIds", buildJsonObject { put(drafts, true) })
+        put("keywords", buildJsonObject { put("\$draft", true); put("\$seen", true) })
+        put("from", buildJsonArray { add(buildJsonObject { put("name", identity.name ?: ""); put("email", identity.email) }) })
+        put("to", buildJsonArray { to.forEach { a -> add(buildJsonObject { put("email", a) }) } })
+        put("subject", subject)
+        put("textBody", buildJsonArray { add(buildJsonObject { put("partId", "1"); put("type", "text/plain") }) })
+        put("bodyValues", buildJsonObject { put("1", buildJsonObject { put("value", text) }) })
+    }
+    val sent = jmap(buildJsonArray {
+        add(call("Email/set", buildJsonObject { put("create", buildJsonObject { put("m", draft) }) }, "c"))
+        add(call("EmailSubmission/set", buildJsonObject {
+            put("create", buildJsonObject { put("s", buildJsonObject { put("identityId", identity.id); put("emailId", "#m") }) })
+            put("onSuccessDestroyEmail", buildJsonArray { add("#s") })
+        }, "s"))
+    })
+    (sent["c"]?.get("notCreated") as? JsonObject)?.get("m")?.let { throw ApiError(0, "notSent", "Not sent.") }
+    (sent["s"]?.get("notCreated") as? JsonObject)?.get("s")?.let { throw ApiError(0, "notSent", "Not sent.") }
+}
+
 suspend fun Client.reply(last: Email, text: String) {
     val got = jmap(buildJsonArray { add(call("Identity/get", JsonObject(emptyMap()), "i")); add(call("Mailbox/get", JsonObject(emptyMap()), "b")) })
     val identity = got["i"]?.get("list")?.jsonArray?.firstOrNull()?.jsonObject ?: throw ApiError(0, "forbiddenFrom", "You cannot send from here.")

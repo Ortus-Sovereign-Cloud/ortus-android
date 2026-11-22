@@ -114,4 +114,16 @@
     <string name="folder_trash">Papierkorb</string>
     <string name="delivery_failed">Nicht zugestellt</string>
     <string name="delivery_trying">Wird gesendet</string>
+    <string name="compose_title">Neue Nachricht</string>
+    <string name="compose_from">Von</string>
+    <string name="compose_to">An</string>
+    <string name="compose_subject">Betreff</string>
+    <string name="compose_message">Nachricht</string>
+    <string name="compose_send">Senden</string>
+    <string name="compose_cancel">Abbrechen</string>
+    <string name="compose_noAddress">Sie können von hier noch keine E-Mails senden: Ihr Konto hat keine Adresse in der Mail dieser Organisation. Ihre Administration kann Ihnen eine geben.</string>
+    <string name="delivery_done">Zugestellt an %1$s</string>
+    <string name="delivery_notDone">Nicht an %1$s zugestellt</string>
+    <string name="delivery_retrying">Noch nicht an %1$s zugestellt; neuer Versuch läuft</string>
+    <string name="delivery_sendingTo">Wird an %1$s gesendet…</string>
 </resources>
