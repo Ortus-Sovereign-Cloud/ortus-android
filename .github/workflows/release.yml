@@ -1,0 +1,46 @@
+name: release
+
+# Builds the app bundle (AAB) for Google Play, signed with the upload key,
+# and keeps it with the run. Run by hand from main once CI is green.
+# Secrets: ORTUS_UPLOAD_KEYSTORE_B64 (the keystore, base64),
+# ORTUS_UPLOAD_STORE_PASSWORD, ORTUS_UPLOAD_KEY_ALIAS,
+# ORTUS_UPLOAD_KEY_PASSWORD. See store/android/README.md.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+      - name: The upload key
+        env:
+          KEYSTORE: ${{ secrets.ORTUS_UPLOAD_KEYSTORE_B64 }}
+        run: |
+          [ -n "$KEYSTORE" ] || { echo "ORTUS_UPLOAD_KEYSTORE_B64 is not set: see store/android/README.md"; exit 1; }
+          printf '%s' "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          echo "ORTUS_UPLOAD_KEYSTORE=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
+      - name: The bundle, signed
+        env:
+          ORTUS_UPLOAD_STORE_PASSWORD: ${{ secrets.ORTUS_UPLOAD_STORE_PASSWORD }}
+          ORTUS_UPLOAD_KEY_ALIAS: ${{ secrets.ORTUS_UPLOAD_KEY_ALIAS }}
+          ORTUS_UPLOAD_KEY_PASSWORD: ${{ secrets.ORTUS_UPLOAD_KEY_PASSWORD }}
+          ORTUS_VERSION_CODE: ${{ github.run_number }}
+        run: |
+          ./gradlew :app:bundleRelease -q
+          jarsigner -verify app/build/outputs/bundle/release/app-release.aab > /dev/null
+          rm -f "$ORTUS_UPLOAD_KEYSTORE"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ortus-${{ github.run_number }}.aab
+          path: app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error

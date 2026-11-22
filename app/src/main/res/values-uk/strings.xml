@@ -126,4 +126,6 @@
     <string name="delivery_notDone">Не доставлено до %1$s</string>
     <string name="delivery_retrying">Ще не доставлено до %1$s; пробуємо знову</string>
     <string name="delivery_sendingTo">Надсилання до %1$s…</string>
+    <string name="call_start">Дзвінок</string>
+    <string name="call_close">Закрити</string>
 </resources>

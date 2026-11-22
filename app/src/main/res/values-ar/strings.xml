@@ -126,4 +126,6 @@
     <string name="delivery_notDone">لم تُسلَّم إلى %1$s</string>
     <string name="delivery_retrying">لم تُسلَّم إلى %1$s بعد؛ نعيد المحاولة</string>
     <string name="delivery_sendingTo">جارٍ الإرسال إلى %1$s…</string>
+    <string name="call_start">مكالمة</string>
+    <string name="call_close">إغلاق</string>
 </resources>

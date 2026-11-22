@@ -37,6 +37,7 @@ sealed class Place {
     data class Share(val item: DriveItem) : Place()
     data class Doc(val id: String) : Place()
     data object Compose : Place()
+    data class Call(val room: Room, val title: String) : Place()
     data object ForYou : Place()
     data object Notifications : Place()
     data object Search : Place()
@@ -72,11 +73,12 @@ fun Tabs(model: Model) {
             androidx.activity.compose.BackHandler(enabled = stack.isNotEmpty()) { back() }
             when (val top = stack.lastOrNull()) {
                 is Place.Thread -> ThreadScreen(model, top.id)
-                is Place.Channel -> ChannelScreen(model, top.room, top.title)
+                is Place.Channel -> ChannelScreen(model, top.room, top.title, open)
                 is Place.Folder -> FolderScreen(model, top.id, top.title, open)
                 is Place.Share -> ShareScreen(model, top.item)
                 is Place.Doc -> DocScreen(model, top.id)
                 Place.Compose -> ComposeScreen(model, back)
+                is Place.Call -> CallScreen(model, top.room, top.title, back)
                 Place.ForYou -> ForYouScreen(model)
                 Place.Notifications -> NotificationsScreen(model)
                 Place.Search -> SearchScreen(model)
@@ -210,14 +212,18 @@ fun ChatsScreen(model: Model, open: (Place) -> Unit) {
 }
 
 @Composable
-fun ChannelScreen(model: Model, room: Room, title: String) {
+fun ChannelScreen(model: Model, room: Room, title: String, open: (Place) -> Unit) {
     var data by remember { mutableStateOf<Messages?>(null) }
     var text by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     suspend fun load() { data = runCatching { model.client!!.messages(room.id) }.getOrNull() }
     LaunchedEffect(room.id) { load() }
     Column(Modifier.fillMaxSize()) {
-        Text(title, fontWeight = FontWeight.Bold, color = Text1, fontSize = 18.sp, modifier = Modifier.padding(16.dp))
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(title, fontWeight = FontWeight.Bold, color = Text1, fontSize = 18.sp, modifier = Modifier.weight(1f))
+            // The room's call (the web call page, signed in).
+            OutlinedButton({ open(Place.Call(room, title)) }, Modifier.testTag("call")) { Text(stringResource(R.string.call_start)) }
+        }
         LazyColumn(Modifier.weight(1f).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             items(data?.messages?.filter { it.deleted != true && it.thread == null } ?: emptyList(), key = { it.id }) { m ->
                 val name = data?.people?.get(m.sender)?.name ?: m.sender

@@ -1,0 +1,14 @@
+Ortus Workspace is the phone app for Ortus, the sovereign workspace an organisation runs on its own servers.
+
+Everything stays with your organisation: the app talks only to your organisation's Ortus, never to a cloud of ours.
+
+• Mail: your inbox by importance, threads, quick replies, new messages, and whether outside mail was delivered.
+• Chat: your channels and direct messages.
+• Calendar: your day and week, and invitations to answer.
+• Files and documents: what is shared with you.
+• For you: approvals and signatures waiting for you, signed with your phone's key.
+• Admin: for administrators, the state of the installation.
+
+Signing in is simple and safe: scan the code from your welcome letter, or from "Sign in on your phone" on the web. Your phone then becomes your key, protected by Face Unlock, fingerprint or screen lock; there is no password to steal.
+
+You need an account at an organisation that runs Ortus.

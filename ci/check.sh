@@ -9,6 +9,14 @@ for lang in pl uk de fr ar; do
   diff <(grep -o 'name="[^"]*"' app/src/main/res/values/strings.xml | sort) <(grep -o 'name="[^"]*"' "app/src/main/res/values-$lang/strings.xml" | sort) > /dev/null \
     || { echo "check: $lang texts differ from en" >&2; exit 1; }
 done
+# The Play listing in every language, within Play's limits.
+for lang in en pl uk de fr ar; do
+  for f in title:30 short_description:80 full_description:4000; do
+    file="store/android/listing/$lang/${f%%:*}.txt"
+    [ -s "$file" ] || { echo "check: $file is missing" >&2; exit 1; }
+    [ "$(tr -d '\n' < "$file" | wc -m)" -le "${f##*:}" ] || { echo "check: $file is over ${f##*:} characters" >&2; exit 1; }
+  done
+done
 # Dependencies are Apache-2.0 or MIT (AndroidX, Kotlin, kotlinx, OkHttp,
 # ZXing core: reviewed 2026-11-21, Apache-2.0, pure Java, no native code);
 # a new one needs a licence review.

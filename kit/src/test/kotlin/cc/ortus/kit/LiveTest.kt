@@ -37,6 +37,10 @@ class LiveTest {
         assertEquals(me.email, Passkey.signIn(back, key).email)
         back.raw("POST", "/session/sign-out", body())
         kotlin.test.assertFailsWith<ApiError> { back.call<Me>("GET", "/me") }
+        // Compose suggests Olena, and Iryna may send from her own address.
+        val olena = client.suggest("olena")
+        assertEquals(true, olena.any { it.email == "olena@ministry.example" }, "suggestions: $olena")
+        assertEquals(listOf("iryna@ministry.example"), client.identities().map { it.email })
         // Her inbox has Anna's mail.
         assertEquals(true, client.inbox().any { it.subject == "Gauge report and updated shelter agreement" })
         // S1.9: she signs the plan with her phone's key (a fresh sign-in, as signing asks).

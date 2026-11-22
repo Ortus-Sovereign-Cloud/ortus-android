@@ -4,6 +4,9 @@
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <!-- Only to read an invitation's QR code; the app works without it. -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Calls: others hear you (the web call page in the app). -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
     <application
         android:label="Ortus"

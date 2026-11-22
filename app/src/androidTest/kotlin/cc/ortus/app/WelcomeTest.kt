@@ -146,8 +146,28 @@ class WelcomeTest {
         val open = android.net.Uri.Builder().scheme("ortus").authority("signin")
             .appendQueryParameter("server", server).appendQueryParameter("code", code).build()
         val intent = Intent(Intent.ACTION_VIEW, open, context, MainActivity::class.java).putExtra("reset", true)
+        // A channel to call in.
+        val room = java.net.URL("$server/api/v1/chat/rooms").openConnection() as java.net.HttpURLConnection
+        room.requestMethod = "POST"
+        room.doOutput = true
+        room.setRequestProperty("Authorization", "Bearer $session")
+        room.setRequestProperty("Content-Type", "application/json")
+        room.setRequestProperty("X-Requested-With", "ortus")
+        room.outputStream.use { it.write("""{"kind":"channel","name":"phone-calls"}""".toByteArray()) }
+        check(room.responseCode == 200, "the channel")
+        androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation.apply {
+            grantRuntimePermission(context.packageName, android.Manifest.permission.CAMERA)
+            grantRuntimePermission(context.packageName, android.Manifest.permission.RECORD_AUDIO)
+        }
         ActivityScenario.launch<MainActivity>(intent).use {
             waitFor("the welcome screen after the sign-in code") { compose.onAllNodesWithTag("welcome").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithTag("makeKey").performClick()
+            waitFor("the tab bar after making the key") { compose.onAllNodesWithText("Chat").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText("Chat").performClick()
+            waitFor("the channel") { compose.onAllNodesWithText("phone-calls", substring = true).fetchSemanticsNodes().isNotEmpty() }
+            compose.onAllNodesWithText("phone-calls", substring = true)[0].performClick()
+            compose.onNodeWithTag("call").performClick()
+            waitFor("the call screen") { compose.onAllNodesWithTag("call").fetchSemanticsNodes().isNotEmpty() && compose.onAllNodesWithText("Close").fetchSemanticsNodes().isNotEmpty() }
         }
     }
 
