@@ -7,6 +7,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import android.os.Bundle
+import cc.ortus.kit.InvitationLink
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -87,7 +88,7 @@ fun JoinScreen(model: Model, server0: String, code0: String) {
     if (scanning) CodeScanner(found = { scanning = false; model.open(it) }, close = { scanning = false })
     // An invitation handed to the app fills in what it joins with.
     LaunchedEffect(model.handed) {
-        model.handed?.let { server = it.server; code = it.code; withPassword = false }
+        model.handed?.takeIf { it.kind == InvitationLink.Kind.Invite }?.let { server = it.server; code = it.code; withPassword = false }
     }
     Column(Modifier.fillMaxSize().imePadding().padding(24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
       Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {

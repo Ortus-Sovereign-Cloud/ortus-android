@@ -107,4 +107,5 @@
     <string name="join_scan">Scan the invitation\'s QR code</string>
     <string name="join_scanCancel">Cancel</string>
     <string name="join_notFound">No Ortus was found for that email. Type the address from your welcome letter.</string>
+    <string name="join_phoneLinkExpired">This sign-in code has expired or was used. On the web, open your name, then Sign in on your phone, for a new one.</string>
 </resources>

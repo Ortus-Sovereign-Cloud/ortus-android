@@ -110,6 +110,29 @@ class WelcomeTest {
         }
     }
 
+    /** "Sign in on your phone" from the web: the code from the owner's web session signs the app in. */
+    @Test fun aPhoneSignInCodeFromTheWeb() {
+        val server = args.getString("ortusServer").orEmpty()
+        val session = args.getString("ortusOwnerSession").orEmpty()
+        need(server, session)
+        val c = java.net.URL("$server/api/v1/me/phone-link").openConnection() as java.net.HttpURLConnection
+        c.requestMethod = "POST"
+        c.doOutput = true
+        c.setRequestProperty("Authorization", "Bearer $session")
+        c.setRequestProperty("Content-Type", "application/json")
+        c.setRequestProperty("X-Requested-With", "ortus")
+        c.outputStream.use { it.write("{}".toByteArray()) }
+        val link = org.json.JSONObject(c.inputStream.bufferedReader().readText()).getString("link")
+        val code = link.substringAfterLast("p=")
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val open = android.net.Uri.Builder().scheme("ortus").authority("signin")
+            .appendQueryParameter("server", server).appendQueryParameter("code", code).build()
+        val intent = Intent(Intent.ACTION_VIEW, open, context, MainActivity::class.java).putExtra("reset", true)
+        ActivityScenario.launch<MainActivity>(intent).use {
+            waitFor("the welcome screen after the sign-in code") { compose.onAllNodesWithTag("welcome").fetchSemanticsNodes().isNotEmpty() }
+        }
+    }
+
     /** S2.4: the IT administrator fixes the two failed mailbox imports from the phone. */
     @Test fun anAdministratorFixesImports() {
         val server = args.getString("ortusServer").orEmpty()

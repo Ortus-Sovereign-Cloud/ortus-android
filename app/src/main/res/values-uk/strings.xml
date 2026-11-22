@@ -107,4 +107,5 @@
     <string name="join_scan">Сканувати QR-код запрошення</string>
     <string name="join_scanCancel">Скасувати</string>
     <string name="join_notFound">Для цієї пошти Ortus не знайдено. Введіть адресу з вітального листа.</string>
+    <string name="join_phoneLinkExpired">Термін дії коду минув або його вже використано. У вебзастосунку відкрийте своє ім’я, потім «Увійти на телефоні», щоб отримати новий.</string>
 </resources>

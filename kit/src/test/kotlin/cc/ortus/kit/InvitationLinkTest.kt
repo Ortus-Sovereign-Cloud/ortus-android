@@ -54,6 +54,14 @@ class InvitationLinkTest {
         assertNull(QrCode.invitation(ByteArray(stride * height) { 0x80.toByte() }, width, height, stride))
     }
 
+    @Test fun aPhoneSignInCode() {
+        val phone = InvitationLink("https://ortus.cc", code, InvitationLink.Kind.Phone)
+        assertEquals(phone, InvitationLink.parse("https://join.ortus.cc/i#s=https%3A%2F%2Fortus.cc&p=$code"))
+        assertEquals(phone, InvitationLink.parse("ortus://signin?server=https%3A%2F%2Fortus.cc&code=$code"))
+        assertEquals(InvitationLink.Kind.Invite, InvitationLink.parse("https://join.ortus.cc/i#s=https%3A%2F%2Fortus.cc&c=$code")?.kind)
+        assertNull(InvitationLink.parse("https://join.ortus.cc/i#s=https%3A%2F%2Fortus.cc&p=short"))
+    }
+
     @Test fun anythingElseIsNot() {
         for (text in listOf(
             "",

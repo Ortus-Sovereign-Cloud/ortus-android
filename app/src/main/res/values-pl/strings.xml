@@ -107,4 +107,5 @@
     <string name="join_scan">Zeskanuj kod QR zaproszenia</string>
     <string name="join_scanCancel">Anuluj</string>
     <string name="join_notFound">Nie znaleziono Ortus dla tego adresu e-mail. Wpisz adres z listu powitalnego.</string>
+    <string name="join_phoneLinkExpired">Ten kod logowania wygasł lub został użyty. W przeglądarce otwórz swoje imię, potem Zaloguj się na telefonie, aby dostać nowy.</string>
 </resources>

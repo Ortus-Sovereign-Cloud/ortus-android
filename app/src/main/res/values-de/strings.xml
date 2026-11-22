@@ -107,4 +107,5 @@
     <string name="join_scan">QR-Code der Einladung scannen</string>
     <string name="join_scanCancel">Abbrechen</string>
     <string name="join_notFound">Für diese E-Mail wurde kein Ortus gefunden. Geben Sie die Adresse aus Ihrem Willkommensbrief ein.</string>
+    <string name="join_phoneLinkExpired">Dieser Anmeldecode ist abgelaufen oder wurde benutzt. Öffnen Sie im Web Ihren Namen, dann Auf dem Telefon anmelden, für einen neuen.</string>
 </resources>

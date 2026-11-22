@@ -62,7 +62,28 @@ class Model(private val activity: FragmentActivity) {
         }
         if (stage != Stage.Join || busy) return
         handed = invitation
-        activity.lifecycleScope.launch { join(invitation.server, invitation.code) }
+        activity.lifecycleScope.launch {
+            when (invitation.kind) {
+                InvitationLink.Kind.Invite -> join(invitation.server, invitation.code)
+                InvitationLink.Kind.Phone -> signInWithPhoneLink(invitation.server, invitation.code)
+            }
+        }
+    }
+
+    /** "Sign in on your phone" from the web: signed in; a phone that is not yet their key becomes it next. */
+    suspend fun signInWithPhoneLink(typed: String, code: String) {
+        error = null
+        val server = Client.serverUrl(typed) ?: run { error = context.getString(R.string.join_badServer); return }
+        busy = true
+        try {
+            val c = Client(server, transport = OkTransport)
+            me = Passkey.phoneLink(c, code)
+            client = c
+            keep(c)
+            stage = if (hasKey) Stage.In else Stage.Welcome
+        } catch (e: Exception) {
+            error = say(e)
+        } finally { busy = false }
     }
 
     suspend fun join(typed0: String, code: String) {
@@ -107,6 +128,7 @@ class Model(private val activity: FragmentActivity) {
     fun say(e: Throwable): String = when {
         e is PhoneKey.NoLock -> context.getString(R.string.key_noLock)
         e is KeyPermanentlyInvalidatedException -> context.getString(R.string.key_invalidated)
+        e is ApiError && e.code == "phone_link_expired" -> context.getString(R.string.join_phoneLinkExpired)
         e is ApiError && e.status > 0 -> e.message ?: context.getString(R.string.error_generic)
         e is ApiError && e.code == "no_key" -> context.getString(R.string.welcome_noKey)
         e is java.io.IOException -> context.getString(R.string.error_network)

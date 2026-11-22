@@ -107,4 +107,5 @@
     <string name="join_scan">مسح رمز QR للدعوة</string>
     <string name="join_scanCancel">إلغاء</string>
     <string name="join_notFound">لم يُعثر على Ortus لهذا البريد. اكتب العنوان من رسالة الترحيب.</string>
+    <string name="join_phoneLinkExpired">انتهت صلاحية رمز الدخول هذا أو استُخدم. على الويب، افتح اسمك ثم سجّل الدخول على هاتفك للحصول على رمز جديد.</string>
 </resources>

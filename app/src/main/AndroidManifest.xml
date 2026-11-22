@@ -26,6 +26,8 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="ortus" android:host="join" />
+                <!-- ortus://signin?server=…&code=…: "Sign in on your phone" on a phone. -->
+                <data android:scheme="ortus" android:host="signin" />
             </intent-filter>
             <!-- Invitation links on ortus.cc (its /.well-known/assetlinks.json names the app). -->
             <intent-filter android:autoVerify="true">

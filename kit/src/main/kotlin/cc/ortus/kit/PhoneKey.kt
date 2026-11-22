@@ -10,6 +10,13 @@ interface Signer {
 /** Joining, the phone's passkey and signing in with it, as the app does. */
 object Passkey {
     /** Follows the invitation code: signed in, the session kept. */
+    /** "Sign in on your phone" from the web: the code signs in as its person. */
+    suspend fun phoneLink(client: Client, code: String): Me {
+        val me: Me = client.call("POST", "/session/phone-link", body("token" to code.trim()))
+        client.token = me.session_token ?: throw ApiError(0, "no_session", "The code did not sign you in.")
+        return me
+    }
+
     suspend fun join(client: Client, code: String): Me {
         val token = code.trim().substringAfterLast('#')
         val me: Me = client.call("POST", "/invitation/accept", body("token" to token))
