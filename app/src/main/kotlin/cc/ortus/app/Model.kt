@@ -31,6 +31,19 @@ class Model(private val activity: FragmentActivity) {
     var busy by mutableStateOf(false)
     /** The open tab (a notification's tap chooses it). */
     var tab by mutableStateOf(0)
+    /** The installation could not be reached: screens show what was kept. */
+    var offline by mutableStateOf(false)
+
+    /** The answers this phone keeps for an installation (app cache: never backed up). */
+    private fun cache(server: String) = cc.ortus.kit.ResponseCache(java.io.File(context.cacheDir, "ortus-" + cc.ortus.kit.sha256(server.toByteArray()).take(8).joinToString("") { "%02x".format(it) }))
+
+    /** A client whose reads are kept, and answered from the phone when the installation cannot be reached. */
+    private fun makeClient(server: String, token: String? = null): Client {
+        val transport = cc.ortus.kit.CachingTransport(OkTransport, cache(server)) { reached ->
+            activity.runOnUiThread { if (offline != !reached) offline = !reached }
+        }
+        return Client(server, token, transport)
+    }
     var client: Client? = null
         private set
     private val context: Context get() = activity
@@ -39,7 +52,7 @@ class Model(private val activity: FragmentActivity) {
         val server = Store.get(context, "server")
         val token = Store.get(context, "session")
         if (server != null && token != null) {
-            client = Client(server, token, OkTransport)
+            client = makeClient(server, token)
             stage = Stage.In
             startPush()
         }
@@ -109,7 +122,7 @@ class Model(private val activity: FragmentActivity) {
         val server = Client.serverUrl(typed) ?: run { error = context.getString(R.string.join_badServer); return }
         busy = true
         try {
-            val c = Client(server, transport = OkTransport)
+            val c = makeClient(server)
             me = Passkey.phoneLink(c, code)
             client = c
             keep(c)
@@ -132,7 +145,7 @@ class Model(private val activity: FragmentActivity) {
         val server = Client.serverUrl(typed) ?: run { error = context.getString(R.string.join_badServer); return }
         busy = true
         try {
-            val c = Client(server, transport = OkTransport)
+            val c = makeClient(server)
             me = Passkey.join(c, code)
             client = c
             keep(c)
@@ -215,6 +228,7 @@ class Model(private val activity: FragmentActivity) {
 
     /** The session ended on the server: sign in again (the key stays). */
     private fun expired() {
+        client?.let { cache(it.server).clear() }
         Store.put(context, "session", null)
         client = null
         me = null
@@ -231,7 +245,7 @@ class Model(private val activity: FragmentActivity) {
         val server = Client.serverUrl(typed) ?: run { error = context.getString(R.string.join_badServer); return }
         busy = true
         try {
-            val c = Client(server, transport = OkTransport)
+            val c = makeClient(server)
             ticket = Passkey.password(c, email, password)
             pending = c
         } catch (e: Exception) {
@@ -267,7 +281,7 @@ class Model(private val activity: FragmentActivity) {
         val server = Client.serverUrl(typed) ?: run { error = context.getString(R.string.join_badServer); return }
         busy = true
         try {
-            val c = Client(server, transport = OkTransport)
+            val c = makeClient(server)
             client = c
             me = null
             signInWithKey()
@@ -286,6 +300,7 @@ class Model(private val activity: FragmentActivity) {
     suspend fun signOut() {
         stopPush()
         client?.let { c -> runCatching { c.raw("POST", "/session/sign-out", kotlinx.serialization.json.JsonObject(emptyMap())) } }
+        client?.let { cache(it.server).clear() }
         Store.put(context, "session", null)
         client = null
         me = null

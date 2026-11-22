@@ -18,7 +18,7 @@ class PushTest {
         }
     }
 
-    @Test fun registersTheEndpoint() = runBlocking {
+    @Test fun registersTheEndpoint(): Unit = runBlocking {
         val t = Seen(200, """{"id":"pd1","fetch_token":"f1"}""")
         val r = Client("https://ortus.example", "s1", t).registerPush("https://ntfy.example/upAbC?up=1", 60)
         assertEquals(PushRegistration("pd1", "f1"), r)
@@ -27,7 +27,7 @@ class PushTest {
         assertTrue(sent.contains("\"platform\":\"unifiedpush\"") && sent.contains("ntfy.example") && sent.contains("\"utc_offset\":60"), sent)
     }
 
-    @Test fun fetchesWithTheFetchTokenOnly() = runBlocking {
+    @Test fun fetchesWithTheFetchTokenOnly(): Unit = runBlocking {
         val t = Seen(200, """{"app":"chat","title":"Anna mentioned you","detail":"#flood-response","path":"/chat?room=r1","at":1}""")
         val n = Push.fetch("https://ortus.example", "f1", "nabc", t)
         assertEquals("Anna mentioned you", n.title)

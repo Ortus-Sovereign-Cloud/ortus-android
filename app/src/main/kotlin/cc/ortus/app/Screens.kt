@@ -1,10 +1,13 @@
 package cc.ortus.app
 
+import cc.ortus.kit.quickly
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -60,7 +63,13 @@ fun Tabs(model: Model) {
     val stack = remember { mutableStateListOf<Place>() }
     LaunchedEffect(Unit) { model.refresh() }
     val labels = listOf(R.string.tab_mail, R.string.tab_chat, R.string.tab_calendar, R.string.tab_files, R.string.tab_more)
-    Scaffold(containerColor = Background, bottomBar = {
+    Scaffold(containerColor = Background, topBar = {
+        if (model.offline) {
+            Text(stringResource(R.string.offline_banner), color = Text2, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.fillMaxWidth().background(Surface).statusBarsPadding().padding(vertical = 6.dp).testTag("offline"),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        }
+    }, bottomBar = {
         NavigationBar(containerColor = Surface) {
             labels.forEachIndexed { i, l ->
                 NavigationBarItem(selected = tab == i, onClick = { tab = i; stack.clear() }, icon = { Text("•") }, label = { Text(stringResource(l)) })
@@ -99,7 +108,7 @@ fun Tabs(model: Model) {
 fun InboxScreen(model: Model, open: (Place) -> Unit) {
     var emails by remember { mutableStateOf<List<Email>>(emptyList()) }
     var folder by remember { mutableStateOf("inbox") }
-    LaunchedEffect(folder) { emails = runCatching { model.client!!.mailFolder(folder) }.getOrDefault(emptyList()) }
+    LaunchedEffect(folder) { runCatching { quickly({ model.client!!.mailFolder(folder) }) { emails = it } } }
     val names = mapOf("inbox" to R.string.folder_inbox, "sent" to R.string.folder_sent, "archive" to R.string.folder_archive, "trash" to R.string.folder_trash)
     val sent = folder == "sent"
     LazyColumn {
@@ -145,7 +154,7 @@ fun ThreadScreen(model: Model, id: String) {
     var note by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     val sent = stringResource(R.string.thread_sent)
-    suspend fun load() { emails = runCatching { model.client!!.thread(id) }.getOrDefault(emptyList()) }
+    suspend fun load() { runCatching { quickly({ model.client!!.thread(id) }) { emails = it } } }
     LaunchedEffect(id) { load() }
     Column(Modifier.fillMaxSize()) {
         LazyColumn(Modifier.weight(1f).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -196,7 +205,7 @@ fun ThreadScreen(model: Model, id: String) {
 @Composable
 fun ChatsScreen(model: Model, open: (Place) -> Unit) {
     var data by remember { mutableStateOf<Rooms?>(null) }
-    LaunchedEffect(Unit) { data = runCatching { model.client!!.rooms() }.getOrNull() }
+    LaunchedEffect(Unit) { runCatching { quickly({ model.client!!.rooms() }) { data = it } } }
     LazyColumn {
         item { Title(stringResource(R.string.tab_chat)) }
         items(data?.rooms ?: emptyList(), key = { it.id }) { r ->
@@ -216,7 +225,7 @@ fun ChannelScreen(model: Model, room: Room, title: String, open: (Place) -> Unit
     var data by remember { mutableStateOf<Messages?>(null) }
     var text by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
-    suspend fun load() { data = runCatching { model.client!!.messages(room.id) }.getOrNull() }
+    suspend fun load() { runCatching { quickly({ model.client!!.messages(room.id) }) { data = it } } }
     LaunchedEffect(room.id) { load() }
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -245,7 +254,7 @@ fun CalendarScreen(model: Model) {
     var day by remember { mutableLongStateOf(java.time.LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()) }
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
     val scope = rememberCoroutineScope()
-    suspend fun load() { events = runCatching { model.client!!.events(day, day + 86_400_000) }.getOrDefault(emptyList()) }
+    suspend fun load() { runCatching { quickly({ model.client!!.events(day, day + 86_400_000) }) { events = it } } }
     LaunchedEffect(day) { load() }
     LazyColumn(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text(DateFormat.getDateInstance(DateFormat.FULL).format(Date(day)), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Text1) }

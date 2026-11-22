@@ -130,4 +130,5 @@
     <string name="call_close">Fermer</string>
     <string name="push_new">Du nouveau dans Ortus</string>
     <string name="push_channel">Messages et mentions</string>
+    <string name="offline_banner">Hors ligne : ce que le téléphone a gardé</string>
 </resources>
