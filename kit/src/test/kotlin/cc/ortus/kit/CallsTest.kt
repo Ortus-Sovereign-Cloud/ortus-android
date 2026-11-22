@@ -30,7 +30,7 @@ class CallsTest {
     }
 
     @Test fun joinsWithTheRelay(): Unit = runBlocking {
-        val body = """{"call":{"id":"c1","room":"r1","sessions":[{"session":"s2","user":"u2","muted":true}],"people":{"u2":{"name":"Taras"}}},"session":"s1","ice_servers":[{"urls":["turns:turn.example:443?transport=tcp"],"username":"1:s1","credential":"x"}]}"""
+        val body = """{"call":{"id":"c1","room":"r1","sessions":[{"session":"s2","user":"u2","muted":true},{"camera":true,"doc":null,"hand":null,"joinedAt":1795389704526,"muted":false,"screen":null,"session":"s1","user":"u1"}],"people":{"u2":{"name":"Taras"}}},"session":"s1","ice_servers":[{"urls":["turns:turn.example:443?transport=tcp"],"username":"1:s1","credential":"x"}]}"""
         val seen = mutableListOf<String>()
         val c = Client("https://ortus.example", "t", Transport { m, u, _, _ -> seen += "$m $u"; 200 to body.toByteArray() })
         val j = c.joinCall("r 1")

@@ -19,7 +19,7 @@ import java.net.URLEncoder
  * state report every 10 s keeps the session; leave.
  */
 @Serializable data class IceServer(val urls: List<String>, val username: String? = null, val credential: String? = null)
-@Serializable data class CallSession(val session: String, val user: String, val muted: Boolean = false, val camera: Boolean = false, val screen: Boolean = false, val hand: Boolean = false)
+@Serializable data class CallSession(val session: String, val user: String, val muted: Boolean? = null, val camera: Boolean? = null)
 @Serializable data class CallPerson(val name: String)
 @Serializable data class CallInfo(val id: String, val room: String, val sessions: List<CallSession> = emptyList(), val people: Map<String, CallPerson> = emptyMap()) {
     /** The name of whoever a session (a remote stream's id) belongs to. */
