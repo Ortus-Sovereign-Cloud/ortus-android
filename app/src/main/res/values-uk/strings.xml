@@ -128,4 +128,6 @@
     <string name="delivery_sendingTo">Надсилання до %1$s…</string>
     <string name="call_start">Дзвінок</string>
     <string name="call_close">Закрити</string>
+    <string name="push_new">Щось нове в Ortus</string>
+    <string name="push_channel">Повідомлення та згадки</string>
 </resources>

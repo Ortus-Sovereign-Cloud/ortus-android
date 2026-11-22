@@ -1,8 +1,9 @@
 # Licences of what the Ortus Android app ships
 
-The app is MIT OR Apache-2.0. These are the 126 libraries it carries (its release runtime classpath), with their licences.
+The app is MIT OR Apache-2.0. These are the 127 libraries it carries (its release runtime classpath), with their licences.
 
 | Group | Library | Version | Licence |
+| --- | --- | --- | --- |
 | --- | --- | --- | --- |
 | androidx.activity | activity | 1.10.1 | Apache-2.0 |
 | androidx.activity | activity-compose | 1.10.1 | Apache-2.0 |
@@ -130,3 +131,4 @@ The app is MIT OR Apache-2.0. These are the 126 libraries it carries (its releas
 | org.jetbrains.kotlinx | kotlinx-serialization-json | 1.8.1 | Apache-2.0 |
 | org.jetbrains.kotlinx | kotlinx-serialization-json-jvm | 1.8.1 | Apache-2.0 |
 | org.jspecify | jspecify | 1.0.0 | Apache-2.0 |
+| org.unifiedpush.android | connector | 2.5.0 | Apache-2.0 |

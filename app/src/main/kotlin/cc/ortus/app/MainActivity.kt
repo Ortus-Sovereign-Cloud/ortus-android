@@ -37,6 +37,7 @@ class MainActivity : FragmentActivity() {
     override fun onNewIntent(intent: android.content.Intent) {
         super.onNewIntent(intent)
         intent.dataString?.let { model?.open(it) }
+        intent.getStringExtra("path")?.let { model?.tab = cc.ortus.kit.Push.tab(it) }
     }
 
     /** The installation an organisation's device management set, if any. */
@@ -54,6 +55,7 @@ class MainActivity : FragmentActivity() {
         val model = Model(this)
         this.model = model
         if (first) intent?.dataString?.let { model.open(it) }
+        if (first) intent?.getStringExtra("path")?.let { model.tab = cc.ortus.kit.Push.tab(it) }
         setContent {
             MaterialTheme(colorScheme = darkColorScheme(primary = Accent, background = Background, surface = Surface, onBackground = Text1, onSurface = Text1)) {
                 Surface(Modifier.fillMaxSize(), color = Background) {

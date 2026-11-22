@@ -18,12 +18,14 @@ for lang in en pl uk de fr ar; do
   done
 done
 # Dependencies are Apache-2.0 or MIT (AndroidX, Kotlin, kotlinx, OkHttp,
-# ZXing core: reviewed 2026-11-21, Apache-2.0, pure Java, no native code);
+# ZXing core: reviewed 2026-11-21, Apache-2.0, pure Java, no native code;
+# UnifiedPush connector 2.5.0: reviewed 2026-11-22, Apache-2.0, needs only
+# kotlin-stdlib);
 # a new one needs a licence review.
 deps="$(grep -ho '"[a-z][a-zA-Z0-9.-]*:[a-zA-Z0-9.-]*:\?[^"]*"' kit/build.gradle.kts app/build.gradle.kts | tr -d '"' | cut -d: -f1 | sort -u)"
 for group in $deps; do
   case "$group" in
-    androidx.*|org.jetbrains.kotlinx|com.squareup.okhttp3|com.google.zxing) ;;
+    androidx.*|org.jetbrains.kotlinx|com.squareup.okhttp3|com.google.zxing|org.unifiedpush.android) ;;
     *) echo "check: $group needs a licence review" >&2; exit 1 ;;
   esac
 done

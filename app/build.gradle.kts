@@ -63,6 +63,9 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.4.2")
     implementation("androidx.camera:camera-view:1.4.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    // Notifications without Google services (UnifiedPush, Apache-2.0; 2.x
+    // needs only the Kotlin library, 3.x brings Tink and protobuf).
+    implementation("org.unifiedpush.android:connector:2.5.0")
     androidTestImplementation(platform("androidx.compose:compose-bom:2025.05.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")

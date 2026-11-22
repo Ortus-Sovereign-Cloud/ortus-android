@@ -16,6 +16,7 @@ import cc.ortus.kit.InvitationLink
 import cc.ortus.kit.Client
 import cc.ortus.kit.Me
 import cc.ortus.kit.Passkey
+import cc.ortus.kit.unregisterPush
 import kotlin.coroutines.resume
 import kotlinx.coroutines.launch
 import kotlin.coroutines.suspendCoroutine
@@ -28,6 +29,8 @@ class Model(private val activity: FragmentActivity) {
     var me by mutableStateOf<Me?>(null)
     var error by mutableStateOf<String?>(null)
     var busy by mutableStateOf(false)
+    /** The open tab (a notification's tap chooses it). */
+    var tab by mutableStateOf(0)
     var client: Client? = null
         private set
     private val context: Context get() = activity
@@ -38,6 +41,7 @@ class Model(private val activity: FragmentActivity) {
         if (server != null && token != null) {
             client = Client(server, token, OkTransport)
             stage = Stage.In
+            startPush()
         }
     }
 
@@ -49,6 +53,32 @@ class Model(private val activity: FragmentActivity) {
     private fun keep(c: Client) {
         Store.put(context, "server", c.server)
         Store.put(context, "session", c.token)
+        startPush()
+    }
+
+    /**
+     * Notifications while the app is closed: asks once (Android 13 and
+     * later), then registers with the phone's UnifiedPush distributor, if it
+     * has one; the receiver registers the endpoint with the installation.
+     */
+    fun startPush() {
+        if (activity.intent?.getBooleanExtra("reset", false) == true) return
+        if (android.os.Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            activity.requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 7)
+        }
+        val distributors = org.unifiedpush.android.connector.UnifiedPush.getDistributors(context)
+        val chosen = org.unifiedpush.android.connector.UnifiedPush.getAckDistributor(context) ?: distributors.firstOrNull() ?: return
+        org.unifiedpush.android.connector.UnifiedPush.saveDistributor(context, chosen)
+        org.unifiedpush.android.connector.UnifiedPush.registerApp(context)
+    }
+
+    /** Before the session ends: the installation and the distributor forget this phone. */
+    private suspend fun stopPush() {
+        val registration = Store.get(context, "push")?.let { runCatching { cc.ortus.kit.json.decodeFromString(cc.ortus.kit.PushRegistration.serializer(), it) }.getOrNull() }
+        if (registration != null) client?.let { c -> runCatching { c.unregisterPush(registration.id) } }
+        Store.put(context, "push", null)
+        runCatching { org.unifiedpush.android.connector.UnifiedPush.unregisterApp(context) }
     }
 
     /** What the last new message did ("Sent."), shown in Mail. */
@@ -254,6 +284,7 @@ class Model(private val activity: FragmentActivity) {
      * turns off a lost phone's key).
      */
     suspend fun signOut() {
+        stopPush()
         client?.let { c -> runCatching { c.raw("POST", "/session/sign-out", kotlinx.serialization.json.JsonObject(emptyMap())) } }
         Store.put(context, "session", null)
         client = null

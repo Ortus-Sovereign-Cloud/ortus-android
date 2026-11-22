@@ -7,6 +7,8 @@
     <!-- Calls: others hear you (the web call page in the app). -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- Notifications while the app is closed (asked once, after sign-in). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
     <application
         android:label="Ortus"
@@ -47,5 +49,14 @@
                 <data android:scheme="https" android:host="join.ortus.cc" android:path="/i" />
             </intent-filter>
         </activity>
+        <!-- Pushes from the phone's UnifiedPush distributor (ntfy and others). -->
+        <receiver android:name=".PushReceiver" android:enabled="true" android:exported="true">
+            <intent-filter>
+                <action android:name="org.unifiedpush.android.connector.MESSAGE" />
+                <action android:name="org.unifiedpush.android.connector.UNREGISTERED" />
+                <action android:name="org.unifiedpush.android.connector.NEW_ENDPOINT" />
+                <action android:name="org.unifiedpush.android.connector.REGISTRATION_FAILED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

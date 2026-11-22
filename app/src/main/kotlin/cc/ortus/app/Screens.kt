@@ -56,7 +56,7 @@ fun time(ms: Long): String = DateFormat.getTimeInstance(DateFormat.SHORT).format
 
 @Composable
 fun Tabs(model: Model) {
-    var tab by remember { mutableIntStateOf(0) }
+    var tab by model::tab
     val stack = remember { mutableStateListOf<Place>() }
     LaunchedEffect(Unit) { model.refresh() }
     val labels = listOf(R.string.tab_mail, R.string.tab_chat, R.string.tab_calendar, R.string.tab_files, R.string.tab_more)
