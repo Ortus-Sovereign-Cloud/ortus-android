@@ -95,12 +95,12 @@ class WelcomeTest {
             compose.onNodeWithText("Sent").performClick()
             waitFor("the reply in Sent") { compose.onAllNodesWithText("Gauge report", substring = true).fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("Inbox").performClick()
-            // A new message to Olena, picked from the suggestions.
+            // A new message to Taras (who has joined), picked from the suggestions.
             compose.onNodeWithTag("compose").performClick()
             waitFor("the compose screen") { compose.onAllNodesWithTag("to").fetchSemanticsNodes().isNotEmpty() }
-            compose.onNodeWithTag("to").performTextInput("olena")
-            waitFor("a suggestion for Olena") { compose.onAllNodesWithText("olena@ministry.example").fetchSemanticsNodes().isNotEmpty() }
-            compose.onNodeWithText("olena@ministry.example").performClick()
+            compose.onNodeWithTag("to").performTextInput("taras")
+            waitFor("a suggestion for Taras") { compose.onAllNodesWithText("taras@ministry.example").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText("taras@ministry.example").performClick()
             compose.onNodeWithTag("subject").performTextInput("Depot keys")
             compose.onNodeWithTag("message").performTextInput("The keys are with the guard.")
             compose.onNodeWithTag("sendMessage").performClick()
