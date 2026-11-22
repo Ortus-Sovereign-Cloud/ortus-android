@@ -4,7 +4,6 @@ The app is MIT OR Apache-2.0. These are the 127 libraries it carries (its releas
 
 | Group | Library | Version | Licence |
 | --- | --- | --- | --- |
-| --- | --- | --- | --- |
 | androidx.activity | activity | 1.10.1 | Apache-2.0 |
 | androidx.activity | activity-compose | 1.10.1 | Apache-2.0 |
 | androidx.activity | activity-ktx | 1.10.1 | Apache-2.0 |
