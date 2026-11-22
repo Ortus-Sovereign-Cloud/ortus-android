@@ -86,8 +86,12 @@ class WelcomeTest {
             compose.onNodeWithTag("reply").performTextInput("Thanks, will review")
             compose.onNodeWithTag("send").performClick()
             waitFor("the reply sent") { compose.onAllNodesWithText("Sent.").fetchSemanticsNodes().isNotEmpty() }
-            // Her reply is in Sent, with whom it went to.
+            // Her reply is in Sent, with whom it went to. (The first Back
+            // may only close the keyboard; then one more leaves the thread.)
             androidx.test.espresso.Espresso.pressBack()
+            compose.waitForIdle()
+            if (compose.onAllNodesWithText("Sent").fetchSemanticsNodes().isEmpty()) androidx.test.espresso.Espresso.pressBack()
+            waitFor("the folders") { compose.onAllNodesWithText("Sent").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("Sent").performClick()
             waitFor("the reply in Sent") { compose.onAllNodesWithText("Gauge report", substring = true).fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("Inbox").performClick()
