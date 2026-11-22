@@ -10,6 +10,9 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -87,15 +90,33 @@ fun Tabs(model: Model) {
 @Composable
 fun InboxScreen(model: Model, open: (Place) -> Unit) {
     var emails by remember { mutableStateOf<List<Email>>(emptyList()) }
-    LaunchedEffect(Unit) { emails = runCatching { model.client!!.inbox() }.getOrDefault(emptyList()) }
+    var folder by remember { mutableStateOf("inbox") }
+    LaunchedEffect(folder) { emails = runCatching { model.client!!.mailFolder(folder) }.getOrDefault(emptyList()) }
+    val names = mapOf("inbox" to R.string.folder_inbox, "sent" to R.string.folder_sent, "archive" to R.string.folder_archive, "trash" to R.string.folder_trash)
+    val sent = folder == "sent"
     LazyColumn {
-        item { Title(stringResource(R.string.inbox_title)) }
+        item { Title(stringResource(names.getValue(folder))) }
+        item {
+            Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FOLDERS.forEach { f ->
+                    FilterChip(selected = f == folder, onClick = { if (f != folder) { emails = emptyList(); folder = f } }, label = { Text(stringResource(names.getValue(f))) })
+                }
+            }
+        }
         if (emails.isEmpty()) item { Text(stringResource(R.string.inbox_empty), color = Text2, modifier = Modifier.padding(16.dp)) }
         items(emails, key = { it.id }) { e ->
+            // In Sent: whom it went to, and how its delivery goes.
+            val who = if (sent) e.recipients else e.sender
             Row(Modifier.fillMaxWidth().clickable { open(Place.Thread(e.threadId)) }.padding(16.dp, 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Avatar(e.sender)
+                Avatar(who)
                 Column(Modifier.weight(1f)) {
-                    Text(e.sender, color = Text1, fontWeight = if (e.unread) FontWeight.Bold else FontWeight.Normal, maxLines = 1)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(who, color = Text1, fontWeight = if (e.unread && !sent) FontWeight.Bold else FontWeight.Normal, maxLines = 1, modifier = Modifier.weight(1f))
+                        if (sent) e.deliveryState?.let { state ->
+                            Text(stringResource(if (state == "failed") R.string.delivery_failed else R.string.delivery_trying), fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+                                color = if (state == "failed") Color(0xFFFF6B6B) else Color(0xFFFFA94D))
+                        }
+                    }
                     Text(e.subject, color = Text1, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }

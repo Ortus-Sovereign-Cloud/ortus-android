@@ -108,4 +108,10 @@
     <string name="join_scanCancel">Cancel</string>
     <string name="join_notFound">No Ortus was found for that email. Type the address from your welcome letter.</string>
     <string name="join_phoneLinkExpired">This sign-in code has expired or was used. On the web, open your name, then Sign in on your phone, for a new one.</string>
+    <string name="folder_inbox">Inbox</string>
+    <string name="folder_sent">Sent</string>
+    <string name="folder_archive">Archive</string>
+    <string name="folder_trash">Trash</string>
+    <string name="delivery_failed">Not delivered</string>
+    <string name="delivery_trying">Sending</string>
 </resources>

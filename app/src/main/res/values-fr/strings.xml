@@ -108,4 +108,10 @@
     <string name="join_scanCancel">Annuler</string>
     <string name="join_notFound">Aucun Ortus trouvé pour ce courriel. Saisissez l\'adresse de votre lettre de bienvenue.</string>
     <string name="join_phoneLinkExpired">Ce code de connexion a expiré ou a déjà servi. Sur le web, ouvrez votre nom, puis Se connecter sur le téléphone, pour en obtenir un nouveau.</string>
+    <string name="folder_inbox">Boîte de réception</string>
+    <string name="folder_sent">Envoyés</string>
+    <string name="folder_archive">Archives</string>
+    <string name="folder_trash">Corbeille</string>
+    <string name="delivery_failed">Non remis</string>
+    <string name="delivery_trying">Envoi en cours</string>
 </resources>

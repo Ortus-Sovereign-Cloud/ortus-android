@@ -16,17 +16,30 @@ import kotlinx.serialization.Serializable
 /** Mail by JMAP, as the web client does. */
 @Serializable data class Address(val name: String? = null, val email: String? = null) { val shown get() = name?.ifEmpty { null } ?: email ?: "" }
 @Serializable data class Invite(val method: String, val summary: String, val start: Long? = null, val end: Long? = null, val answer: String? = null, val cancelled: Boolean = false)
+/** How a message one sent is getting to one recipient outside: queued, deferred (trying again), sent or bounced. */
+@Serializable data class Delivery(val recipient: String? = null, val state: String? = null, val attempts: Int? = null, val lastError: String? = null)
 @Serializable data class Email(
-    val id: String, val threadId: String, val subject: String, val from: List<Address>? = null, val replyTo: List<Address>? = null,
+    val id: String, val threadId: String, val subject: String, val from: List<Address>? = null, val to: List<Address>? = null, val replyTo: List<Address>? = null,
+    val ortusDelivery: List<Delivery>? = null,
     val receivedAt: String, val preview: String? = null, val keywords: Map<String, Boolean>? = null,
     val ortusInvite: Invite? = null, val ortusText: String? = null, val messageId: List<String>? = null, val references: List<String>? = null,
 ) {
     val unread get() = keywords?.get("\$seen") != true
     val sender get() = from?.firstOrNull()?.shown ?: ""
+    /** Whom it went to (for Sent). */
+    val recipients get() = (to ?: emptyList()).joinToString(", ") { it.shown }
+    /** The worst delivery state, for a mark in Sent: failed, trying, or null. */
+    val deliveryState: String? get() = ortusDelivery?.let { d ->
+        when {
+            d.any { it.state == "bounced" } -> "failed"
+            d.any { it.state == "deferred" } -> "trying"
+            else -> null
+        }
+    }
 }
 
 private val using = buildJsonArray { listOf("urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission").forEach { add(it) } }
-private val listProps = listOf("threadId", "subject", "from", "receivedAt", "preview", "keywords", "ortusInvite")
+private val listProps = listOf("threadId", "subject", "from", "to", "receivedAt", "preview", "keywords", "ortusInvite", "ortusDelivery")
 private fun props(list: List<String>) = buildJsonArray { list.forEach { add(it) } }
 
 suspend fun Client.jmap(calls: JsonArray): Map<String, JsonObject> {
@@ -43,9 +56,15 @@ suspend fun Client.jmap(calls: JsonArray): Map<String, JsonObject> {
 private fun call(name: String, args: JsonObject, id: String) = buildJsonArray { add(name); add(args); add(id) }
 private fun ref(of: String, name: String, path: String) = buildJsonObject { put("resultOf", of); put("name", name); put("path", path) }
 
-suspend fun Client.inbox(): List<Email> {
+/** The folders the app shows, by their role. */
+val FOLDERS = listOf("inbox", "sent", "archive", "trash")
+
+suspend fun Client.inbox(): List<Email> = mailFolder("inbox")
+
+/** A folder by its role (inbox, sent, archive, trash), newest first, threads collapsed. */
+suspend fun Client.mailFolder(role: String): List<Email> {
     val boxes = jmap(buildJsonArray { add(call("Mailbox/get", JsonObject(emptyMap()), "b")) })["b"]?.get("list")?.jsonArray ?: return emptyList()
-    val inbox = boxes.firstOrNull { it.jsonObject["role"]?.jsonPrimitive?.contentOrNull == "inbox" }?.jsonObject?.get("id")?.jsonPrimitive?.content ?: return emptyList()
+    val inbox = boxes.firstOrNull { it.jsonObject["role"]?.jsonPrimitive?.contentOrNull == role }?.jsonObject?.get("id")?.jsonPrimitive?.content ?: return emptyList()
     val got = jmap(buildJsonArray {
         add(call("Email/query", buildJsonObject {
             put("filter", buildJsonObject { put("inMailbox", inbox) })

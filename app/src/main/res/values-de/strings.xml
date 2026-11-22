@@ -108,4 +108,10 @@
     <string name="join_scanCancel">Abbrechen</string>
     <string name="join_notFound">Für diese E-Mail wurde kein Ortus gefunden. Geben Sie die Adresse aus Ihrem Willkommensbrief ein.</string>
     <string name="join_phoneLinkExpired">Dieser Anmeldecode ist abgelaufen oder wurde benutzt. Öffnen Sie im Web Ihren Namen, dann Auf dem Telefon anmelden, für einen neuen.</string>
+    <string name="folder_inbox">Posteingang</string>
+    <string name="folder_sent">Gesendet</string>
+    <string name="folder_archive">Archiv</string>
+    <string name="folder_trash">Papierkorb</string>
+    <string name="delivery_failed">Nicht zugestellt</string>
+    <string name="delivery_trying">Wird gesendet</string>
 </resources>

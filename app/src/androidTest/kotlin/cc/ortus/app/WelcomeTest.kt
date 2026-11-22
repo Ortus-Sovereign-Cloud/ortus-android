@@ -86,8 +86,12 @@ class WelcomeTest {
             compose.onNodeWithTag("reply").performTextInput("Thanks, will review")
             compose.onNodeWithTag("send").performClick()
             waitFor("the reply sent") { compose.onAllNodesWithText("Sent.").fetchSemanticsNodes().isNotEmpty() }
-            // S1.9: she signs the flood plan with the phone's key.
+            // Her reply is in Sent, with whom it went to.
             androidx.test.espresso.Espresso.pressBack()
+            compose.onNodeWithText("Sent").performClick()
+            waitFor("the reply in Sent") { compose.onAllNodesWithText("Gauge report", substring = true).fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText("Inbox").performClick()
+            // S1.9: she signs the flood plan with the phone's key.
             compose.onNodeWithText("More").performClick()
             compose.onNodeWithText("For you").performClick()
             compose.waitUntil(20_000) { compose.onAllNodesWithText("Flood response plan 2026").fetchSemanticsNodes().isNotEmpty() }

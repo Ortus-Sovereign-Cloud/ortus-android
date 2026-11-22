@@ -59,6 +59,20 @@ class KitTest {
 }
 
 /** Signing in with a password: the ticket, then the one-time code. */
+class DeliveryTest {
+    private fun email(delivery: String) = json.decodeFromString(Email.serializer(),
+        """{"id":"m1","threadId":"t1","subject":"Agreement","to":[{"name":"Anna Kowalska","email":"anna@regional.example"},{"email":"kasia@down.example"}],"receivedAt":"2026-11-22T10:00:00Z","keywords":{"${'$'}seen":true},"ortusDelivery":$delivery}""")
+
+    @Test fun sentShowsWhomAndHowDeliveryGoes() {
+        val delivered = email("""[{"recipient":"anna@regional.example","state":"sent","attempts":1,"lastError":null}]""")
+        assertEquals("Anna Kowalska, kasia@down.example", delivered.recipients)
+        assertNull(delivered.deliveryState)
+        assertEquals("trying", email("""[{"recipient":"kasia@down.example","state":"deferred","attempts":3}]""").deliveryState)
+        assertEquals("failed", email("""[{"recipient":"a","state":"deferred"},{"recipient":"b","state":"bounced"}]""").deliveryState)
+        assertNull(email("null").deliveryState)
+    }
+}
+
 class PasswordTest {
     @kotlin.test.Test fun passwordThenCode() = kotlinx.coroutines.runBlocking {
         val sent = mutableListOf<Pair<String, String>>()

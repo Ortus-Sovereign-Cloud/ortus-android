@@ -108,4 +108,10 @@
     <string name="join_scanCancel">إلغاء</string>
     <string name="join_notFound">لم يُعثر على Ortus لهذا البريد. اكتب العنوان من رسالة الترحيب.</string>
     <string name="join_phoneLinkExpired">انتهت صلاحية رمز الدخول هذا أو استُخدم. على الويب، افتح اسمك ثم سجّل الدخول على هاتفك للحصول على رمز جديد.</string>
+    <string name="folder_inbox">الوارد</string>
+    <string name="folder_sent">المرسلة</string>
+    <string name="folder_archive">الأرشيف</string>
+    <string name="folder_trash">المهملات</string>
+    <string name="delivery_failed">لم تُسلَّم</string>
+    <string name="delivery_trying">قيد الإرسال</string>
 </resources>
