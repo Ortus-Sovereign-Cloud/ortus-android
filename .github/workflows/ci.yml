@@ -84,6 +84,11 @@ jobs:
           target: google_apis
           # On a failure, the app's own log lines say why.
           script: ./gradlew :app:connectedDebugAndroidTest || (adb logcat -d -s ortus:V AndroidRuntime:E System.err:W | tail -n 120; exit 1)
+      # On a failure, whether the test server still answers, and its log.
+      - if: failure()
+        run: |
+          curl -s -m 5 "http://127.0.0.1:${ORTUS_PORT:-0}/api/v1/health" || echo "the test server does not answer"
+          tail -n 80 "${ORTUS_LOG:-/dev/null}" | grep -v '"path":' || true
       - if: always()
         uses: actions/upload-artifact@v4
         with:
