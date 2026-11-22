@@ -171,7 +171,8 @@ class WelcomeTest {
             waitFor("the call screen") { compose.onAllNodesWithTag("call").fetchSemanticsNodes().isNotEmpty() && compose.onAllNodesWithText("Close").fetchSemanticsNodes().isNotEmpty() }
             // Natively: the phone joined and the media node answered its offer.
             waitFor("the media node's answer") { compose.onAllNodesWithTag("answered").fetchSemanticsNodes().isNotEmpty() || compose.onAllNodesWithTag("callError").fetchSemanticsNodes().isNotEmpty() }
-            check(compose.onAllNodesWithTag("callError").fetchSemanticsNodes().isEmpty(), "the call failed")
+            val failed = compose.onAllNodesWithTag("callError").fetchSemanticsNodes()
+            check(failed.isEmpty(), "the call failed: " + failed.joinToString { it.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.Text)?.joinToString().orEmpty() })
             compose.onNodeWithTag("mute").performClick()
             compose.onNodeWithTag("hangUp").performClick()
         }

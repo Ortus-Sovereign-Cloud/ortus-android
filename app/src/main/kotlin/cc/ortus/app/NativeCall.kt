@@ -119,7 +119,8 @@ class NativeCall(private val context: Context, private val client: Client, priva
                     val s = session ?: break
                     runCatching { client.callState(s, muted, camera) }.getOrNull()?.let { info = it; refresh() }
                 }
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
+                android.util.Log.e("ortus", "call: ${e}", e)
                 error = e.message ?: e.toString()
             }
         }
