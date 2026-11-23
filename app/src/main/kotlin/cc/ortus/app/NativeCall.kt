@@ -233,6 +233,11 @@ class NativeCall(private val context: Context, private val client: Client, priva
         report()
     }
 
+    /** Front to back camera and back again. */
+    fun flipCamera() {
+        capturer?.switchCamera(null)
+    }
+
     fun toggleSpeaker() {
         speaker = !speaker
         @Suppress("DEPRECATION")

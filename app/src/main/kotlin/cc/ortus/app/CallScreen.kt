@@ -44,20 +44,31 @@ fun CallScreen(model: Model, room: Room, title: String, close: () -> Unit) {
     val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { allowed = true }
     LaunchedEffect(Unit) { ask.launch(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)) }
     Column(Modifier.fillMaxSize().testTag("call")) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        if ((context as? MainActivity)?.pip != true) Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(title, fontWeight = FontWeight.Bold, color = Text1, fontSize = 18.sp, modifier = Modifier.weight(1f))
             TextButton(close) { Text(stringResource(R.string.call_close)) }
         }
         if (!allowed) return@Column
         val call = remember { NativeCall(context, client, room.id) }
+        val activity = context as? MainActivity
         DisposableEffect(Unit) {
             val window = (context as? Activity)?.window
             window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            activity?.inCall = true
             call.start()
             onDispose {
+                activity?.inCall = false
                 call.end()
                 window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             }
+        }
+        // The small window: only the others' video.
+        if (activity?.pip == true) {
+            Box(Modifier.fillMaxSize()) {
+                call.remotes.firstOrNull { it.video != null }?.let { Tile(it.name, it.video, mirror = false, Modifier.fillMaxSize()) }
+                    ?: Text(call.remotes.firstOrNull()?.name ?: title, color = Text1, modifier = Modifier.align(Alignment.Center))
+            }
+            return@Column
         }
         call.error?.let { Text(it, color = Color(0xFFFF8A80), modifier = Modifier.padding(horizontal = 16.dp).testTag("callError")) }
         val state = when {
@@ -83,6 +94,7 @@ fun CallScreen(model: Model, room: Room, title: String, close: () -> Unit) {
             Control(if (call.muted) R.string.call_unmute else R.string.call_mute, call.muted, "mute") { call.toggleMute() }
             Control(if (call.camera) R.string.call_cameraOff else R.string.call_cameraOn, !call.camera, "camera") { call.toggleCamera() }
             Control(if (call.speaker) R.string.call_earpiece else R.string.call_speaker, false, "speaker") { call.toggleSpeaker() }
+            if (call.camera) Control(R.string.call_flip, false, "flip") { call.flipCamera() }
             Button(close, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5484D)), modifier = Modifier.testTag("hangUp")) {
                 Text(stringResource(R.string.call_hangUp), color = Color.White)
             }

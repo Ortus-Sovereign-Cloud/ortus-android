@@ -22,7 +22,8 @@
         android:theme="@android:style/Theme.Material.NoActionBar">
         <!-- What an organisation's device management may set (the installation). -->
         <meta-data android:name="android.content.APP_RESTRICTIONS" android:resource="@xml/app_restrictions" />
-        <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop" android:windowSoftInputMode="adjustResize">
+        <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop" android:windowSoftInputMode="adjustResize"
+            android:supportsPictureInPicture="true" android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

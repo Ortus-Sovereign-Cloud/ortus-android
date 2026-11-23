@@ -33,6 +33,25 @@ val Teal = Color(0xFF4FD1C5)
 class MainActivity : FragmentActivity() {
     private var model: Model? = null
 
+    /** A call is on screen: leaving the app keeps it in a small window. */
+    var inCall = false
+
+    /** Whether the screen is the small picture-in-picture window now. */
+    var pip by mutableStateOf(false)
+        private set
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        if (inCall && android.os.Build.VERSION.SDK_INT >= 26) {
+            runCatching { enterPictureInPictureMode(android.app.PictureInPictureParams.Builder().setAspectRatio(android.util.Rational(3, 4)).build()) }
+        }
+    }
+
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: android.content.res.Configuration) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        pip = isInPictureInPictureMode
+    }
+
     /** An invitation link while the app is open. */
     override fun onNewIntent(intent: android.content.Intent) {
         super.onNewIntent(intent)

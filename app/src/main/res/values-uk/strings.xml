@@ -144,4 +144,5 @@
     <string name="call_hangUp">Вийти</string>
     <string name="offline_queued">Буде надіслано, щойно з\'явиться зв\'язок</string>
     <string name="offline_waiting">Чекає на надсилання: %d</string>
+    <string name="call_flip">Інша камера</string>
 </resources>
