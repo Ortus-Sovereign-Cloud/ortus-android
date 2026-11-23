@@ -308,13 +308,13 @@ fun CalendarScreen(model: Model) {
 
 @Composable
 fun FolderScreen(model: Model, parent: String?, title: String, open: (Place) -> Unit) {
-    var items by remember { mutableStateOf<List<DriveItem>>(emptyList()) }
-    var failure by remember { mutableStateOf<String?>(null) }
-    var loaded by remember { mutableStateOf(false) }
+    // Another folder starts afresh: never one folder's rows under another's title.
+    var items by remember(parent) { mutableStateOf<List<DriveItem>>(emptyList()) }
+    var failure by remember(parent) { mutableStateOf<String?>(null) }
+    var loaded by remember(parent) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     suspend fun load() {
-        failure = model.loadList({ items.isNotEmpty() }) { items = model.client!!.folder(parent).items }
-        loaded = true
+        failure = model.loadList({ items.isNotEmpty() }) { items = model.client!!.folder(parent).items; loaded = true }
     }
     LaunchedEffect(parent) { load() }
     LazyColumn {
@@ -400,22 +400,22 @@ fun ForYouScreen(model: Model) {
     var reviews by remember { mutableStateOf<List<Review>>(emptyList()) }
     var tasks by remember { mutableStateOf<List<WorkTask>>(emptyList()) }
     var note by remember { mutableStateOf<String?>(null) }
-    var failure by remember { mutableStateOf<String?>(null) }
-    var loaded by remember { mutableStateOf(false) }
+    var reviewsFailure by remember { mutableStateOf<String?>(null) }
+    var tasksFailure by remember { mutableStateOf<String?>(null) }
+    var reviewsLoaded by remember { mutableStateOf(false) }
+    var tasksLoaded by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val signed = stringResource(R.string.foryou_signed); val done = stringResource(R.string.foryou_done); val sentBack = stringResource(R.string.foryou_sentBackComment)
     suspend fun load() {
-        val showing = { reviews.isNotEmpty() || tasks.isNotEmpty() }
-        val a = model.loadList(showing) { reviews = model.client!!.waitingReviews() }
-        val b = model.loadList(showing) { tasks = model.client!!.myTasks() }
-        failure = a ?: b
-        loaded = true
+        // Each list says for itself whether it loaded.
+        reviewsFailure = model.loadList({ reviews.isNotEmpty() }) { reviews = model.client!!.waitingReviews(); reviewsLoaded = true }
+        tasksFailure = model.loadList({ tasks.isNotEmpty() }) { tasks = model.client!!.myTasks(); tasksLoaded = true }
     }
     LaunchedEffect(Unit) { load() }
     LazyColumn(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text(stringResource(R.string.foryou_title), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Text1) }
         note?.let { item { Text(it, color = Text2, modifier = Modifier.testTag("note")) } }
-        item { ListStatus(failure, loaded && reviews.isEmpty(), R.string.foryou_nothing) { scope.launch { load() } } }
+        if (reviewsFailure != null || (reviewsLoaded && reviews.isEmpty())) item { ListStatus(reviewsFailure, reviewsLoaded && reviews.isEmpty(), R.string.foryou_nothing) { scope.launch { load() } } }
         items(reviews, key = { it.id }) { r ->
             Surface(color = Surface, shape = MaterialTheme.shapes.large, modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -433,7 +433,7 @@ fun ForYouScreen(model: Model) {
             }
         }
         item { Text(stringResource(R.string.foryou_tasks, tasks.count { !it.done }), fontWeight = FontWeight.SemiBold, color = Text1) }
-        if (loaded && failure == null && tasks.isEmpty()) item { Text(stringResource(R.string.foryou_noTasks), color = Text2, modifier = Modifier.testTag("listEmpty")) }
+        if (tasksFailure != null || (tasksLoaded && tasks.isEmpty())) item { ListStatus(tasksFailure, tasksLoaded && tasks.isEmpty(), R.string.foryou_noTasks) { scope.launch { load() } } }
         items(tasks, key = { it.id }) { t ->
             Row(Modifier.fillMaxWidth().clickable { scope.launch { runCatching { model.client!!.setDone(t, !t.done) }; load() } }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(t.done, null)
@@ -450,13 +450,12 @@ fun NotificationsScreen(model: Model) {
     var loaded by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     suspend fun load() {
-        failure = model.loadList({ items.isNotEmpty() }) { items = model.client!!.notices() }
-        loaded = true
+        failure = model.loadList({ items.isNotEmpty() }) { items = model.client!!.notices(); loaded = true }
     }
     LaunchedEffect(Unit) { load(); if (failure == null) runCatching { model.client!!.markNoticesRead() } }
     LazyColumn(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text(stringResource(R.string.notify_title), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Text1) }
-        item { ListStatus(failure, loaded && items.isEmpty(), R.string.notify_empty) { scope.launch { load() } } }
+        if (failure != null || (loaded && items.isEmpty())) item { ListStatus(failure, loaded && items.isEmpty(), R.string.notify_empty) { scope.launch { load() } } }
         items(items, key = { it.id }) { n ->
             Column { Text(n.title, color = Text1, fontWeight = if (n.read) FontWeight.Normal else FontWeight.SemiBold); n.detail?.takeIf { it.isNotEmpty() }?.let { Text(it, color = Text2, fontSize = 14.sp) } }
         }
@@ -471,8 +470,8 @@ fun SearchScreen(model: Model) {
     var searched by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     suspend fun search() {
-        failure = model.loadList({ false }) { hits = emptyList(); hits = model.client!!.search(words) }
-        searched = true
+        searched = false
+        failure = model.loadList({ false }) { hits = emptyList(); hits = model.client!!.search(words); searched = true }
     }
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(stringResource(R.string.search_title), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Text1)
