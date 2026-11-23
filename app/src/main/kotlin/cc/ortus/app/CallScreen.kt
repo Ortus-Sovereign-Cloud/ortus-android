@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,14 +42,28 @@ fun CallScreen(model: Model, room: Room, title: String, close: () -> Unit) {
     val client = model.client ?: return close()
     val context = LocalContext.current
     var allowed by remember { mutableStateOf(false) }
-    val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { allowed = true }
+    var noMic by remember { mutableStateOf(false) }
+    val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
+        noMic = granted[Manifest.permission.RECORD_AUDIO] == false
+        allowed = true
+    }
     LaunchedEffect(Unit) { ask.launch(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)) }
     Column(Modifier.fillMaxSize().testTag("call")) {
         if ((context as? MainActivity)?.pip != true) Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(title, fontWeight = FontWeight.Bold, color = Text1, fontSize = 18.sp, modifier = Modifier.weight(1f))
-            TextButton(close) { Text(stringResource(R.string.call_close)) }
         }
         if (!allowed) return@Column
+        if (noMic) {
+            // Nobody would hear them: say so, and where to allow it.
+            Column(Modifier.fillMaxWidth().padding(24.dp).testTag("noMic"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(R.string.call_noMic), color = Text1)
+                Button({
+                    context.startActivity(android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.fromParts("package", context.packageName, null)))
+                }) { Text(stringResource(R.string.call_openSettings)) }
+                TextButton(close) { Text(stringResource(R.string.call_hangUp)) }
+            }
+            return@Column
+        }
         val call = remember { NativeCall(context, client, room.id) }
         val activity = context as? MainActivity
         DisposableEffect(Unit) {
@@ -90,24 +105,27 @@ fun CallScreen(model: Model, room: Room, title: String, close: () -> Unit) {
                 Tile(null, track, mirror = true, Modifier.align(Alignment.BottomEnd).padding(8.dp).size(96.dp, 128.dp))
             }
         }
-        Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-            Control(if (call.muted) R.string.call_unmute else R.string.call_mute, call.muted, "mute") { call.toggleMute() }
-            Control(if (call.camera) R.string.call_cameraOff else R.string.call_cameraOn, !call.camera, "camera") { call.toggleCamera() }
-            Control(if (call.speaker) R.string.call_earpiece else R.string.call_speaker, false, "speaker") { call.toggleSpeaker() }
-            if (call.camera) Control(R.string.call_flip, false, "flip") { call.flipCamera() }
-            Button(close, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5484D)), modifier = Modifier.testTag("hangUp")) {
-                Text(stringResource(R.string.call_hangUp), color = Color.White)
+        Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+            Control(if (call.muted) OrtusIcons.MicOff else OrtusIcons.Mic, if (call.muted) R.string.call_unmute else R.string.call_mute, call.muted, "mute") { call.toggleMute() }
+            Control(if (call.camera) OrtusIcons.Video else OrtusIcons.VideoOff, if (call.camera) R.string.call_cameraOff else R.string.call_cameraOn, !call.camera, "camera") { call.toggleCamera() }
+            Control(OrtusIcons.Speaker, if (call.speaker) R.string.call_earpiece else R.string.call_speaker, call.speaker, "speaker") { call.toggleSpeaker() }
+            if (call.camera) Control(OrtusIcons.Flip, R.string.call_flip, false, "flip") { call.flipCamera() }
+            val leave = stringResource(R.string.call_hangUp)
+            FilledIconButton(close, Modifier.size(56.dp).testTag("hangUp").semantics { contentDescription = leave },
+                colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color(0xFFE5484D))) {
+                Icon(OrtusIcons.HangUp, contentDescription = null, tint = Color.White)
             }
         }
     }
 }
 
+/** A round control (56 dp): its icon, its name for TalkBack, and whether it is on. */
 @Composable
-private fun Control(label: Int, on: Boolean, tag: String, action: () -> Unit) {
+private fun Control(icon: androidx.compose.ui.graphics.vector.ImageVector, label: Int, on: Boolean, tag: String, action: () -> Unit) {
     val text = stringResource(label)
-    OutlinedButton(action, modifier = Modifier.testTag(tag).semantics { contentDescription = text },
-        colors = ButtonDefaults.outlinedButtonColors(containerColor = if (on) Surface2 else Color.Transparent)) {
-        Text(text, color = Text1, fontSize = 13.sp)
+    FilledIconButton(action, Modifier.size(56.dp).testTag(tag).semantics { contentDescription = text; selected = on },
+        colors = IconButtonDefaults.filledIconButtonColors(containerColor = if (on) Text1 else Surface2)) {
+        Icon(icon, contentDescription = null, tint = if (on) Background else Text1)
     }
 }
 

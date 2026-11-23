@@ -149,4 +149,6 @@
     <string name="join_confirmLead">Продовжуйте, лише якщо це Ortus вашої організації.</string>
     <string name="back">Назад</string>
     <string name="compose_remove">Прибрати %1$s</string>
+    <string name="call_noMic">Ortus не може використовувати мікрофон, тож вас ніхто не почує. Дозвольте це в налаштуваннях телефона.</string>
+    <string name="call_openSettings">Відкрити налаштування</string>
 </resources>

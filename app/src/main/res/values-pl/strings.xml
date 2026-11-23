@@ -149,4 +149,6 @@
     <string name="join_confirmLead">Kontynuuj tylko, jeśli to Ortus Twojej organizacji.</string>
     <string name="back">Wstecz</string>
     <string name="compose_remove">Usuń %1$s</string>
+    <string name="call_noMic">Ortus nie może używać mikrofonu, więc nikt by Cię nie usłyszał. Zezwól na to w ustawieniach telefonu.</string>
+    <string name="call_openSettings">Otwórz ustawienia</string>
 </resources>

@@ -149,4 +149,6 @@
     <string name="join_confirmLead">Only continue if this is your organisation\'s Ortus.</string>
     <string name="back">Back</string>
     <string name="compose_remove">Remove %1$s</string>
+    <string name="call_noMic">Ortus may not use the microphone, so nobody would hear you. Allow it in the phone\'s settings.</string>
+    <string name="call_openSettings">Open settings</string>
 </resources>

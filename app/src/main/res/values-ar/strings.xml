@@ -149,4 +149,6 @@
     <string name="join_confirmLead">تابع فقط إن كان هذا Ortus الخاص بمؤسستك.</string>
     <string name="back">رجوع</string>
     <string name="compose_remove">إزالة %1$s</string>
+    <string name="call_noMic">لا يمكن لـ Ortus استخدام الميكروفون، فلن يسمعك أحد. اسمح بذلك في إعدادات الهاتف.</string>
+    <string name="call_openSettings">فتح الإعدادات</string>
 </resources>

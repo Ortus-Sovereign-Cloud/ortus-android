@@ -149,4 +149,6 @@
     <string name="join_confirmLead">Ne continuez que s\'il s\'agit de l\'Ortus de votre organisation.</string>
     <string name="back">Retour</string>
     <string name="compose_remove">Retirer %1$s</string>
+    <string name="call_noMic">Ortus ne peut pas utiliser le micro : personne ne vous entendrait. Autorisez-le dans les réglages du téléphone.</string>
+    <string name="call_openSettings">Ouvrir les réglages</string>
 </resources>
