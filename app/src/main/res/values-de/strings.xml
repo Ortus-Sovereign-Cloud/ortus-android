@@ -158,4 +158,8 @@
     <string name="drive_empty">Dieser Ordner ist leer.</string>
     <string name="chat_noRooms">Noch keine Räume.</string>
     <string name="chat_locked">Nachrichten in diesem Raum sind Ende-zu-Ende-verschlüsselt. Öffnen Sie ihn am Computer, um zu lesen und zu schreiben.</string>
+    <string name="call_incoming">Eingehender Anruf</string>
+    <string name="call_answer">Annehmen</string>
+    <string name="call_decline">Ablehnen</string>
+    <string name="call_channel">Anrufe</string>
 </resources>

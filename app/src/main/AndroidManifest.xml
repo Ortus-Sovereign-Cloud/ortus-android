@@ -11,6 +11,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Notifications while the app is closed (asked once, after sign-in). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- A call rings on the lock screen. -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
     <application
         android:label="Ortus"
@@ -52,6 +54,7 @@
                 <data android:scheme="https" android:host="join.ortus.cc" android:path="/i" />
             </intent-filter>
         </activity>
+        <receiver android:name=".DeclineReceiver" android:exported="false" />
         <!-- Pushes from the phone's UnifiedPush distributor (ntfy and others). -->
         <receiver android:name=".PushReceiver" android:enabled="true" android:exported="true">
             <intent-filter>

@@ -43,6 +43,15 @@ object Push {
         json.decodeFromString(PushNotice.serializer(), String(data))
     }
 
+    /** Whether a push is a call (it rings). */
+    fun isCall(message: ByteArray): Boolean =
+        runCatching { json.parseToJsonElement(String(message)).jsonObject["c"]?.jsonPrimitive?.contentOrNull == "1" }.getOrDefault(false)
+
+    /** The room a call's path names (`/calls?room=…`). */
+    fun callRoom(path: String?): String? =
+        path?.takeIf { it.startsWith("/calls") }?.substringAfter("room=", "")?.substringBefore("&")?.takeIf { it.isNotEmpty() }
+            ?.let { java.net.URLDecoder.decode(it, "UTF-8") }
+
     /** Which tab a notification's path opens: 0 Mail, 1 Chat, 2 Calendar, 3 Files, 4 More. */
     fun tab(path: String?): Int {
         val p = path ?: ""

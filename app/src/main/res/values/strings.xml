@@ -158,4 +158,8 @@
     <string name="drive_empty">This folder is empty.</string>
     <string name="chat_noRooms">No rooms yet.</string>
     <string name="chat_locked">Messages in this room are end-to-end encrypted. Open it on a computer to read and write.</string>
+    <string name="call_incoming">Incoming call</string>
+    <string name="call_answer">Answer</string>
+    <string name="call_decline">Decline</string>
+    <string name="call_channel">Calls</string>
 </resources>

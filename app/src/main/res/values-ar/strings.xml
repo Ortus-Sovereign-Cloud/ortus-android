@@ -158,4 +158,8 @@
     <string name="drive_empty">هذا المجلد فارغ.</string>
     <string name="chat_noRooms">لا توجد غرف بعد.</string>
     <string name="chat_locked">الرسائل في هذه الغرفة مشفّرة من طرف إلى طرف. افتحها على حاسوب للقراءة والكتابة.</string>
+    <string name="call_incoming">مكالمة واردة</string>
+    <string name="call_answer">رد</string>
+    <string name="call_decline">رفض</string>
+    <string name="call_channel">المكالمات</string>
 </resources>

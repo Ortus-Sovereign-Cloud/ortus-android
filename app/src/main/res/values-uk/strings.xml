@@ -158,4 +158,8 @@
     <string name="drive_empty">Ця тека порожня.</string>
     <string name="chat_noRooms">Кімнат ще немає.</string>
     <string name="chat_locked">Повідомлення в цій кімнаті наскрізно зашифровані. Відкрийте її на комп\'ютері, щоб читати й писати.</string>
+    <string name="call_incoming">Вхідний дзвінок</string>
+    <string name="call_answer">Відповісти</string>
+    <string name="call_decline">Відхилити</string>
+    <string name="call_channel">Дзвінки</string>
 </resources>

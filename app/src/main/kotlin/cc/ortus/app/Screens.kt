@@ -66,6 +66,14 @@ fun Tabs(model: Model) {
     var tab by model::tab
     val stack = remember { mutableStateListOf<Place>() }
     LaunchedEffect(Unit) { model.refresh() }
+    // A call answered from its ringing: straight into it.
+    LaunchedEffect(model.answered) {
+        val (id, title) = model.answered ?: return@LaunchedEffect
+        model.answered = null
+        tab = 1
+        stack.clear()
+        stack.add(Place.Call(Room(id = id, name = title, kind = "channel"), title))
+    }
     val labels = listOf(R.string.tab_mail, R.string.tab_chat, R.string.tab_calendar, R.string.tab_files, R.string.tab_more)
     Scaffold(containerColor = Background, topBar = {
         if (model.offline || model.waiting > 0) {

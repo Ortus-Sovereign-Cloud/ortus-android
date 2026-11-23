@@ -31,6 +31,15 @@ class Model(private val activity: FragmentActivity) {
     var busy by mutableStateOf(false)
     /** The open tab (a notification's tap chooses it). */
     var tab by mutableStateOf(0)
+    /** A call answered from its ringing notification: (room id, title). */
+    var answered by mutableStateOf<Pair<String, String>?>(null)
+
+    /** Takes in a call the person answered (the ringing stops). */
+    fun answer(intent: android.content.Intent?) {
+        val room = intent?.getStringExtra("callRoom") ?: return
+        context.getSystemService(android.app.NotificationManager::class.java).cancel(intent.getIntExtra("callNotice", 0))
+        answered = room to (intent.getStringExtra("callTitle") ?: "")
+    }
     /** The installation could not be reached: screens show what was kept. */
     var offline by mutableStateOf(false)
     /** Messages written offline that wait to be sent. */

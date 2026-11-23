@@ -158,4 +158,8 @@
     <string name="drive_empty">Ce dossier est vide.</string>
     <string name="chat_noRooms">Aucun salon pour l’instant.</string>
     <string name="chat_locked">Les messages de ce salon sont chiffrés de bout en bout. Ouvrez-le sur un ordinateur pour lire et écrire.</string>
+    <string name="call_incoming">Appel entrant</string>
+    <string name="call_answer">Répondre</string>
+    <string name="call_decline">Refuser</string>
+    <string name="call_channel">Appels</string>
 </resources>

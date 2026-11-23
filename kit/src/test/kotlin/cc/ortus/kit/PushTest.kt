@@ -47,6 +47,14 @@ class PushTest {
         assertNull(Push.parts("not json".toByteArray()))
     }
 
+    @Test fun callsAreKnown() {
+        kotlin.test.assertTrue(Push.isCall("""{"n":"n1","s":"https://o.example","c":1}""".toByteArray()))
+        kotlin.test.assertFalse(Push.isCall("""{"n":"n1","s":"https://o.example"}""".toByteArray()))
+        assertEquals("r1", Push.callRoom("/calls?room=r1"))
+        assertEquals("r 2", Push.callRoom("/calls?room=r%202&x=1"))
+        assertNull(Push.callRoom("/chat?room=r1"))
+    }
+
     @Test fun opensTheRightTab() {
         assertEquals(0, Push.tab("/mail?thread=t1"))
         assertEquals(1, Push.tab("/chat?room=r1"))
