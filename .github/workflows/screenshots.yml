@@ -95,7 +95,7 @@ jobs:
             adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 -e mobile show -e level 4
             adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false
             ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=cc.ortus.app.StoreScreenshots
-            mkdir -p screenshots && adb pull /sdcard/Android/data/cc.ortus.app/files/screenshots/. screenshots/ && ls -la screenshots
+            mkdir -p screenshots && adb pull /data/local/tmp/ortus-shots/. screenshots/ && ls -la screenshots
       - if: always()
         uses: actions/upload-artifact@v4
         with:

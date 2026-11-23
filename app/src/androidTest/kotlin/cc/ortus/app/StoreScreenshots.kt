@@ -1,7 +1,6 @@
 package cc.ortus.app
 
 import android.content.Intent
-import android.graphics.Bitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.test.core.app.ActivityScenario
@@ -9,7 +8,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
-import java.io.File
 
 /**
  * The Play Store screenshots, against an Ortus filled with the sample
@@ -21,12 +19,17 @@ class StoreScreenshots {
     @get:Rule val compose = createEmptyComposeRule()
     private val args = InstrumentationRegistry.getArguments()
 
+    /** The system's own screen capture, into /data/local/tmp (it outlives the app, which the test run uninstalls). */
+    private fun shell(command: String) {
+        val out = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(command)
+        android.os.ParcelFileDescriptor.AutoCloseInputStream(out).use { it.readBytes() }
+    }
+
     private fun shot(name: String) {
         compose.waitForIdle()
         Thread.sleep(2000)
-        val bitmap = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
-        val dir = File(InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir(null), "screenshots").apply { mkdirs() }
-        File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        shell("mkdir -p /data/local/tmp/ortus-shots")
+        shell("screencap -p /data/local/tmp/ortus-shots/$name.png")
     }
 
     private fun waitText(text: String, timeout: Long = 30_000) =
