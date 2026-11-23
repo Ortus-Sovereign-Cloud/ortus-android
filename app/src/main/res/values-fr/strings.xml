@@ -145,4 +145,8 @@
     <string name="offline_queued">Sera envoyé dès le retour de la connexion</string>
     <string name="offline_waiting">En attente d\'envoi : %d</string>
     <string name="call_flip">Retourner</string>
+    <string name="join_confirm">Se connecter à %1$s ?</string>
+    <string name="join_confirmLead">Ne continuez que s\'il s\'agit de l\'Ortus de votre organisation.</string>
+    <string name="back">Retour</string>
+    <string name="compose_remove">Retirer %1$s</string>
 </resources>

@@ -145,4 +145,8 @@
     <string name="offline_queued">Буде надіслано, щойно з\'явиться зв\'язок</string>
     <string name="offline_waiting">Чекає на надсилання: %d</string>
     <string name="call_flip">Інша камера</string>
+    <string name="join_confirm">Увійти до %1$s?</string>
+    <string name="join_confirmLead">Продовжуйте, лише якщо це Ortus вашої організації.</string>
+    <string name="back">Назад</string>
+    <string name="compose_remove">Прибрати %1$s</string>
 </resources>

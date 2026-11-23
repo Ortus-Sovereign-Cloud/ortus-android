@@ -145,4 +145,8 @@
     <string name="offline_queued">Will send when you\'re back online</string>
     <string name="offline_waiting">%d waiting to send</string>
     <string name="call_flip">Flip</string>
+    <string name="join_confirm">Sign in to %1$s?</string>
+    <string name="join_confirmLead">Only continue if this is your organisation\'s Ortus.</string>
+    <string name="back">Back</string>
+    <string name="compose_remove">Remove %1$s</string>
 </resources>

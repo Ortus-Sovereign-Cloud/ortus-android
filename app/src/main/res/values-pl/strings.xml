@@ -145,4 +145,8 @@
     <string name="offline_queued">Zostanie wysłane po odzyskaniu połączenia</string>
     <string name="offline_waiting">Czeka na wysłanie: %d</string>
     <string name="call_flip">Odwróć</string>
+    <string name="join_confirm">Zalogować się do %1$s?</string>
+    <string name="join_confirmLead">Kontynuuj tylko, jeśli to Ortus Twojej organizacji.</string>
+    <string name="back">Wstecz</string>
+    <string name="compose_remove">Usuń %1$s</string>
 </resources>

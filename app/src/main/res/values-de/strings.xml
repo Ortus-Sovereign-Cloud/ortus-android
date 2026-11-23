@@ -145,4 +145,8 @@
     <string name="offline_queued">Wird gesendet, sobald Sie wieder online sind</string>
     <string name="offline_waiting">Warten auf Versand: %d</string>
     <string name="call_flip">Kamera wechseln</string>
+    <string name="join_confirm">Bei %1$s anmelden?</string>
+    <string name="join_confirmLead">Fahren Sie nur fort, wenn das das Ortus Ihrer Organisation ist.</string>
+    <string name="back">Zurück</string>
+    <string name="compose_remove">%1$s entfernen</string>
 </resources>

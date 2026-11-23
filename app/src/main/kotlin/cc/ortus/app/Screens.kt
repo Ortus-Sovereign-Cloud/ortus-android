@@ -1,5 +1,9 @@
 package cc.ortus.app
 
+import androidx.compose.ui.semantics.semantics
+
+import androidx.compose.ui.semantics.contentDescription
+
 import cc.ortus.kit.quickly
 
 import androidx.compose.foundation.clickable
@@ -72,14 +76,19 @@ fun Tabs(model: Model) {
     }, bottomBar = {
         NavigationBar(containerColor = Surface) {
             labels.forEachIndexed { i, l ->
-                NavigationBarItem(selected = tab == i, onClick = { tab = i; stack.clear() }, icon = { Text("•") }, label = { Text(stringResource(l)) })
+                val icon = listOf(OrtusIcons.Mail, OrtusIcons.Chat, OrtusIcons.Calendar, OrtusIcons.Files, OrtusIcons.More)[i]
+                NavigationBarItem(selected = tab == i, onClick = { tab = i; stack.clear() }, icon = { Icon(icon, contentDescription = null) }, label = { Text(stringResource(l)) })
             }
         }
     }) { pad ->
-        Box(Modifier.padding(pad)) {
+        Column(Modifier.padding(pad)) {
             val open: (Place) -> Unit = { stack.add(it) }
             val back: () -> Unit = { stack.removeLastOrNull() }
             androidx.activity.compose.BackHandler(enabled = stack.isNotEmpty()) { back() }
+            // A way back on every screen opened from a list (a call has its own Leave).
+            if (stack.isNotEmpty() && stack.last() !is Place.Call) {
+                IconButton(back, Modifier.testTag("back")) { Icon(OrtusIcons.Back, contentDescription = stringResource(R.string.back), tint = Text1) }
+            }
             when (val top = stack.lastOrNull()) {
                 is Place.Thread -> ThreadScreen(model, top.id)
                 is Place.Channel -> ChannelScreen(model, top.room, top.title, open)
@@ -225,6 +234,7 @@ fun ChatsScreen(model: Model, open: (Place) -> Unit) {
 @Composable
 fun ChannelScreen(model: Model, room: Room, title: String, open: (Place) -> Unit) {
     var data by remember { mutableStateOf<Messages?>(null) }
+    var chatNote by remember { mutableStateOf<String?>(null) }
     var text by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     suspend fun load() { runCatching { quickly({ model.client!!.messages(room.id) }) { data = it } } }
@@ -244,9 +254,18 @@ fun ChannelScreen(model: Model, room: Room, title: String, open: (Place) -> Unit
                 }
             }
         }
+        chatNote?.let { Text(it, color = Text2, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 12.dp).testTag("chatNote")) }
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(text, { text = it }, Modifier.weight(1f).testTag("message"), placeholder = { Text(stringResource(R.string.chat_message, title)) })
-            Button({ scope.launch { val said = text; text = ""; runCatching { model.client!!.say(said, room.id) }; load() } }, enabled = text.isNotBlank(), modifier = Modifier.padding(start = 8.dp)) { Text(stringResource(R.string.thread_send)) }
+            Button({ scope.launch {
+                val said = text
+                text = ""
+                runCatching { model.client!!.say(said, room.id) }.onFailure {
+                    // Queued offline: it goes by itself. Anything else: the words come back.
+                    if (it is cc.ortus.kit.Queued) chatNote = model.queuedText() else { text = said; chatNote = model.say(it) }
+                }
+                load()
+            } }, enabled = text.isNotBlank(), modifier = Modifier.padding(start = 8.dp).testTag("sendChat")) { Text(stringResource(R.string.thread_send)) }
         }
     }
 }
@@ -527,7 +546,8 @@ fun ComposeScreen(model: Model, done: () -> Unit) {
         items(to.toList(), key = { it }) { a ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(a, color = Text1, modifier = Modifier.weight(1f))
-                TextButton({ to.remove(a) }) { Text("×") }
+                val removeLabel = stringResource(R.string.compose_remove, a)
+                TextButton({ to.remove(a) }, Modifier.semantics { contentDescription = removeLabel }) { Text("×") }
             }
         }
         item {

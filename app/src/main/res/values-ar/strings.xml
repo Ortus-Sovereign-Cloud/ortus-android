@@ -145,4 +145,8 @@
     <string name="offline_queued">سيُرسل عند عودة الاتصال</string>
     <string name="offline_waiting">بانتظار الإرسال: %d</string>
     <string name="call_flip">تبديل الكاميرا</string>
+    <string name="join_confirm">تسجيل الدخول إلى %1$s؟</string>
+    <string name="join_confirmLead">تابع فقط إن كان هذا Ortus الخاص بمؤسستك.</string>
+    <string name="back">رجوع</string>
+    <string name="compose_remove">إزالة %1$s</string>
 </resources>

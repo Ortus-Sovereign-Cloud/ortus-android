@@ -40,6 +40,12 @@ class WelcomeTest {
     }
 
     /** A check that always runs (Kotlin's assert is off on Android). */
+    /** A link names its installation; the person says yes. */
+    private fun confirmLink() {
+        waitFor("the link's installation to confirm") { compose.onAllNodesWithTag("confirmLink").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("confirmLink").performClick()
+    }
+
     private fun check(ok: Boolean, what: String) { if (!ok) throw AssertionError(what) }
 
     /** Each import account as login:state:copied, from the server. */
@@ -125,6 +131,7 @@ class WelcomeTest {
             .appendQueryParameter("server", server).appendQueryParameter("code", code).build()
         val intent = Intent(Intent.ACTION_VIEW, link, context, MainActivity::class.java).putExtra("reset", true)
         ActivityScenario.launch<MainActivity>(intent).use {
+            confirmLink()
             waitFor("the welcome screen after the link") { compose.onAllNodesWithTag("welcome").fetchSemanticsNodes().isNotEmpty() }
         }
     }
@@ -161,6 +168,7 @@ class WelcomeTest {
             grantRuntimePermission(context.packageName, android.Manifest.permission.RECORD_AUDIO)
         }
         ActivityScenario.launch<MainActivity>(intent).use {
+            confirmLink()
             waitFor("the welcome screen after the sign-in code") { compose.onAllNodesWithTag("welcome").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithTag("makeKey").performClick()
             waitFor("the tab bar after making the key") { compose.onAllNodesWithText("Chat").fetchSemanticsNodes().isNotEmpty() }

@@ -70,7 +70,8 @@ class MainActivity : FragmentActivity() {
         // when the screen is made again (a rotation, a configuration change),
         // a used one-time code must not be tried again, nor the key forgotten.
         val first = savedInstanceState == null
-        if (first && intent.getBooleanExtra("reset", false)) { PhoneKey.forget(this); Store.clear(this) }
+        // Test builds only: another app must not wipe the key or name a server.
+        if (BuildConfig.DEBUG && first && intent.getBooleanExtra("reset", false)) { PhoneKey.forget(this); Store.clear(this) }
         val model = Model(this)
         this.model = model
         if (first) intent?.dataString?.let { model.open(it) }
@@ -79,7 +80,9 @@ class MainActivity : FragmentActivity() {
             MaterialTheme(colorScheme = darkColorScheme(primary = Accent, background = Background, surface = Surface, onBackground = Text1, onSurface = Text1)) {
                 Surface(Modifier.fillMaxSize(), color = Background) {
                     when (model.stage) {
-                        Stage.Join -> JoinScreen(model, intent.getStringExtra("server") ?: managedServer() ?: Store.get(this, "server") ?: "", intent.getStringExtra("code") ?: "")
+                        Stage.Join -> JoinScreen(model,
+                            intent.getStringExtra("server")?.takeIf { BuildConfig.DEBUG } ?: managedServer() ?: Store.get(this, "server") ?: "",
+                            intent.getStringExtra("code")?.takeIf { BuildConfig.DEBUG } ?: "")
                         Stage.Welcome -> WelcomeScreen(model)
                         Stage.In -> Tabs(model)
                     }
@@ -118,6 +121,19 @@ fun JoinScreen(model: Model, server0: String, code0: String) {
     Column(Modifier.fillMaxSize().imePadding().padding(24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
       Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Mark()
+        model.confirming?.let { link ->
+            val host = runCatching { java.net.URI(link.server).let { u -> u.host + if (u.port > 0) ":${u.port}" else "" } }.getOrDefault(link.server)
+            Surface(color = Surface2, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth().testTag("confirm")) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(stringResource(R.string.join_confirm, host), color = Text1, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.join_confirmLead), color = Text2, fontSize = 14.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button({ model.confirmLink() }, Modifier.testTag("confirmLink")) { Text(stringResource(R.string.join_continue)) }
+                        TextButton({ model.confirming = null }) { Text(stringResource(R.string.compose_cancel)) }
+                    }
+                }
+            }
+        }
         Text(stringResource(R.string.join_title), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Text1)
         Text(stringResource(R.string.join_lead), color = Text2)
         OutlinedTextField(server, { server = it }, label = { Text(stringResource(R.string.join_server)) }, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("server"))

@@ -53,6 +53,8 @@ class StoreScreenshots {
             .appendQueryParameter("server", server).appendQueryParameter("code", code).build()
         val intent = Intent(Intent.ACTION_VIEW, open, context, MainActivity::class.java).putExtra("reset", true)
         ActivityScenario.launch<MainActivity>(intent).use {
+            compose.waitUntil(30_000) { compose.onAllNodesWithTag("confirmLink").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithTag("confirmLink").performClick()
             compose.waitUntil(30_000) { compose.onAllNodesWithTag("makeKey").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithTag("makeKey").performClick()
             compose.waitUntil(30_000) { compose.onAllNodesWithText("Chat").fetchSemanticsNodes().isNotEmpty() }

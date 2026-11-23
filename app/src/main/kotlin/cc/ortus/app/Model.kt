@@ -119,6 +119,17 @@ class Model(private val activity: FragmentActivity) {
         }
         if (stage != Stage.Join || busy) return
         handed = invitation
+        // A link may come from anyone: the person sees which installation
+        // it signs them into and says yes first.
+        confirming = invitation
+    }
+
+    /** A link waiting for the person's yes (the installation it names is shown). */
+    var confirming by mutableStateOf<InvitationLink?>(null)
+
+    fun confirmLink() {
+        val invitation = confirming ?: return
+        confirming = null
         activity.lifecycleScope.launch {
             when (invitation.kind) {
                 InvitationLink.Kind.Invite -> join(invitation.server, invitation.code)
