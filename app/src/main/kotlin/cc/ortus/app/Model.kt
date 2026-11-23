@@ -33,6 +33,13 @@ class Model(private val activity: FragmentActivity) {
     var tab by mutableStateOf(0)
     /** The installation could not be reached: screens show what was kept. */
     var offline by mutableStateOf(false)
+    /** Messages written offline that wait to be sent. */
+    var waiting by mutableStateOf(0)
+
+    fun queuedText(): String = context.getString(R.string.offline_queued)
+
+    /** Messages written without a connection (no-backup storage: kept until sent). */
+    private fun outbox(server: String) = cc.ortus.kit.Outbox(java.io.File(context.noBackupFilesDir, "ortus-outbox-" + cc.ortus.kit.sha256(server.toByteArray()).take(8).joinToString("") { "%02x".format(it) } + ".json"))
 
     /** The answers this phone keeps for an installation (app cache: never backed up). */
     private fun cache(server: String) = cc.ortus.kit.ResponseCache(java.io.File(context.cacheDir, "ortus-" + cc.ortus.kit.sha256(server.toByteArray()).take(8).joinToString("") { "%02x".format(it) }))
@@ -41,6 +48,10 @@ class Model(private val activity: FragmentActivity) {
     private fun makeClient(server: String, token: String? = null): Client {
         val transport = cc.ortus.kit.CachingTransport(OkTransport, cache(server)) { reached ->
             activity.runOnUiThread { if (offline != !reached) offline = !reached }
+        }
+        transport.outbox = outbox(server).also { box ->
+            box.changed = { n -> activity.runOnUiThread { waiting = n } }
+            waiting = box.count
         }
         return Client(server, token, transport)
     }
@@ -228,7 +239,7 @@ class Model(private val activity: FragmentActivity) {
 
     /** The session ended on the server: sign in again (the key stays). */
     private fun expired() {
-        client?.let { cache(it.server).clear() }
+        client?.let { cache(it.server).clear(); outbox(it.server).clear() }
         Store.put(context, "session", null)
         client = null
         me = null
@@ -300,7 +311,7 @@ class Model(private val activity: FragmentActivity) {
     suspend fun signOut() {
         stopPush()
         client?.let { c -> runCatching { c.raw("POST", "/session/sign-out", kotlinx.serialization.json.JsonObject(emptyMap())) } }
-        client?.let { cache(it.server).clear() }
+        client?.let { cache(it.server).clear(); outbox(it.server).clear() }
         Store.put(context, "session", null)
         client = null
         me = null

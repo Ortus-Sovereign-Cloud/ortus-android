@@ -64,8 +64,8 @@ fun Tabs(model: Model) {
     LaunchedEffect(Unit) { model.refresh() }
     val labels = listOf(R.string.tab_mail, R.string.tab_chat, R.string.tab_calendar, R.string.tab_files, R.string.tab_more)
     Scaffold(containerColor = Background, topBar = {
-        if (model.offline) {
-            Text(stringResource(R.string.offline_banner), color = Text2, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+        if (model.offline || model.waiting > 0) {
+            Text(if (model.waiting > 0) stringResource(R.string.offline_waiting, model.waiting) else stringResource(R.string.offline_banner), color = Text2, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.fillMaxWidth().background(Surface).statusBarsPadding().padding(vertical = 6.dp).testTag("offline"),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center)
         }
@@ -195,7 +195,9 @@ fun ThreadScreen(model: Model, id: String) {
             OutlinedTextField(reply, { reply = it }, Modifier.weight(1f).testTag("reply"), placeholder = { Text(stringResource(R.string.thread_reply, emails.lastOrNull()?.sender ?: "")) })
             Button({ scope.launch {
                 val last = emails.lastOrNull() ?: return@launch
-                note = runCatching { model.client!!.reply(last, reply); reply = ""; sent }.getOrElse { model.say(it) }
+                note = runCatching { model.client!!.reply(last, reply); reply = ""; sent }.getOrElse {
+                    if (it is cc.ortus.kit.Queued) { reply = ""; model.queuedText() } else model.say(it)
+                }
                 load()
             } }, enabled = reply.isNotBlank(), modifier = Modifier.padding(start = 8.dp).testTag("send")) { Text(stringResource(R.string.thread_send)) }
         }
@@ -507,7 +509,7 @@ fun ComposeScreen(model: Model, done: () -> Unit) {
                     scope.launch {
                         runCatching { model.client!!.send(id, to.toList(), subject, text) }
                             .onSuccess { model.mailNote = sentText; done() }
-                            .onFailure { error = model.say(it) }
+                            .onFailure { if (it is cc.ortus.kit.Queued) { model.mailNote = model.queuedText(); done() } else error = model.say(it) }
                         sending = false
                     }
                 }, enabled = !sending && from != null && (to.isNotEmpty() || address(typed)), modifier = Modifier.testTag("sendMessage")) { Text(stringResource(R.string.compose_send)) }

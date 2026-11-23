@@ -142,4 +142,6 @@
     <string name="call_speaker">Głośnik</string>
     <string name="call_earpiece">Słuchawka</string>
     <string name="call_hangUp">Wyjdź</string>
+    <string name="offline_queued">Zostanie wysłane po odzyskaniu połączenia</string>
+    <string name="offline_waiting">Czeka na wysłanie: %d</string>
 </resources>

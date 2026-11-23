@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -56,4 +57,34 @@ class CacheTest {
         assertFalse(CachingTransport.reads("POST", "https://ortus.example/api/v1/session/sign-out", null))
         assertFalse(CachingTransport.reads("GET", "https://ortus.example/api/v1/push/notices/n1", null))
     }
+
+    @Test fun messagesWaitAndGoOnceBackOnline(): Unit = runBlocking {
+        val dir = kotlin.io.path.createTempDirectory("ortus-outbox").toFile()
+        var online = false
+        val sent = mutableListOf<Triple<String, Map<String, String>, String?>>()
+        val net = Transport { m, u, h, b ->
+            if (!online) throw java.net.ConnectException("no network")
+            sent += Triple("$m $u", h, b?.let { String(it) })
+            200 to "{}".toByteArray()
+        }
+        val t = CachingTransport(net, ResponseCache(File(dir, "c")))
+        t.outbox = Outbox(File(dir, "outbox.json"))
+        val c = Client("https://ortus.example", "s1", t)
+        assertFailsWith<Queued> { c.raw("POST", "/chat/rooms/r1/messages", JsonObject(mapOf("text" to JsonPrimitive("On my way")))) }
+        assertEquals(1, t.outbox!!.count)
+        // Other writes still fail plainly.
+        val other = runCatching { c.raw("POST", "/calendar/events", JsonObject(emptyMap())) }.exceptionOrNull()
+        assertTrue(other != null && other !is Queued, "$other")
+        assertEquals(1, t.outbox!!.count)
+        // Back online: the next call sends what waited, with the session.
+        online = true
+        c.raw("GET", "/chat/rooms")
+        repeat(50) { if (t.outbox!!.count != 0) Thread.sleep(20) }
+        assertEquals(0, t.outbox!!.count)
+        val message = sent.first { it.first.endsWith("/messages") }
+        assertEquals("Bearer s1", message.second["Authorization"])
+        assertTrue(message.third!!.contains("On my way"))
+        assertFalse(File(dir, "outbox.json").let { it.exists() && it.readText().contains("s1") }, "no session on disk")
+    }
 }
+

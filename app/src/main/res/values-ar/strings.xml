@@ -142,4 +142,6 @@
     <string name="call_speaker">مكبّر الصوت</string>
     <string name="call_earpiece">سماعة الأذن</string>
     <string name="call_hangUp">مغادرة</string>
+    <string name="offline_queued">سيُرسل عند عودة الاتصال</string>
+    <string name="offline_waiting">بانتظار الإرسال: %d</string>
 </resources>

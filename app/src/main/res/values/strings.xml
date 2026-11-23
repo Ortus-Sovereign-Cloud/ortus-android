@@ -142,4 +142,6 @@
     <string name="call_speaker">Speaker</string>
     <string name="call_earpiece">Earpiece</string>
     <string name="call_hangUp">Leave</string>
+    <string name="offline_queued">Will send when you\'re back online</string>
+    <string name="offline_waiting">%d waiting to send</string>
 </resources>

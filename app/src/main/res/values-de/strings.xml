@@ -142,4 +142,6 @@
     <string name="call_speaker">Lautsprecher</string>
     <string name="call_earpiece">Hörer</string>
     <string name="call_hangUp">Verlassen</string>
+    <string name="offline_queued">Wird gesendet, sobald Sie wieder online sind</string>
+    <string name="offline_waiting">Warten auf Versand: %d</string>
 </resources>
