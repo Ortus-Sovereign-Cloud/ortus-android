@@ -10,7 +10,7 @@ import kotlinx.serialization.json.add
 @Serializable data class CreationOptions(val challenge: String, val rp: Rp) { @Serializable data class Rp(val id: String? = null) }
 @Serializable data class RequestOptions(val challenge: String, val rpId: String? = null)
 
-@Serializable data class Room(val id: String, val name: String, val kind: String, val topic: String? = null, val unread: Int? = null, val federated: Boolean? = null, val with: List<String>? = null)
+@Serializable data class Room(val id: String, val name: String, val kind: String, val topic: String? = null, val unread: Int? = null, val federated: Boolean? = null, val with: List<String>? = null, val encrypted: Boolean? = null)
 @Serializable data class Person(val name: String, val email: String? = null)
 @Serializable data class Rooms(val rooms: List<Room>, val people: Map<String, Person> = emptyMap()) {
     fun title(r: Room): String = when {

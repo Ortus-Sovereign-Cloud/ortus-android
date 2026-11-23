@@ -237,6 +237,15 @@ fun ChatsScreen(model: Model, open: (Place) -> Unit) {
 
 @Composable
 fun ChannelScreen(model: Model, room: Room, title: String, open: (Place) -> Unit) {
+    // End-to-end rooms are read on a computer in V1 (the phone cannot
+    // decrypt them yet): never show their ciphertext as text.
+    if (room.encrypted == true) {
+        Column(Modifier.fillMaxSize().padding(24.dp).testTag("locked"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(title, fontWeight = FontWeight.Bold, color = Text1, fontSize = 18.sp)
+            Text(stringResource(R.string.chat_locked), color = Text2)
+        }
+        return
+    }
     var data by remember { mutableStateOf<Messages?>(null) }
     var chatNote by remember { mutableStateOf<String?>(null) }
     var text by remember { mutableStateOf("") }

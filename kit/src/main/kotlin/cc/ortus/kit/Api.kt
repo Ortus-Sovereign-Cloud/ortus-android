@@ -156,7 +156,10 @@ suspend fun Client.reply(last: Email, text: String) {
 suspend fun Client.rsvp(email: Email, answer: String) { raw("POST", "/mail/messages/${email.id}/rsvp", body("answer" to answer)) }
 suspend fun Client.rooms(): Rooms = call("GET", "/chat/rooms")
 suspend fun Client.messages(room: String): Messages = call("GET", "/chat/rooms/$room/messages")
-suspend fun Client.say(text: String, room: String) { raw("POST", "/chat/rooms/$room/messages", body("text" to text)) }
+/** Sends a message; its client id makes a resend from the outbox one message. */
+suspend fun Client.say(text: String, room: String) {
+    raw("POST", "/chat/rooms/$room/messages", body("text" to text, "client_id" to java.util.UUID.randomUUID().toString()))
+}
 suspend fun Client.events(from: Long, to: Long): List<Event> = call<Events>("GET", "/calendar/events?from=$from&to=$to").events.sortedBy { it.start }
 suspend fun Client.answer(event: Event, answer: String) { raw("POST", "/calendar/events/${event.id}/rsvp", body("answer" to answer)) }
 suspend fun Client.folder(parent: String?): Folder = call("GET", "/drive/items" + (parent?.let { "?parent=$it" } ?: ""))

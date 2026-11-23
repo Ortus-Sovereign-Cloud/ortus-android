@@ -157,4 +157,5 @@
     <string name="foryou_noTasks">Aucune tâche.</string>
     <string name="drive_empty">Ce dossier est vide.</string>
     <string name="chat_noRooms">Aucun salon pour l’instant.</string>
+    <string name="chat_locked">Les messages de ce salon sont chiffrés de bout en bout. Ouvrez-le sur un ordinateur pour lire et écrire.</string>
 </resources>

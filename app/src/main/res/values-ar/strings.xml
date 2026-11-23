@@ -157,4 +157,5 @@
     <string name="foryou_noTasks">لا توجد مهام.</string>
     <string name="drive_empty">هذا المجلد فارغ.</string>
     <string name="chat_noRooms">لا توجد غرف بعد.</string>
+    <string name="chat_locked">الرسائل في هذه الغرفة مشفّرة من طرف إلى طرف. افتحها على حاسوب للقراءة والكتابة.</string>
 </resources>

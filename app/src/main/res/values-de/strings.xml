@@ -157,4 +157,5 @@
     <string name="foryou_noTasks">Keine Aufgaben.</string>
     <string name="drive_empty">Dieser Ordner ist leer.</string>
     <string name="chat_noRooms">Noch keine Räume.</string>
+    <string name="chat_locked">Nachrichten in diesem Raum sind Ende-zu-Ende-verschlüsselt. Öffnen Sie ihn am Computer, um zu lesen und zu schreiben.</string>
 </resources>

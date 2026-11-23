@@ -157,4 +157,5 @@
     <string name="foryou_noTasks">Завдань немає.</string>
     <string name="drive_empty">Ця тека порожня.</string>
     <string name="chat_noRooms">Кімнат ще немає.</string>
+    <string name="chat_locked">Повідомлення в цій кімнаті наскрізно зашифровані. Відкрийте її на комп\'ютері, щоб читати й писати.</string>
 </resources>
