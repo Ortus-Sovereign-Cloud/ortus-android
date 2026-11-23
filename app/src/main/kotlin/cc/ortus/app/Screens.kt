@@ -216,9 +216,13 @@ fun ThreadScreen(model: Model, id: String) {
 @Composable
 fun ChatsScreen(model: Model, open: (Place) -> Unit) {
     var data by remember { mutableStateOf<Rooms?>(null) }
-    LaunchedEffect(Unit) { runCatching { quickly({ model.client!!.rooms() }) { data = it } } }
+    var failure by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
+    suspend fun load() { failure = model.loadList({ data?.rooms?.isNotEmpty() == true }) { quickly({ model.client!!.rooms() }) { data = it } } }
+    LaunchedEffect(Unit) { load() }
     LazyColumn {
         item { Title(stringResource(R.string.tab_chat)) }
+        item { ListStatus(failure, data?.rooms?.isEmpty() == true, R.string.chat_noRooms, PaddingValues(16.dp)) { scope.launch { load() } } }
         items(data?.rooms ?: emptyList(), key = { it.id }) { r ->
             val title = data!!.title(r)
             Row(Modifier.fillMaxWidth().clickable { open(Place.Channel(r, title)) }.padding(16.dp, 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -305,9 +309,17 @@ fun CalendarScreen(model: Model) {
 @Composable
 fun FolderScreen(model: Model, parent: String?, title: String, open: (Place) -> Unit) {
     var items by remember { mutableStateOf<List<DriveItem>>(emptyList()) }
-    LaunchedEffect(parent) { items = runCatching { model.client!!.folder(parent).items }.getOrDefault(emptyList()) }
+    var failure by remember { mutableStateOf<String?>(null) }
+    var loaded by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    suspend fun load() {
+        failure = model.loadList({ items.isNotEmpty() }) { items = model.client!!.folder(parent).items }
+        loaded = true
+    }
+    LaunchedEffect(parent) { load() }
     LazyColumn {
         item { Title(title) }
+        item { ListStatus(failure, loaded && items.isEmpty(), R.string.drive_empty, PaddingValues(16.dp)) { scope.launch { load() } } }
         items(items, key = { it.id }) { i ->
             Row(Modifier.fillMaxWidth().clickable {
                 open(when { i.kind == "folder" -> Place.Folder(i.id, i.name); i.mime == "application/vnd.ortus.doc" -> Place.Doc(i.id); else -> Place.Share(i) })
@@ -388,17 +400,22 @@ fun ForYouScreen(model: Model) {
     var reviews by remember { mutableStateOf<List<Review>>(emptyList()) }
     var tasks by remember { mutableStateOf<List<WorkTask>>(emptyList()) }
     var note by remember { mutableStateOf<String?>(null) }
+    var failure by remember { mutableStateOf<String?>(null) }
+    var loaded by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val signed = stringResource(R.string.foryou_signed); val done = stringResource(R.string.foryou_done); val sentBack = stringResource(R.string.foryou_sentBackComment)
     suspend fun load() {
-        reviews = runCatching { model.client!!.waitingReviews() }.getOrDefault(emptyList())
-        tasks = runCatching { model.client!!.myTasks() }.getOrDefault(emptyList())
+        val showing = { reviews.isNotEmpty() || tasks.isNotEmpty() }
+        val a = model.loadList(showing) { reviews = model.client!!.waitingReviews() }
+        val b = model.loadList(showing) { tasks = model.client!!.myTasks() }
+        failure = a ?: b
+        loaded = true
     }
     LaunchedEffect(Unit) { load() }
     LazyColumn(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text(stringResource(R.string.foryou_title), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Text1) }
         note?.let { item { Text(it, color = Text2, modifier = Modifier.testTag("note")) } }
-        if (reviews.isEmpty()) item { Text(stringResource(R.string.foryou_nothing), color = Text2) }
+        item { ListStatus(failure, loaded && reviews.isEmpty(), R.string.foryou_nothing) { scope.launch { load() } } }
         items(reviews, key = { it.id }) { r ->
             Surface(color = Surface, shape = MaterialTheme.shapes.large, modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -416,6 +433,7 @@ fun ForYouScreen(model: Model) {
             }
         }
         item { Text(stringResource(R.string.foryou_tasks, tasks.count { !it.done }), fontWeight = FontWeight.SemiBold, color = Text1) }
+        if (loaded && failure == null && tasks.isEmpty()) item { Text(stringResource(R.string.foryou_noTasks), color = Text2, modifier = Modifier.testTag("listEmpty")) }
         items(tasks, key = { it.id }) { t ->
             Row(Modifier.fillMaxWidth().clickable { scope.launch { runCatching { model.client!!.setDone(t, !t.done) }; load() } }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(t.done, null)
@@ -428,9 +446,17 @@ fun ForYouScreen(model: Model) {
 @Composable
 fun NotificationsScreen(model: Model) {
     var items by remember { mutableStateOf<List<Notice>>(emptyList()) }
-    LaunchedEffect(Unit) { items = runCatching { model.client!!.notices() }.getOrDefault(emptyList()); runCatching { model.client!!.markNoticesRead() } }
+    var failure by remember { mutableStateOf<String?>(null) }
+    var loaded by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    suspend fun load() {
+        failure = model.loadList({ items.isNotEmpty() }) { items = model.client!!.notices() }
+        loaded = true
+    }
+    LaunchedEffect(Unit) { load(); if (failure == null) runCatching { model.client!!.markNoticesRead() } }
     LazyColumn(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text(stringResource(R.string.notify_title), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Text1) }
+        item { ListStatus(failure, loaded && items.isEmpty(), R.string.notify_empty) { scope.launch { load() } } }
         items(items, key = { it.id }) { n ->
             Column { Text(n.title, color = Text1, fontWeight = if (n.read) FontWeight.Normal else FontWeight.SemiBold); n.detail?.takeIf { it.isNotEmpty() }?.let { Text(it, color = Text2, fontSize = 14.sp) } }
         }
@@ -441,12 +467,19 @@ fun NotificationsScreen(model: Model) {
 fun SearchScreen(model: Model) {
     var words by remember { mutableStateOf("") }
     var hits by remember { mutableStateOf<List<SearchHit>>(emptyList()) }
+    var failure by remember { mutableStateOf<String?>(null) }
+    var searched by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    suspend fun search() {
+        failure = model.loadList({ false }) { hits = emptyList(); hits = model.client!!.search(words) }
+        searched = true
+    }
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(stringResource(R.string.search_title), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Text1)
         OutlinedTextField(words, { words = it }, Modifier.fillMaxWidth(), placeholder = { Text(stringResource(R.string.search_prompt)) }, singleLine = true,
-            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { scope.launch { hits = runCatching { model.client!!.search(words) }.getOrDefault(emptyList()) } }),
+            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { scope.launch { search() } }),
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search))
+        ListStatus(failure, searched && hits.isEmpty(), R.string.search_none) { scope.launch { search() } }
         hits.forEach { h -> Column { Text(h.title, color = Text1); h.snippet?.let { Text(it, color = Text2, fontSize = 13.sp, maxLines = 2) } } }
     }
 }
@@ -460,12 +493,14 @@ fun AdminScreen(model: Model) {
     val passwords = remember { mutableStateMapOf<String, String>() }
     val scope = rememberCoroutineScope()
     val asked = stringResource(R.string.admin_asked); val retrying = stringResource(R.string.admin_retrying); val invited = stringResource(R.string.admin_invited)
-    suspend fun load() { imports = runCatching { model.client!!.imports() }.getOrDefault(emptyList()) }
+    var failure by remember { mutableStateOf<String?>(null) }
+    suspend fun load() { failure = model.loadList({ imports.isNotEmpty() }) { imports = model.client!!.imports() } }
     LaunchedEffect(Unit) { load() }
     val failed = imports.flatMap { it.accounts }.filter { it.failed }
     LazyColumn(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text(stringResource(R.string.admin_title), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Text1) }
-        item { Text(stringResource(if (failed.isEmpty()) R.string.admin_normal else R.string.admin_needs), fontWeight = FontWeight.SemiBold, color = Text1) }
+        if (failure != null) item { ListStatus(failure, false, R.string.admin_normal) { scope.launch { load() } } }
+        else item { Text(stringResource(if (failed.isEmpty()) R.string.admin_normal else R.string.admin_needs), fontWeight = FontWeight.SemiBold, color = Text1) }
         // What the last action did, where it is seen (not under the list).
         note?.let { item { Text(it, color = Text2, modifier = Modifier.testTag("note")) } }
         if (failed.isNotEmpty()) {

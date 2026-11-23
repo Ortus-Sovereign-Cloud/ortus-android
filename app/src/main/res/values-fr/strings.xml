@@ -151,4 +151,10 @@
     <string name="compose_remove">Retirer %1$s</string>
     <string name="call_noMic">Ortus ne peut pas utiliser le micro : personne ne vous entendrait. Autorisez-le dans les réglages du téléphone.</string>
     <string name="call_openSettings">Ouvrir les réglages</string>
+    <string name="list_tryAgain">Réessayer</string>
+    <string name="notify_empty">Aucune notification.</string>
+    <string name="search_none">Rien trouvé.</string>
+    <string name="foryou_noTasks">Aucune tâche.</string>
+    <string name="drive_empty">Ce dossier est vide.</string>
+    <string name="chat_noRooms">Aucun salon pour l’instant.</string>
 </resources>

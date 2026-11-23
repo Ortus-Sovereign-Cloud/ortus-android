@@ -151,4 +151,10 @@
     <string name="compose_remove">Прибрати %1$s</string>
     <string name="call_noMic">Ortus не може використовувати мікрофон, тож вас ніхто не почує. Дозвольте це в налаштуваннях телефона.</string>
     <string name="call_openSettings">Відкрити налаштування</string>
+    <string name="list_tryAgain">Спробувати ще раз</string>
+    <string name="notify_empty">Сповіщень немає.</string>
+    <string name="search_none">Нічого не знайдено.</string>
+    <string name="foryou_noTasks">Завдань немає.</string>
+    <string name="drive_empty">Ця тека порожня.</string>
+    <string name="chat_noRooms">Кімнат ще немає.</string>
 </resources>

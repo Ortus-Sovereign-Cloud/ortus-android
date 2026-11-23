@@ -151,4 +151,10 @@
     <string name="compose_remove">إزالة %1$s</string>
     <string name="call_noMic">لا يمكن لـ Ortus استخدام الميكروفون، فلن يسمعك أحد. اسمح بذلك في إعدادات الهاتف.</string>
     <string name="call_openSettings">فتح الإعدادات</string>
+    <string name="list_tryAgain">حاول مرة أخرى</string>
+    <string name="notify_empty">لا توجد إشعارات.</string>
+    <string name="search_none">لم يُعثر على شيء.</string>
+    <string name="foryou_noTasks">لا توجد مهام.</string>
+    <string name="drive_empty">هذا المجلد فارغ.</string>
+    <string name="chat_noRooms">لا توجد غرف بعد.</string>
 </resources>

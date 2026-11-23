@@ -151,4 +151,10 @@
     <string name="compose_remove">Remove %1$s</string>
     <string name="call_noMic">Ortus may not use the microphone, so nobody would hear you. Allow it in the phone\'s settings.</string>
     <string name="call_openSettings">Open settings</string>
+    <string name="list_tryAgain">Try again</string>
+    <string name="notify_empty">No notifications.</string>
+    <string name="search_none">Nothing found.</string>
+    <string name="foryou_noTasks">No tasks.</string>
+    <string name="drive_empty">This folder is empty.</string>
+    <string name="chat_noRooms">No rooms yet.</string>
 </resources>
