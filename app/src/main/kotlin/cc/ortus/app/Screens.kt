@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -45,6 +46,8 @@ sealed class Place {
     data class Doc(val id: String) : Place()
     data object Compose : Place()
     data class Call(val room: Room, val title: String) : Place()
+    /** The calendar on a given day (an event found by search). */
+    data class Day(val at: Long) : Place()
     data object ForYou : Place()
     data object Notifications : Place()
     data object Search : Place()
@@ -66,6 +69,8 @@ fun Tabs(model: Model) {
     var tab by model::tab
     val stack = remember { mutableStateListOf<Place>() }
     LaunchedEffect(Unit) { model.refresh() }
+    // The bell counts again when a push arrives (and once signed in).
+    LaunchedEffect(Unit) { Pushes.arrived.collect { model.countUnread() } }
     // A call answered from its ringing: straight into it.
     LaunchedEffect(model.answered) {
         val (id, title) = model.answered ?: return@LaunchedEffect
@@ -74,20 +79,20 @@ fun Tabs(model: Model) {
         stack.clear()
         stack.add(Place.Call(Room(id = id, name = title, kind = "channel"), title))
     }
-    val labels = listOf(R.string.tab_mail, R.string.tab_chat, R.string.tab_calendar, R.string.tab_files, R.string.tab_more)
     Scaffold(containerColor = Background, topBar = {
-        if (model.offline || model.waiting > 0) {
-            Text(if (model.waiting > 0) stringResource(R.string.offline_waiting, model.waiting) else stringResource(R.string.offline_banner), color = Text2, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.fillMaxWidth().background(Surface).statusBarsPadding().padding(vertical = 6.dp).testTag("offline"),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        val banner = model.offline || model.waiting > 0
+        Column {
+            if (banner) {
+                Text(if (model.waiting > 0) stringResource(R.string.offline_waiting, model.waiting) else stringResource(R.string.offline_banner), color = Text2, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.fillMaxWidth().background(Surface).statusBarsPadding().padding(vertical = 6.dp).testTag("offline"),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            }
+            // The main screens: search and the bell at the top.
+            if (stack.isEmpty()) TopActions(model.unread, search = { stack.add(Place.Search) }, notifications = { stack.add(Place.Notifications) },
+                modifier = if (banner) Modifier else Modifier.statusBarsPadding())
         }
     }, bottomBar = {
-        NavigationBar(containerColor = Surface) {
-            labels.forEachIndexed { i, l ->
-                val icon = listOf(OrtusIcons.Mail, OrtusIcons.Chat, OrtusIcons.Calendar, OrtusIcons.Files, OrtusIcons.More)[i]
-                NavigationBarItem(selected = tab == i, onClick = { tab = i; stack.clear() }, icon = { Icon(icon, contentDescription = null) }, label = { Text(stringResource(l)) })
-            }
-        }
+        Sections(tab) { tab = it; stack.clear() }
     }) { pad ->
         Column(Modifier.padding(pad)) {
             val open: (Place) -> Unit = { stack.add(it) }
@@ -107,13 +112,14 @@ fun Tabs(model: Model) {
                 is Place.Call -> CallScreen(model, top.room, top.title, back)
                 Place.ForYou -> ForYouScreen(model)
                 Place.Notifications -> NotificationsScreen(model)
-                Place.Search -> SearchScreen(model)
+                Place.Search -> SearchScreen(model, open)
+                is Place.Day -> CalendarScreen(model, top.at)
                 Place.Admin -> AdminScreen(model)
                 null -> when (tab) {
                     0 -> InboxScreen(model, open)
                     1 -> ChatsScreen(model, open)
                     2 -> CalendarScreen(model)
-                    3 -> FolderScreen(model, null, stringResource(R.string.tab_files), open)
+                    3 -> FolderScreen(model, null, stringResource(R.string.tab_drive), open)
                     else -> MoreScreen(model, open)
                 }
             }
@@ -292,8 +298,10 @@ fun ChannelScreen(model: Model, room: Room, title: String, open: (Place) -> Unit
 }
 
 @Composable
-fun CalendarScreen(model: Model) {
-    var day by remember { mutableLongStateOf(java.time.LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()) }
+fun CalendarScreen(model: Model, at: Long? = null) {
+    // Today, or the day of the event a search found.
+    var day by remember { mutableLongStateOf((at?.let { java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate() } ?: java.time.LocalDate.now())
+        .atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()) }
     var events by remember { mutableStateOf<List<Event>>(emptyList()) }
     val scope = rememberCoroutineScope()
     suspend fun load() { runCatching { quickly({ model.client!!.events(day, day + 86_400_000) }) { events = it } } }
@@ -469,7 +477,11 @@ fun NotificationsScreen(model: Model) {
     suspend fun load() {
         failure = model.loadList({ items.isNotEmpty() }) { items = model.client!!.notices(); loaded = true }
     }
-    LaunchedEffect(Unit) { load(); if (failure == null) runCatching { model.client!!.markNoticesRead() } }
+    LaunchedEffect(Unit) {
+        load()
+        // Read now: the bell's badge goes (counted again, as others may have come).
+        if (failure == null) runCatching { model.client!!.markNoticesRead() }.onSuccess { model.unread = 0; model.countUnread() }
+    }
     LazyColumn(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text(stringResource(R.string.notify_title), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Text1) }
         if (failure != null || (loaded && items.isEmpty())) item { ListStatus(failure, loaded && items.isEmpty(), R.string.notify_empty) { scope.launch { load() } } }
@@ -480,23 +492,29 @@ fun NotificationsScreen(model: Model) {
 }
 
 @Composable
-fun SearchScreen(model: Model) {
+fun SearchScreen(model: Model, open: (Place) -> Unit) {
     var words by remember { mutableStateOf("") }
     var hits by remember { mutableStateOf<List<SearchHit>>(emptyList()) }
     var failure by remember { mutableStateOf<String?>(null) }
     var searched by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    // A result opens its item here, or its web page when the app has no screen for it.
+    fun go(h: SearchHit) = scope.launch {
+        val c = model.client ?: return@launch
+        place(h) { runCatching { c.rooms() }.getOrNull() }?.let(open) ?: openWeb(context, c.server + h.path)
+    }
     suspend fun search() {
         searched = false
         failure = model.loadList({ false }) { hits = emptyList(); hits = model.client!!.search(words); searched = true }
     }
-    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(stringResource(R.string.search_title), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Text1)
-        OutlinedTextField(words, { words = it }, Modifier.fillMaxWidth(), placeholder = { Text(stringResource(R.string.search_prompt)) }, singleLine = true,
+        OutlinedTextField(words, { words = it }, Modifier.fillMaxWidth().testTag("searchWords"), placeholder = { Text(stringResource(R.string.search_prompt)) }, singleLine = true,
             keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { scope.launch { search() } }),
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search))
         ListStatus(failure, searched && hits.isEmpty(), R.string.search_none) { scope.launch { search() } }
-        hits.forEach { h -> Column { Text(h.title, color = Text1); h.snippet?.let { Text(it, color = Text2, fontSize = 13.sp, maxLines = 2) } } }
+        SearchHits(hits) { go(it) }
     }
 }
 

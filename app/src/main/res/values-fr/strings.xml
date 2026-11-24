@@ -22,10 +22,10 @@
     <string name="welcome_lost">Téléphone perdu ? L\'informatique désactive la clé en une minute.</string>
     <string name="welcome_keyName">Ortus sur ce téléphone</string>
     <string name="welcome_noKey">Ce téléphone n\'a pas encore de clé.</string>
-    <string name="tab_mail">Messagerie</string>
+    <string name="tab_mail">Courrier</string>
     <string name="tab_chat">Discussion</string>
     <string name="tab_calendar">Agenda</string>
-    <string name="tab_files">Fichiers</string>
+    <string name="tab_drive">Fichiers</string>
     <string name="tab_more">Plus</string>
     <string name="more_signOut">Se déconnecter</string>
     <string name="inbox_title">Boîte de réception</string>
@@ -68,6 +68,11 @@
     <string name="foryou_done">Fait.</string>
     <string name="foryou_sentBack">Renvoyé depuis mon téléphone.</string>
     <string name="notify_title">Notifications</string>
+    <plurals name="notify_unread">
+        <item quantity="one">Notifications, %d non lue</item>
+        <item quantity="many">Notifications, %d non lues</item>
+        <item quantity="other">Notifications, %d non lues</item>
+    </plurals>
     <string name="search_title">Recherche</string>
     <string name="search_prompt">Messages, fichiers, événements, personnes</string>
     <string name="admin_title">Administration</string>

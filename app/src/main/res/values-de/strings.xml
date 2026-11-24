@@ -22,10 +22,10 @@
     <string name="welcome_lost">Telefon verloren? Die IT schaltet den Schlüssel in einer Minute ab.</string>
     <string name="welcome_keyName">Ortus auf diesem Telefon</string>
     <string name="welcome_noKey">Dieses Telefon hat noch keinen Schlüssel.</string>
-    <string name="tab_mail">Mail</string>
+    <string name="tab_mail">E-Mail</string>
     <string name="tab_chat">Chat</string>
     <string name="tab_calendar">Kalender</string>
-    <string name="tab_files">Dateien</string>
+    <string name="tab_drive">Dateien</string>
     <string name="tab_more">Mehr</string>
     <string name="more_signOut">Abmelden</string>
     <string name="inbox_title">Posteingang</string>
@@ -68,6 +68,10 @@
     <string name="foryou_done">Erledigt.</string>
     <string name="foryou_sentBack">Vom Telefon zurückgegeben.</string>
     <string name="notify_title">Benachrichtigungen</string>
+    <plurals name="notify_unread">
+        <item quantity="one">Benachrichtigungen, %d ungelesen</item>
+        <item quantity="other">Benachrichtigungen, %d ungelesen</item>
+    </plurals>
     <string name="search_title">Suche</string>
     <string name="search_prompt">Mail, Dateien, Termine, Personen</string>
     <string name="admin_title">Verwaltung</string>

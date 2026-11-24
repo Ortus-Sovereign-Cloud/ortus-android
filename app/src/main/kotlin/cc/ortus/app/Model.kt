@@ -17,11 +17,15 @@ import cc.ortus.kit.Client
 import cc.ortus.kit.Me
 import cc.ortus.kit.Passkey
 import cc.ortus.kit.unregisterPush
+import cc.ortus.kit.unreadNotices
 import kotlin.coroutines.resume
 import kotlinx.coroutines.launch
 import kotlin.coroutines.suspendCoroutine
 
 enum class Stage { Join, Welcome, In }
+
+/** Bumped by each push that arrives while the app runs (the bell counts again). */
+object Pushes { val arrived = kotlinx.coroutines.flow.MutableStateFlow(0) }
 
 /** Where the app is, and the signed-in client. */
 class Model(private val activity: FragmentActivity) {
@@ -76,6 +80,16 @@ class Model(private val activity: FragmentActivity) {
             stage = Stage.In
             startPush()
         }
+    }
+
+    /** Unread notifications, as the web's bell counts them (the top bar's badge). */
+    var unread by mutableStateOf(0)
+
+    /** Counts them again: on resume, on a push, after reading them. */
+    suspend fun countUnread() {
+        val c = client ?: return
+        if (stage != Stage.In) return
+        runCatching { c.unreadNotices() }.onSuccess { unread = it }
     }
 
     suspend fun refresh() {

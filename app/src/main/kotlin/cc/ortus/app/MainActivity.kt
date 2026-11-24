@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
 import kotlinx.coroutines.launch
+import androidx.lifecycle.lifecycleScope
 
 val Background = Color(0xFF0B0D12)
 val Surface = Color(0xFF13161C)
@@ -50,6 +51,12 @@ class MainActivity : FragmentActivity() {
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: android.content.res.Configuration) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         pip = isInPictureInPictureMode
+    }
+
+    /** Back in the app: the bell counts again (read elsewhere, or new). */
+    override fun onResume() {
+        super.onResume()
+        model?.let { m -> lifecycleScope.launch { m.countUnread() } }
     }
 
     /** An invitation link while the app is open. */

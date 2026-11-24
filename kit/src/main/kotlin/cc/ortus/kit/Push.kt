@@ -52,7 +52,7 @@ object Push {
         path?.takeIf { it.startsWith("/calls") }?.substringAfter("room=", "")?.substringBefore("&")?.takeIf { it.isNotEmpty() }
             ?.let { java.net.URLDecoder.decode(it, "UTF-8") }
 
-    /** Which tab a notification's path opens: 0 Mail, 1 Chat, 2 Calendar, 3 Files, 4 More. */
+    /** Which tab a notification's path opens: 0 Mail, 1 Chat, 2 Calendar, 3 Drive, 4 More. */
     fun tab(path: String?): Int {
         val p = path ?: ""
         return when {

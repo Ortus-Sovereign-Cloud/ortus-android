@@ -25,7 +25,7 @@
     <string name="tab_mail">Mail</string>
     <string name="tab_chat">Chat</string>
     <string name="tab_calendar">Calendar</string>
-    <string name="tab_files">Files</string>
+    <string name="tab_drive">Drive</string>
     <string name="tab_more">More</string>
     <string name="more_signOut">Sign out</string>
     <string name="inbox_title">Inbox</string>
@@ -68,6 +68,10 @@
     <string name="foryou_done">Done.</string>
     <string name="foryou_sentBack">Sent back from my phone.</string>
     <string name="notify_title">Notifications</string>
+    <plurals name="notify_unread">
+        <item quantity="one">Notifications, %d unread</item>
+        <item quantity="other">Notifications, %d unread</item>
+    </plurals>
     <string name="search_title">Search</string>
     <string name="search_prompt">Mail, files, events, people</string>
     <string name="admin_title">Admin</string>

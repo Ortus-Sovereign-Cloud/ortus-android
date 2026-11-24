@@ -85,6 +85,18 @@ class WelcomeTest {
             waitFor("the tab bar after making the key") { compose.onAllNodesWithText("More").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("More").performClick()
             compose.waitUntil(10_000) { compose.onAllNodesWithText("iryna@ministry.example").fetchSemanticsNodes().isNotEmpty() }
+            // Review U6: Drive named as on the web; search in the top bar,
+            // and a result opens its item (Anna's message, in its thread).
+            compose.onNodeWithText("Drive").assertExists()
+            compose.onNodeWithTag("openNotifications").assertExists()
+            compose.onNodeWithTag("openSearch").performClick()
+            compose.onNodeWithTag("searchWords").performTextInput("Gauge")
+            compose.onNodeWithTag("searchWords").performImeAction()
+            val gauge = hasTestTag("hit") and hasText("Gauge report", substring = true)
+            waitFor("Anna's message among the results") { compose.onAllNodes(gauge).fetchSemanticsNodes().isNotEmpty() }
+            androidx.test.espresso.Espresso.closeSoftKeyboard()
+            compose.onAllNodes(gauge)[0].performClick()
+            waitFor("the result's thread") { compose.onAllNodesWithTag("reply").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("Mail").performClick()
             waitFor("Anna's mail in the inbox") { compose.onAllNodesWithText("Gauge report and updated shelter agreement").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("Gauge report and updated shelter agreement").performClick()

@@ -44,8 +44,11 @@ import kotlinx.serialization.json.add
 @Serializable data class Tasks(val tasks: List<WorkTask>)
 
 @Serializable data class Notice(val id: String, val app: String, val kind: String, val title: String, val detail: String? = null, val at: Long, val read: Boolean)
-@Serializable data class Notices(val items: List<Notice>)
-@Serializable data class SearchHit(val app: String, val id: String, val title: String, val snippet: String? = null)
+/** The list and how many are unread (the web's bell shows the same count). */
+@Serializable data class Notices(val items: List<Notice>, val unread: Int = 0)
+/** Where a result opens (`path`, as the web follows it) and what the app shows of it. */
+@Serializable data class HitMeta(val path: String? = null, val kind: String? = null, val mime: String? = null, val start: Long? = null)
+@Serializable data class SearchHit(val app: String, val id: String, val title: String, val snippet: String? = null, val meta: HitMeta? = null)
 @Serializable data class SearchResults(val results: List<SearchHit>)
 
 @Serializable data class DocText(val name: String, val now: String, val label: String? = null)

@@ -12,6 +12,7 @@ import cc.ortus.kit.Push
 import cc.ortus.kit.PushRegistration
 import cc.ortus.kit.json
 import cc.ortus.kit.registerPush
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.runBlocking
 import org.unifiedpush.android.connector.MessagingReceiver
 
@@ -56,6 +57,8 @@ class PushReceiver : MessagingReceiver() {
                 val room = Push.callRoom(notice?.path)
                 if (call && room != null) ring(context, id, notice?.title ?: context.getString(R.string.call_incoming), room)
                 else show(context, id, notice?.title ?: context.getString(R.string.push_new), notice?.detail.orEmpty(), notice?.path)
+                // An open app's bell counts again (the notice is on the server by now).
+                Pushes.arrived.update { it + 1 }
             } finally {
                 done.finish()
             }

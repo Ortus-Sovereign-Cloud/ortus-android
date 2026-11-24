@@ -23,9 +23,9 @@
     <string name="welcome_keyName">Ortus على هذا الهاتف</string>
     <string name="welcome_noKey">لا يملك هذا الهاتف مفتاحًا بعد.</string>
     <string name="tab_mail">البريد</string>
-    <string name="tab_chat">الدردشة</string>
+    <string name="tab_chat">المحادثة</string>
     <string name="tab_calendar">التقويم</string>
-    <string name="tab_files">الملفات</string>
+    <string name="tab_drive">الملفات</string>
     <string name="tab_more">المزيد</string>
     <string name="more_signOut">تسجيل الخروج</string>
     <string name="inbox_title">البريد الوارد</string>
@@ -68,6 +68,14 @@
     <string name="foryou_done">تم.</string>
     <string name="foryou_sentBack">أُعيد من هاتفي.</string>
     <string name="notify_title">الإشعارات</string>
+    <plurals name="notify_unread">
+        <item quantity="zero">الإشعارات، لا شيء غير مقروء</item>
+        <item quantity="one">الإشعارات، %d غير مقروء</item>
+        <item quantity="two">الإشعارات، %d غير مقروءين</item>
+        <item quantity="few">الإشعارات، %d غير مقروءة</item>
+        <item quantity="many">الإشعارات، %d غير مقروء</item>
+        <item quantity="other">الإشعارات، %d غير مقروء</item>
+    </plurals>
     <string name="search_title">بحث</string>
     <string name="search_prompt">البريد والملفات والأحداث والأشخاص</string>
     <string name="admin_title">الإدارة</string>

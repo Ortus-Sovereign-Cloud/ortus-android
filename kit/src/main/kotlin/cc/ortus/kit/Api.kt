@@ -171,6 +171,7 @@ suspend fun Client.decide(review: Review, approve: Boolean, comment: String = ""
 suspend fun Client.myTasks(): List<WorkTask> = call<Tasks>("GET", "/tasks/mine").tasks
 suspend fun Client.setDone(t: WorkTask, done: Boolean) { raw("PATCH", "/tasks/tasks/${t.id}", body("state" to if (done) "done" else "todo")) }
 suspend fun Client.notices(): List<Notice> = call<Notices>("GET", "/notifications").items
+suspend fun Client.unreadNotices(): Int = call<Notices>("GET", "/notifications").unread
 suspend fun Client.markNoticesRead() { raw("POST", "/notifications/read", body("all" to true)) }
 suspend fun Client.search(words: String): List<SearchHit> = call<SearchResults>("GET", "/search?q=" + java.net.URLEncoder.encode(words, "UTF-8")).results
 suspend fun Client.docText(doc: String): DocText = call("GET", "/docs/documents/$doc/changes")

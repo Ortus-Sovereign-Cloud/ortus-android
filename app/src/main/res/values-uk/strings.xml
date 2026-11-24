@@ -25,7 +25,7 @@
     <string name="tab_mail">Пошта</string>
     <string name="tab_chat">Чат</string>
     <string name="tab_calendar">Календар</string>
-    <string name="tab_files">Файли</string>
+    <string name="tab_drive">Диск</string>
     <string name="tab_more">Більше</string>
     <string name="more_signOut">Вийти</string>
     <string name="inbox_title">Вхідні</string>
@@ -68,6 +68,12 @@
     <string name="foryou_done">Готово.</string>
     <string name="foryou_sentBack">Повернуто з телефона.</string>
     <string name="notify_title">Сповіщення</string>
+    <plurals name="notify_unread">
+        <item quantity="one">Сповіщення, %d непрочитане</item>
+        <item quantity="few">Сповіщення, %d непрочитані</item>
+        <item quantity="many">Сповіщення, %d непрочитаних</item>
+        <item quantity="other">Сповіщення, %d непрочитаного</item>
+    </plurals>
     <string name="search_title">Пошук</string>
     <string name="search_prompt">Пошта, файли, події, люди</string>
     <string name="admin_title">Адміністрування</string>

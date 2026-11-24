@@ -25,7 +25,7 @@
     <string name="tab_mail">Poczta</string>
     <string name="tab_chat">Czat</string>
     <string name="tab_calendar">Kalendarz</string>
-    <string name="tab_files">Pliki</string>
+    <string name="tab_drive">Dysk</string>
     <string name="tab_more">Więcej</string>
     <string name="more_signOut">Wyloguj</string>
     <string name="inbox_title">Odebrane</string>
@@ -68,6 +68,12 @@
     <string name="foryou_done">Gotowe.</string>
     <string name="foryou_sentBack">Odesłano z telefonu.</string>
     <string name="notify_title">Powiadomienia</string>
+    <plurals name="notify_unread">
+        <item quantity="one">Powiadomienia, %d nieprzeczytane</item>
+        <item quantity="few">Powiadomienia, %d nieprzeczytane</item>
+        <item quantity="many">Powiadomienia, %d nieprzeczytanych</item>
+        <item quantity="other">Powiadomienia, %d nieprzeczytanych</item>
+    </plurals>
     <string name="search_title">Szukaj</string>
     <string name="search_prompt">Poczta, pliki, wydarzenia, osoby</string>
     <string name="admin_title">Administracja</string>
