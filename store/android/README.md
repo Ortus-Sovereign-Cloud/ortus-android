@@ -31,8 +31,20 @@ release workflow (`.github/workflows/release.yml`).
 4. **Build a bundle**: Actions → release → Run workflow (from `main`, after
    CI is green). The signed `app-release.aab` is attached to the run.
 
-5. **Upload it** to Testing → Internal testing → Create release, and add
-   testers by email.
+5. **Upload it**: the first time by hand, to Testing → Internal testing →
+   Create release (Play takes API uploads only once an app has a release);
+   add testers by email. After that, CI uploads:
+
+   - Play Console → Users and permissions → Invite new users: create a
+     service account first in Google Cloud (IAM → Service accounts →
+     Create; no roles), make a JSON key for it (Keys → Add key → JSON),
+     and invite its email with the app permission **Release to testing
+     tracks**.
+   - `gh secret set PLAY_SERVICE_ACCOUNT_JSON < key.json`, then delete the
+     file from your machine.
+   - Actions → release → Run workflow with **Upload to Google Play** on.
+     Until the app's first review, choose status `draft` and finish the
+     release in Play Console.
 
 6. **App links**: in Play Console → Setup → App signing, copy the
    **SHA-256 of the app signing key** and set it on the installations

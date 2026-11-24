@@ -1,12 +1,25 @@
 name: release
 
 # Builds the app bundle (AAB) for Google Play, signed with the upload key,
-# and keeps it with the run. Run by hand from main once CI is green.
+# and keeps it with the run; with "upload" on, also puts it on a Play track
+# (internal testing by default). Run by hand from main once CI is green.
 # Secrets: ORTUS_UPLOAD_KEYSTORE_B64 (the keystore, base64),
 # ORTUS_UPLOAD_STORE_PASSWORD, ORTUS_UPLOAD_KEY_ALIAS,
-# ORTUS_UPLOAD_KEY_PASSWORD. See store/android/README.md.
+# ORTUS_UPLOAD_KEY_PASSWORD; for uploading, PLAY_SERVICE_ACCOUNT_JSON.
+# See store/android/README.md.
 on:
   workflow_dispatch:
+    inputs:
+      upload:
+        description: Upload to Google Play
+        type: boolean
+        default: false
+      track:
+        description: Play track
+        default: internal
+      status:
+        description: completed, or draft until the app's first review
+        default: completed
 
 permissions:
   contents: read
@@ -44,3 +57,10 @@ jobs:
           name: ortus-${{ github.run_number }}.aab
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
+      - name: To Google Play
+        if: inputs.upload
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          python3 -m pip install -q "PyJWT[crypto]==2.10.1"
+          python3 ci/play-upload.py app/build/outputs/bundle/release/app-release.aab "${{ inputs.track }}" "${{ inputs.status }}"
