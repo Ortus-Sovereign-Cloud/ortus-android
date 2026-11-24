@@ -54,7 +54,7 @@ fun TopActions(unread: Int, search: () -> Unit, notifications: () -> Unit, modif
 
 /** Search results, each one opening its item. */
 @Composable
-fun SearchHits(hits: List<SearchHit>, pick: (SearchHit) -> Unit) {
+fun SearchHits(hits: List<SearchHit>, pick: (SearchHit) -> Unit) = Column {
     hits.forEach { h ->
         Column(Modifier.fillMaxWidth().clickable { pick(h) }.padding(vertical = 8.dp).testTag("hit")) {
             Text(h.title, color = Text1)
