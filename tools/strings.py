@@ -3,8 +3,7 @@
 # become numbered Android placeholders.
 import os, re, sys
 src = sys.argv[1]
-# es and it are kept by hand until ortus-ios has them (store/android/REVIEW-TRANSLATIONS.md).
-langs = {"en": "values", "pl": "values-pl", "uk": "values-uk", "de": "values-de", "fr": "values-fr", "ar": "values-ar"}
+langs = {"en": "values", "pl": "values-pl", "uk": "values-uk", "de": "values-de", "fr": "values-fr", "ar": "values-ar", "es": "values-es", "it": "values-it"}
 pat = re.compile(r'^"(.+?)" = "(.*)";$')
 for lang, folder in langs.items():
     out = ['<?xml version="1.0" encoding="utf-8"?>', "<!-- Made by tools/strings.py from ortus-ios; edit there. -->", "<resources>"]

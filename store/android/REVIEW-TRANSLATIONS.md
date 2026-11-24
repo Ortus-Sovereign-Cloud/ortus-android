@@ -9,8 +9,10 @@ catalogs (`web/src/locales/es.ts`, `it.ts`), which wait for the same review.
 | Spanish (es) | `app/src/main/res/values-es/strings.xml`, `store/android/listing/es/` | Translated without a native speaker; needs review before release in Spain |
 | Italian (it) | `app/src/main/res/values-it/strings.xml`, `store/android/listing/it/` | Translated without a native speaker; needs review before release in Italy |
 
-Both string files are kept here by hand: ortus-ios has no es or it catalog,
-so `tools/strings.py` does not make them. When it does, add them to its list.
+ortus-ios has the same texts in its es and it catalogs
+(`Ortus/Resources/{es,it}.lproj`, waiting for the same review), and
+`tools/strings.py` lists both languages. A reviewed wording goes into
+ortus-ios first, then here.
 
 When a native speaker has reviewed a language, remove its row and the note
 at the top of its strings.xml.

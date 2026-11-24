@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Italian: translated without a native speaker; needs review before release in Italy. See store/android/REVIEW-TRANSLATIONS.md.
-     Not made by tools/strings.py (ortus-ios has no it catalog yet); keep the keys in step with values/strings.xml. -->
+     Follows ortus-ios it.lproj (tools/strings.py); a wording change goes there first. -->
 <resources>
     <string name="join_title">Entri nella Sua organizzazione</string>
     <string name="join_lead">Digiti l’indirizzo Ortus della Sua organizzazione e il codice della Sua lettera di benvenuto.</string>
@@ -8,7 +8,7 @@
     <string name="join_code">Codice della lettera di benvenuto</string>
     <string name="join_continue">Continua</string>
     <string name="join_badServer">Questo non è un indirizzo.</string>
-    <string name="join_failed">Il codice non ha effettuato l’accesso.</string>
+    <string name="join_failed">Non è stato possibile accedere con il codice.</string>
     <string name="welcome_title">Benvenuto/a, %1$s</string>
     <string name="welcome_code">Codice della lettera di benvenuto</string>
     <string name="welcome_codeDetail">Accettato</string>
