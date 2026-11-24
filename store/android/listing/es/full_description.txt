@@ -1,0 +1,14 @@
+Ortus Workspace es la aplicación para teléfono de Ortus, el espacio de trabajo soberano que una organización ejecuta en sus propios servidores.
+
+Todo se queda en su organización: la aplicación solo se comunica con el Ortus de su organización, nunca con una nube nuestra.
+
+• Correo: su bandeja de entrada por importancia, conversaciones, respuestas rápidas, mensajes nuevos y si el correo externo se ha entregado.
+• Chat: sus canales y mensajes directos.
+• Calendario: su día y su semana, y las invitaciones por responder.
+• Archivos y documentos: lo que se comparte con usted.
+• Para usted: aprobaciones y firmas que le esperan, firmadas con la llave de su teléfono.
+• Administración: para los administradores, el estado de la instalación.
+
+Iniciar sesión es sencillo y seguro: escanee el código de su carta de bienvenida, o el de «Iniciar sesión en el teléfono» en la web. Su teléfono se convierte entonces en su llave, protegida por el desbloqueo facial, la huella dactilar o el bloqueo de pantalla; no hay ninguna contraseña que robar.
+
+Necesita una cuenta en una organización que utilice Ortus.

@@ -3,6 +3,7 @@
 # become numbered Android placeholders.
 import os, re, sys
 src = sys.argv[1]
+# es and it are kept by hand until ortus-ios has them (store/android/REVIEW-TRANSLATIONS.md).
 langs = {"en": "values", "pl": "values-pl", "uk": "values-uk", "de": "values-de", "fr": "values-fr", "ar": "values-ar"}
 pat = re.compile(r'^"(.+?)" = "(.*)";$')
 for lang, folder in langs.items():

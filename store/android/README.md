@@ -1,6 +1,6 @@
 # Ortus on Google Play
 
-What the Play listing needs, kept with the app: the texts in six languages
+What the Play listing needs, kept with the app: the texts in eight languages
 (`listing/<language>/`), the data safety answers (`DATA_SAFETY.md`) and the
 release workflow (`.github/workflows/release.yml`).
 
@@ -56,7 +56,7 @@ release workflow (`.github/workflows/release.yml`).
 
 - Texts: `listing/<language>/title.txt` (at most 30 characters),
   `short_description.txt` (at most 80) and `full_description.txt` (at most
-  4000), in en, pl, uk, de, fr and ar. `ci/check.sh` checks the limits.
+  4000), in en, pl, uk, de, fr, ar, es and it. `ci/check.sh` checks the limits.
 - Category: Business. Contact email: the organisation's. Privacy policy:
   the installation's privacy page (the app talks only to the
   organisation's own Ortus).

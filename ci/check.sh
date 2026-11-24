@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # Everything that can be checked on this machine: the shared kit (any
-# JVM), the texts in six languages, and, with the Android SDK here, the
+# JVM), the texts in eight languages, and, with the Android SDK here, the
 # app's build. The emulator tests run in CI.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 for script in ci/*.sh; do bash -n "$script"; done
-for lang in pl uk de fr ar; do
+for lang in pl uk de fr ar es it; do
   diff <(grep -o 'name="[^"]*"' app/src/main/res/values/strings.xml | sort) <(grep -o 'name="[^"]*"' "app/src/main/res/values-$lang/strings.xml" | sort) > /dev/null \
     || { echo "check: $lang texts differ from en" >&2; exit 1; }
 done
 # The Play listing in every language, within Play's limits.
-for lang in en pl uk de fr ar; do
+for lang in en pl uk de fr ar es it; do
   for f in title:30 short_description:80 full_description:4000; do
     file="store/android/listing/$lang/${f%%:*}.txt"
     [ -s "$file" ] || { echo "check: $file is missing" >&2; exit 1; }
