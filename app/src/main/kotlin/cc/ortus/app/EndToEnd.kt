@@ -99,14 +99,19 @@ class EndToEnd(private val context: Context, private val client: Client) {
      */
     suspend fun read(me: String, room: String, messages: List<ChatMessage>): Map<String, String?> = on {
         val e2e = open(me)
-        runCatching { e2e.inbox() }
+        runCatching { e2e.inbox() }.onFailure { android.util.Log.w("ortus-e2e", "inbox: $it") }
         messages.associate { m ->
-            m.id to (opened[m.id] ?: if (m.sealed == null) null else runCatching { e2e.decrypt(room, m.sealedJson()).text }.getOrNull()?.also { opened[m.id] = it })
+            m.id to (opened[m.id] ?: if (m.sealed == null) null else runCatching { e2e.decrypt(room, m.sealedJson()).text }
+                // Why it did not open (the library's reason; never any text).
+                .onFailure { android.util.Log.w("ortus-e2e", "${m.id} not opened: $it") }
+                .getOrNull()?.also { opened[m.id] = it })
         }
     }
 
     /** Seals and sends: the message's id. */
-    suspend fun send(me: String, room: String, text: String): String = on { open(me).send(room, text, null) }
+    suspend fun send(me: String, room: String, text: String): String = on {
+        runCatching { open(me).send(room, text, null) }.onFailure { android.util.Log.w("ortus-e2e", "send: $it") }.getOrThrow()
+    }
 
     /** Signing out: the server drops this device, the phone its keys. */
     suspend fun forget(me: String?) = on {

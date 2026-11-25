@@ -98,6 +98,9 @@ class EndToEndTest {
                 compose.onAllNodesWithTag("sealedRoom").fetchSemanticsNodes().isNotEmpty() || compose.onAllNodesWithTag("locked").fetchSemanticsNodes().isNotEmpty()
             }
             check(compose.onAllNodesWithTag("locked").fetchSemanticsNodes().isEmpty()) { "the phone has no end-to-end library" }
+            // The room is open once the server lists the phone's device.
+            val phoneListed = { call(server, session, "GET", "/chat/rooms/$room/devices").second.contains("\"PHONE") }
+            waitFor("the phone's device keys on the server") { phoneListed() }
 
             // The other device writes; the phone opens it.
             val peer = OrtusE2e.open(store.path, "peer passphrase", user, "TESTPEER", serverName, transport)
@@ -106,7 +109,12 @@ class EndToEndTest {
             for (i in 0 until kept.length()) check(kept.getJSONObject(i).optString("text").isEmpty()) { "the server keeps no text" }
             compose.onNodeWithTag("message").performTextInput("Received, thank you")
             compose.onNodeWithTag("sendChat").performClick()
-            waitFor("the other device's message, opened") { compose.onAllNodesWithText("Shelter list for District 4 is ready").fetchSemanticsNodes().isNotEmpty() }
+            val held = { call(server, session, "GET", "/chat/rooms/$room/messages").second.let { j -> JSONObject(j).getJSONArray("messages").length() } }
+            try {
+                waitFor("the other device's message, opened") { compose.onAllNodesWithText("Shelter list for District 4 is ready").fetchSemanticsNodes().isNotEmpty() }
+            } catch (e: AssertionError) {
+                throw AssertionError("${e.message}; the server holds ${held()} messages")
+            }
 
             // What the phone wrote opens on the other device.
             peer.inbox()
