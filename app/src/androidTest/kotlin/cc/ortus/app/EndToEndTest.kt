@@ -25,10 +25,14 @@ import java.io.File
  */
 class EndToEndTest {
     @get:Rule val compose = createEmptyComposeRule()
+    // A hang fails with where it hung, not at the job's time limit.
+    @get:Rule val limit: org.junit.rules.Timeout = org.junit.rules.Timeout.seconds(300)
     private val args = InstrumentationRegistry.getArguments()
 
     private fun call(server: String, session: String, method: String, path: String, body: String? = null): Pair<Int, String> {
         val c = java.net.URL("$server/api/v1$path").openConnection() as java.net.HttpURLConnection
+        c.connectTimeout = 15_000
+        c.readTimeout = 30_000
         c.requestMethod = method
         c.setRequestProperty("Authorization", "Bearer $session")
         c.setRequestProperty("X-Requested-With", "ortus")
