@@ -10,6 +10,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CancellationException
@@ -22,7 +25,7 @@ import kotlinx.coroutines.CancellationException
 @Composable
 fun ListStatus(failure: String?, empty: Boolean, emptyText: Int, padding: PaddingValues = PaddingValues(0.dp), retry: () -> Unit) {
     when {
-        failure != null -> Column(Modifier.padding(padding).testTag("listFailed"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        failure != null -> Column(Modifier.padding(padding).testTag("listFailed").semantics { liveRegion = LiveRegionMode.Polite }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(failure, color = Color(0xFFFF6B6B))
             OutlinedButton(retry, Modifier.testTag("tryAgain")) { Text(stringResource(R.string.list_tryAgain)) }
         }

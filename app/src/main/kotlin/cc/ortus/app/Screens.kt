@@ -1,6 +1,11 @@
 package cc.ortus.app
 
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.toggleable
 
 import androidx.compose.ui.semantics.contentDescription
 
@@ -84,7 +89,7 @@ fun Tabs(model: Model) {
         Column {
             if (banner) {
                 Text(if (model.waiting > 0) stringResource(R.string.offline_waiting, model.waiting) else stringResource(R.string.offline_banner), color = Text2, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.fillMaxWidth().background(Surface).statusBarsPadding().padding(vertical = 6.dp).testTag("offline"),
+                    modifier = Modifier.fillMaxWidth().background(Surface).statusBarsPadding().padding(vertical = 6.dp).testTag("offline").semantics { liveRegion = LiveRegionMode.Polite },
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center)
             }
             // The main screens: search and the bell at the top.
@@ -367,13 +372,13 @@ fun ShareScreen(model: Model, item: DriveItem) {
     LaunchedEffect(item.id) { load() }
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(item.name, fontWeight = FontWeight.Bold, color = Text1, fontSize = 18.sp)
-        Text(stringResource(R.string.share_title), fontWeight = FontWeight.SemiBold, color = Text1)
+        Text(stringResource(R.string.share_title), fontWeight = FontWeight.SemiBold, color = Text1, modifier = Modifier.semantics { heading() })
         ((shares?.people ?: emptyList()) + (shares?.outside ?: emptyList())).forEach { h -> Text("${h.name ?: h.email} · ${h.role ?: ""}", color = Text1) }
         Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(email, { email = it }, Modifier.weight(1f), label = { Text(stringResource(R.string.share_address)) })
             Button({ scope.launch { note = runCatching { model.client!!.share(item, email); email = ""; null }.getOrElse { model.say(it) }; load() } }, enabled = email.contains("@"), modifier = Modifier.padding(start = 8.dp)) { Text(stringResource(R.string.share_add)) }
         }
-        Text(stringResource(R.string.share_link), fontWeight = FontWeight.SemiBold, color = Text1)
+        Text(stringResource(R.string.share_link), fontWeight = FontWeight.SemiBold, color = Text1, modifier = Modifier.semantics { heading() })
         val url = shares?.link?.url
         if (url != null) Text(url, color = Accent, fontSize = 13.sp, maxLines = 1)
         else Button({ scope.launch { runCatching { model.client!!.makeLink(item) }; load() } }) { Text(stringResource(R.string.share_makeLink)) }
@@ -395,7 +400,7 @@ fun DocScreen(model: Model, id: String) {
         LazyColumn(Modifier.weight(1f).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item { Text(text?.name ?: "", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Text1) }
             item { Text(text?.now ?: "", color = Text1) }
-            if (comments.isNotEmpty()) item { Text(stringResource(R.string.doc_comments), fontWeight = FontWeight.SemiBold, color = Text1) }
+            if (comments.isNotEmpty()) item { Text(stringResource(R.string.doc_comments), fontWeight = FontWeight.SemiBold, color = Text1, modifier = Modifier.semantics { heading() }) }
             items(comments.filter { it.resolved != true }, key = { it.id }) { c -> Surface(color = Surface, shape = MaterialTheme.shapes.medium) { Column(Modifier.padding(12.dp)) { Text(c.body, color = Text1); Text(c.author ?: "", color = Text2, fontSize = 12.sp) } } }
         }
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -457,10 +462,10 @@ fun ForYouScreen(model: Model) {
                 }
             }
         }
-        item { Text(stringResource(R.string.foryou_tasks, tasks.count { !it.done }), fontWeight = FontWeight.SemiBold, color = Text1) }
+        item { Text(stringResource(R.string.foryou_tasks, tasks.count { !it.done }), fontWeight = FontWeight.SemiBold, color = Text1, modifier = Modifier.semantics { heading() }) }
         if (tasksFailure != null || (tasksLoaded && tasks.isEmpty())) item { ListStatus(tasksFailure, tasksLoaded && tasks.isEmpty(), R.string.foryou_noTasks) { scope.launch { load() } } }
         items(tasks, key = { it.id }) { t ->
-            Row(Modifier.fillMaxWidth().clickable { scope.launch { runCatching { model.client!!.setDone(t, !t.done) }; load() } }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().toggleable(t.done, role = Role.Checkbox) { scope.launch { runCatching { model.client!!.setDone(t, !t.done) }; load() } }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(t.done, null)
                 Column { Text(t.title, color = Text1); t.projectName?.let { Text(it, color = Text2, fontSize = 12.sp) } }
             }
@@ -534,7 +539,7 @@ fun AdminScreen(model: Model) {
     LazyColumn(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text(stringResource(R.string.admin_title), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Text1) }
         if (failure != null) item { ListStatus(failure, false, R.string.admin_normal) { scope.launch { load() } } }
-        else item { Text(stringResource(if (failed.isEmpty()) R.string.admin_normal else R.string.admin_needs), fontWeight = FontWeight.SemiBold, color = Text1) }
+        else item { Text(stringResource(if (failed.isEmpty()) R.string.admin_normal else R.string.admin_needs), fontWeight = FontWeight.SemiBold, color = Text1, modifier = Modifier.semantics { heading() }) }
         // What the last action did, where it is seen (not under the list).
         note?.let { item { Text(it, color = Text2, modifier = Modifier.testTag("note")) } }
         if (failed.isNotEmpty()) {
@@ -551,7 +556,7 @@ fun AdminScreen(model: Model) {
                 }
             }
         }
-        item { Text(stringResource(R.string.admin_invite), fontWeight = FontWeight.SemiBold, color = Text1) }
+        item { Text(stringResource(R.string.admin_invite), fontWeight = FontWeight.SemiBold, color = Text1, modifier = Modifier.semantics { heading() }) }
         item { OutlinedTextField(name, { name = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.admin_name)) }) }
         item { OutlinedTextField(email, { email = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.share_address)) }) }
         item { Button({ scope.launch { note = runCatching { model.client!!.invite(name, email); name = ""; email = ""; invited }.getOrElse { model.say(it) } } }, enabled = name.isNotBlank() && email.contains("@")) { Text(stringResource(R.string.admin_inviteButton)) } }

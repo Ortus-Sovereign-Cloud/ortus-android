@@ -1,5 +1,7 @@
 package cc.ortus.app
 
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.heading
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
@@ -207,7 +209,7 @@ fun WelcomeScreen(model: Model) {
         Step(false, 3, R.string.welcome_key, R.string.welcome_keyDetail)
         Surface(color = Surface, shape = MaterialTheme.shapes.large, modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.welcome_seeTitle), fontWeight = FontWeight.SemiBold, color = Text1)
+                Text(stringResource(R.string.welcome_seeTitle), fontWeight = FontWeight.SemiBold, color = Text1, modifier = Modifier.semantics { heading() })
                 Text(stringResource(R.string.welcome_seeYes), color = Teal, fontSize = 14.sp)
                 Text(stringResource(R.string.welcome_seeNo), color = Text2, fontSize = 14.sp)
             }
