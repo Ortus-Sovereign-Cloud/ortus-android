@@ -73,21 +73,9 @@ jobs:
             program/target
           key: ortus-linux-${{ hashFiles('program/pins.toml', 'program/Cargo.lock') }}
           restore-keys: ortus-linux-
-      - name: Build Ortus
-        run: |
-          cd program
-          ci/fetch.sh
-          cargo build --release -p ortus
-      - name: The kit against a real Ortus (S3.2, S1.9, S2.4)
-        # Its own installation (the codes are single-use); ORTUS_LIVE=1
-        # makes a missing value fail rather than skip.
-        run: |
-          eval "$(env -u GITHUB_ENV ci/start-ortus.sh program/target/release/ortus | tail -1)"
-          ORTUS_LIVE=1 ./gradlew :kit:test --tests '*LiveTest*'
-      - name: Start Ortus and invite Iryna
-        run: PUBLIC_HOST=10.0.2.2 ci/start-ortus.sh program/target/release/ortus
       # The end-to-end library (Rust, ci/e2e-lib.sh), kept per program pin:
-      # built again only when the pin moves.
+      # built again only when the pin moves. Before Ortus starts: a phone
+      # sign-in code needs an owner session of the last ten minutes.
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         id: e2e
         with:
@@ -101,6 +89,19 @@ jobs:
         run: cargo install cargo-ndk --locked --version 4.1.2
       - name: The end-to-end library
         run: ci/e2e-lib.sh
+      - name: Build Ortus
+        run: |
+          cd program
+          ci/fetch.sh
+          cargo build --release -p ortus
+      - name: The kit against a real Ortus (S3.2, S1.9, S2.4)
+        # Its own installation (the codes are single-use); ORTUS_LIVE=1
+        # makes a missing value fail rather than skip.
+        run: |
+          eval "$(env -u GITHUB_ENV ci/start-ortus.sh program/target/release/ortus | tail -1)"
+          ORTUS_LIVE=1 ./gradlew :kit:test --tests '*LiveTest*'
+      - name: Start Ortus and invite Iryna
+        run: PUBLIC_HOST=10.0.2.2 ci/start-ortus.sh program/target/release/ortus
       - name: Let the emulator use KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules

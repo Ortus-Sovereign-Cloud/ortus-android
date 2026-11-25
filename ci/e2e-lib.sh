@@ -45,7 +45,7 @@ cargo run --locked --quiet --manifest-path bindgen/Cargo.toml -- generate --no-f
   --library target/debug/libortus_e2e_ffi.so --language kotlin --out-dir "$out/kotlin"
 # name, version, licence of every crate linked into the phone's library.
 # (Procedural macros run at build time only: they are not in it.)
-cargo tree --locked -p ortus-e2e-ffi -e normal,no-proc-macro --target aarch64-linux-android --prefix none -f '{p}|{l}' \
+cargo tree --locked --color never -p ortus-e2e-ffi -e normal,no-proc-macro --target aarch64-linux-android --prefix none -f '{p}|{l}' \
   | sed -E 's/ \([^)]*\)//g; s/ v([0-9])/|\1/' | sort -u > "$out/crates.txt"
 echo "$chat" > "$out/rev"
 echo "e2e-lib: ortus-chat $chat built into .deps/e2e"
