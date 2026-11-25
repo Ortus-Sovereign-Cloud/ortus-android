@@ -49,6 +49,9 @@ class Client(val server: String, var token: String? = null, val transport: Trans
         }
     }
 
+    /** End-to-end rooms seen (never unmarked): `say` refuses them. */
+    val sealedRooms: MutableSet<String> = java.util.Collections.synchronizedSet(mutableSetOf())
+
     fun headers(method: String, hasBody: Boolean): Map<String, String> = buildMap {
         put("Accept", "application/json")
         if (method != "GET") put("X-Requested-With", "ortus")

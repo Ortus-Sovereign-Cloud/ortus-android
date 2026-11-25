@@ -163,6 +163,8 @@
     <string name="drive_empty">Ce dossier est vide.</string>
     <string name="chat_noRooms">Aucun salon pour l’instant.</string>
     <string name="chat_locked">Les messages de ce salon sont chiffrés de bout en bout. Ouvrez-le sur un ordinateur pour lire et écrire.</string>
+    <string name="chat_cannotOpen">Ce message ne peut pas être ouvert sur ce téléphone.</string>
+    <string name="chat_sealed">Chiffré de bout en bout</string>
     <string name="call_incoming">Appel entrant</string>
     <string name="call_answer">Répondre</string>
     <string name="call_decline">Refuser</string>

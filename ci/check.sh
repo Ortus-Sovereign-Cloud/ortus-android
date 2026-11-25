@@ -26,12 +26,14 @@ done
 deps="$(grep -ho '"[a-z][a-zA-Z0-9.-]*:[a-zA-Z0-9.-]*:\?[^"]*"' kit/build.gradle.kts app/build.gradle.kts | tr -d '"' | cut -d: -f1 | sort -u)"
 for group in $deps; do
   case "$group" in
-    androidx.*|org.jetbrains.kotlinx|com.squareup.okhttp3|com.google.zxing|org.unifiedpush.android|io.github.webrtc-sdk) ;;
+    androidx.*|org.jetbrains.kotlinx|com.squareup.okhttp3|com.google.zxing|org.unifiedpush.android|io.github.webrtc-sdk|net.java.dev.jna) ;;
     *) echo "check: $group needs a licence review" >&2; exit 1 ;;
   esac
 done
 ./gradlew :kit:test -q
 if [ -n "${ANDROID_HOME:-}" ]; then
+  # The end-to-end library the app builds with (Rust: cargo and cargo-ndk).
+  ci/e2e-lib.sh
   ./gradlew :app:assembleDebug :app:assembleRelease :app:assembleDebugAndroidTest -q
   # Every library the app ships, with its licence, kept current.
   python3 tools/licences.py > build/LICENSES.md

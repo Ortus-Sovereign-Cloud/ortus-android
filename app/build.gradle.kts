@@ -47,6 +47,9 @@ android {
     }
     kotlinOptions { jvmTarget = "17" }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
+    // End-to-end rooms: the library built by ci/e2e-lib.sh (Rust, from the
+    // chat commit the pinned program builds on), its Kotlin bindings and .so files.
+    sourceSets { getByName("main") { java.srcDir("$rootDir/.deps/e2e/kotlin"); jniLibs.srcDir("$rootDir/.deps/e2e/jniLibs") } }
 }
 
 dependencies {
@@ -71,6 +74,9 @@ dependencies {
     // 2026-11-22), as built by webrtc-sdk (Google publishes no Android
     // builds any more). 150.7871.04 of 2026-10-23.
     implementation("io.github.webrtc-sdk:android:150.7871.04")
+    // What the end-to-end library's Kotlin bindings call it through (JNA,
+    // Apache-2.0 OR LGPL-2.1+: taken under Apache-2.0).
+    implementation("net.java.dev.jna:jna:5.17.0@aar")
     androidTestImplementation(platform("androidx.compose:compose-bom:2025.05.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")

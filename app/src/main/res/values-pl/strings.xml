@@ -164,6 +164,8 @@
     <string name="drive_empty">Ten folder jest pusty.</string>
     <string name="chat_noRooms">Brak pokoi.</string>
     <string name="chat_locked">Wiadomości w tym pokoju są szyfrowane end-to-end. Otwórz go na komputerze, aby czytać i pisać.</string>
+    <string name="chat_cannotOpen">Tej wiadomości nie można otworzyć na tym telefonie.</string>
+    <string name="chat_sealed">Szyfrowane end-to-end</string>
     <string name="call_incoming">Połączenie przychodzące</string>
     <string name="call_answer">Odbierz</string>
     <string name="call_decline">Odrzuć</string>

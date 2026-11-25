@@ -23,6 +23,21 @@ jobs:
           java-version: "17"
           # Gradle's downloads kept between runs (Maven Central rate-limits).
           cache: gradle
+      # The end-to-end library (Rust, ci/e2e-lib.sh), kept per program pin:
+      # built again only when the pin moves.
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        id: e2e
+        with:
+          path: .deps/e2e
+          key: e2e-lib-${{ hashFiles('pins.toml', 'ci/e2e-lib.sh') }}
+      - if: steps.e2e.outputs.cache-hit != 'true'
+        uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
+        with:
+          targets: aarch64-linux-android, armv7-linux-androideabi, x86_64-linux-android
+      - if: steps.e2e.outputs.cache-hit != 'true'
+        run: cargo install cargo-ndk --locked --version 4.1.2
+      - name: The end-to-end library
+        run: ci/e2e-lib.sh
       # The whole check: kit tests, the app built, its licence list current
       # (the runner has an Android SDK).
       - run: ci/check.sh
@@ -71,6 +86,21 @@ jobs:
           ORTUS_LIVE=1 ./gradlew :kit:test --tests '*LiveTest*'
       - name: Start Ortus and invite Iryna
         run: PUBLIC_HOST=10.0.2.2 ci/start-ortus.sh program/target/release/ortus
+      # The end-to-end library (Rust, ci/e2e-lib.sh), kept per program pin:
+      # built again only when the pin moves.
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        id: e2e
+        with:
+          path: .deps/e2e
+          key: e2e-lib-${{ hashFiles('pins.toml', 'ci/e2e-lib.sh') }}
+      - if: steps.e2e.outputs.cache-hit != 'true'
+        uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
+        with:
+          targets: aarch64-linux-android, armv7-linux-androideabi, x86_64-linux-android
+      - if: steps.e2e.outputs.cache-hit != 'true'
+        run: cargo install cargo-ndk --locked --version 4.1.2
+      - name: The end-to-end library
+        run: ci/e2e-lib.sh
       - name: Let the emulator use KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules

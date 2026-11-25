@@ -154,10 +154,15 @@ suspend fun Client.reply(last: Email, text: String) {
 }
 
 suspend fun Client.rsvp(email: Email, answer: String) { raw("POST", "/mail/messages/${email.id}/rsvp", body("answer" to answer)) }
-suspend fun Client.rooms(): Rooms = call("GET", "/chat/rooms")
+/** Refused before anything leaves the phone: an end-to-end room's messages are sealed on it. */
+class SealedRoom(val room: String) : Exception("This room is end-to-end encrypted.")
+
+/** The rooms; the end-to-end ones are remembered, and never get a message in the clear. */
+suspend fun Client.rooms(): Rooms = call<Rooms>("GET", "/chat/rooms").also { r -> r.rooms.filter { it.encrypted == true }.forEach { sealedRooms.add(it.id) } }
 suspend fun Client.messages(room: String): Messages = call("GET", "/chat/rooms/$room/messages")
 /** Sends a message; its client id makes a resend from the outbox one message. */
 suspend fun Client.say(text: String, room: String) {
+    if (room in sealedRooms) throw SealedRoom(room)
     raw("POST", "/chat/rooms/$room/messages", body("text" to text, "client_id" to java.util.UUID.randomUUID().toString()))
 }
 suspend fun Client.events(from: Long, to: Long): List<Event> = call<Events>("GET", "/calendar/events?from=$from&to=$to").events.sortedBy { it.start }

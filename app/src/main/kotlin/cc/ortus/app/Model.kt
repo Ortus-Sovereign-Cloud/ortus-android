@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
+import cc.ortus.kit.rooms
 import cc.ortus.kit.ApiError
 import cc.ortus.kit.Discovery
 import cc.ortus.kit.InvitationLink
@@ -70,6 +71,20 @@ class Model(private val activity: FragmentActivity) {
     }
     var client: Client? = null
         private set
+
+    private var e2e: EndToEnd? = null
+    private var e2eClient: Client? = null
+    /** End-to-end rooms for the person signed in, made when first needed. */
+    fun endToEnd(): EndToEnd? {
+        val c = client ?: return null
+        if (e2eClient !== c) {
+            e2e = EndToEnd(context, c)
+            e2eClient = c
+        }
+        return e2e
+    }
+    /** The person's Matrix id, `me` of the rooms (end-to-end rooms need it). */
+    var chatMe: String? = null
     private val context: Context get() = activity
 
     init {
@@ -344,6 +359,12 @@ class Model(private val activity: FragmentActivity) {
      */
     suspend fun signOut() {
         stopPush()
+        // End-to-end rooms: the server drops this device, the phone its keys.
+        runCatching {
+            val me = chatMe ?: client?.let { c -> runCatching { c.rooms().me }.getOrNull() }
+            endToEnd()?.forget(me)
+        }
+        chatMe = null
         client?.let { c -> runCatching { c.raw("POST", "/session/sign-out", kotlinx.serialization.json.JsonObject(emptyMap())) } }
         client?.let { cache(it.server).clear(); outbox(it.server).clear() }
         Store.put(context, "session", null)

@@ -164,6 +164,8 @@
     <string name="drive_empty">Ця тека порожня.</string>
     <string name="chat_noRooms">Кімнат ще немає.</string>
     <string name="chat_locked">Повідомлення в цій кімнаті наскрізно зашифровані. Відкрийте її на комп\'ютері, щоб читати й писати.</string>
+    <string name="chat_cannotOpen">Це повідомлення не можна відкрити на цьому телефоні.</string>
+    <string name="chat_sealed">Наскрізне шифрування</string>
     <string name="call_incoming">Вхідний дзвінок</string>
     <string name="call_answer">Відповісти</string>
     <string name="call_decline">Відхилити</string>

@@ -12,14 +12,24 @@ import kotlinx.serialization.json.add
 
 @Serializable data class Room(val id: String, val name: String, val kind: String, val topic: String? = null, val unread: Int? = null, val federated: Boolean? = null, val with: List<String>? = null, val encrypted: Boolean? = null)
 @Serializable data class Person(val name: String, val email: String? = null)
-@Serializable data class Rooms(val rooms: List<Room>, val people: Map<String, Person> = emptyMap()) {
+/** `me` is the person's Matrix id, `@{user}:{serverName}` (end-to-end rooms need it). */
+@Serializable data class Rooms(val rooms: List<Room>, val people: Map<String, Person> = emptyMap(), val me: String? = null) {
     fun title(r: Room): String = when {
         r.kind == "direct" -> r.with?.firstOrNull()?.let { people[it]?.name ?: it } ?: r.name
         r.kind == "channel" -> "# ${r.name}"
         else -> r.name
     }
 }
-@Serializable data class ChatMessage(val id: String, val sender: String, val text: String, val at: Long, val thread: String? = null, val deleted: Boolean? = null)
+/** In an end-to-end room `text` is empty and `sealed` holds the message for the phone's keys. */
+@Serializable data class ChatMessage(val id: String, val sender: String, val text: String, val at: Long, val thread: String? = null, val deleted: Boolean? = null, val sealed: kotlinx.serialization.json.JsonObject? = null) {
+    /** The message as the end-to-end library opens it: id, sender, thread and sealed. */
+    fun sealedJson(): String = buildJsonObject {
+        put("id", id)
+        put("sender", sender)
+        thread?.let { put("thread", it) }
+        sealed?.let { put("sealed", it) }
+    }.toString()
+}
 @Serializable data class Messages(val messages: List<ChatMessage>, val people: Map<String, Person> = emptyMap())
 
 @Serializable data class Event(val id: String, val summary: String, val start: Long, val end: Long, val location: String? = null, val answer: String? = null, val mine: Boolean? = null) {

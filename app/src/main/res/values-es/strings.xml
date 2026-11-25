@@ -164,6 +164,8 @@
     <string name="drive_empty">Esta carpeta está vacía.</string>
     <string name="chat_noRooms">Aún no hay salas.</string>
     <string name="chat_locked">Los mensajes de esta sala están cifrados de extremo a extremo. Ábrala en un ordenador para leer y escribir.</string>
+    <string name="chat_cannotOpen">Este mensaje no se puede abrir en este teléfono.</string>
+    <string name="chat_sealed">Cifrado de extremo a extremo</string>
     <string name="call_incoming">Llamada entrante</string>
     <string name="call_answer">Responder</string>
     <string name="call_decline">Rechazar</string>

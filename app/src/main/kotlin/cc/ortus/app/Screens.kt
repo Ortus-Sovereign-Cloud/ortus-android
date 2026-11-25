@@ -237,7 +237,7 @@ fun ChatsScreen(model: Model, open: (Place) -> Unit) {
     var data by remember { mutableStateOf<Rooms?>(null) }
     var failure by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
-    suspend fun load() { failure = model.loadList({ data?.rooms?.isNotEmpty() == true }) { quickly({ model.client!!.rooms() }) { data = it } } }
+    suspend fun load() { failure = model.loadList({ data?.rooms?.isNotEmpty() == true }) { quickly({ model.client!!.rooms() }) { data = it; it.me?.let { me -> model.chatMe = me } } } }
     LaunchedEffect(Unit) { load() }
     LazyColumn {
         item { Title(stringResource(R.string.tab_chat)) }
@@ -256,13 +256,9 @@ fun ChatsScreen(model: Model, open: (Place) -> Unit) {
 
 @Composable
 fun ChannelScreen(model: Model, room: Room, title: String, open: (Place) -> Unit) {
-    // End-to-end rooms are read on a computer in V1 (the phone cannot
-    // decrypt them yet): never show their ciphertext as text.
+    // End-to-end rooms are opened and sealed on the phone (EndToEnd).
     if (room.encrypted == true) {
-        Column(Modifier.fillMaxSize().padding(24.dp).testTag("locked"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(title, fontWeight = FontWeight.Bold, color = Text1, fontSize = 18.sp)
-            Text(stringResource(R.string.chat_locked), color = Text2)
-        }
+        SealedChannel(model, room, title)
         return
     }
     var data by remember { mutableStateOf<Messages?>(null) }
@@ -637,5 +633,84 @@ fun ComposeScreen(model: Model, done: () -> Unit) {
         item { OutlinedTextField(subject, { subject = it }, Modifier.fillMaxWidth().testTag("subject"), label = { Text(stringResource(R.string.compose_subject)) }, singleLine = true) }
         item { OutlinedTextField(text, { text = it }, Modifier.fillMaxWidth().heightIn(min = 140.dp).testTag("message"), label = { Text(stringResource(R.string.compose_message)) }) }
         error?.let { e -> item { Text(e, color = Color(0xFFFF6B6B), modifier = Modifier.testTag("error")) } }
+    }
+}
+
+/**
+ * An end-to-end room: its messages opened on the phone, a message that
+ * cannot be opened said so (never its ciphertext), and what is written
+ * sealed here. Without the library (or its keys), the room says to use a
+ * computer, as before.
+ */
+@Composable
+fun SealedChannel(model: Model, room: Room, title: String) {
+    var data by remember { mutableStateOf<Messages?>(null) }
+    var texts by remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
+    var unavailable by remember { mutableStateOf(false) }
+    var note by remember { mutableStateOf<String?>(null) }
+    var text by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
+    suspend fun load() {
+        try {
+            val c = model.client ?: return
+            val me = model.chatMe ?: c.rooms().me?.also { model.chatMe = it } ?: run { unavailable = true; return }
+            val got = c.messages(room.id)
+            texts = model.endToEnd()!!.read(me, room.id, got.messages)
+            data = got
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            // No library on this phone (a LinkageError), or its keys cannot be made.
+            if (e is LinkageError || e is org.ortus.e2e.E2eException.Store) unavailable = true else note = model.say(e)
+        }
+    }
+    LaunchedEffect(room.id) { load() }
+    if (unavailable) {
+        Column(Modifier.fillMaxSize().padding(24.dp).testTag("locked"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(title, fontWeight = FontWeight.Bold, color = Text1, fontSize = 18.sp, modifier = Modifier.semantics { heading() })
+            Text(stringResource(R.string.chat_locked), color = Text2)
+        }
+        return
+    }
+    Column(Modifier.fillMaxSize().testTag("sealedRoom")) {
+        Column(Modifier.padding(16.dp)) {
+            Text(title, fontWeight = FontWeight.Bold, color = Text1, fontSize = 18.sp, modifier = Modifier.semantics { heading() })
+            Text(stringResource(R.string.chat_sealed), color = Text2, fontSize = 12.sp)
+        }
+        val cannot = stringResource(R.string.chat_cannotOpen)
+        LazyColumn(Modifier.weight(1f).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            items(data?.messages?.filter { it.deleted != true && it.thread == null } ?: emptyList(), key = { it.id }) { m ->
+                val name = data?.people?.get(m.sender)?.name ?: m.sender
+                val shown = texts[m.id]
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Avatar(name, 32)
+                    Column {
+                        Text("$name · ${time(m.at)}", color = Text2, fontSize = 12.sp)
+                        if (shown != null) Text(shown, color = Text1, modifier = Modifier.testTag("opened"))
+                        else Text(cannot, color = Text2, fontSize = 14.sp, modifier = Modifier.testTag("cannotOpen"))
+                    }
+                }
+            }
+        }
+        note?.let { Text(it, color = Text2, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 12.dp).testTag("chatNote").semantics { liveRegion = LiveRegionMode.Polite }) }
+        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(text, { text = it }, Modifier.weight(1f).testTag("message"), placeholder = { Text(stringResource(R.string.chat_message, title)) })
+            Button({ scope.launch {
+                val said = text
+                text = ""
+                note = null
+                try {
+                    val me = model.chatMe ?: return@launch
+                    model.endToEnd()!!.send(me, room.id, said)
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Throwable) {
+                    // Not sent (never in the clear): the words come back.
+                    text = said
+                    note = model.say(e)
+                }
+                load()
+            } }, enabled = text.isNotBlank(), modifier = Modifier.padding(start = 8.dp).testTag("sendChat")) { Text(stringResource(R.string.thread_send)) }
+        }
     }
 }

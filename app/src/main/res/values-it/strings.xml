@@ -164,6 +164,8 @@
     <string name="drive_empty">Questa cartella è vuota.</string>
     <string name="chat_noRooms">Ancora nessuna stanza.</string>
     <string name="chat_locked">I messaggi di questa stanza sono cifrati end-to-end. La apra su un computer per leggere e scrivere.</string>
+    <string name="chat_cannotOpen">Questo messaggio non si può aprire su questo telefono.</string>
+    <string name="chat_sealed">Cifrato end-to-end</string>
     <string name="call_incoming">Chiamata in arrivo</string>
     <string name="call_answer">Rispondi</string>
     <string name="call_decline">Rifiuta</string>
