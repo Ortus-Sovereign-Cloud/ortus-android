@@ -154,6 +154,15 @@ suspend fun Client.reply(last: Email, text: String) {
 }
 
 suspend fun Client.rsvp(email: Email, answer: String) { raw("POST", "/mail/messages/${email.id}/rsvp", body("answer" to answer)) }
+/**
+ * A page of the installation's web app, signed in: an address with a
+ * one-time ticket (it works once, within a minute, after the person's yes
+ * on the page); the plain page when no ticket can be had.
+ */
+suspend fun Client.webAddress(path: String): String = runCatching {
+    raw("POST", "/me/web-ticket", buildJsonObject { put("next", path) }).jsonObject["url"]!!.jsonPrimitive.content
+}.getOrElse { server + path }
+
 /** Refused before anything leaves the phone: an end-to-end room's messages are sealed on it. */
 class SealedRoom(val room: String) : Exception("This room is end-to-end encrypted.")
 

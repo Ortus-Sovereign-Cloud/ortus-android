@@ -467,7 +467,7 @@ fun SearchScreen(model: Model, open: (Place) -> Unit) {
     // A result opens its item here, or its web page when the app has no screen for it.
     fun go(h: SearchHit) = scope.launch {
         val c = model.client ?: return@launch
-        place(h) { runCatching { c.rooms() }.getOrNull() }?.let(open) ?: openWeb(context, c.server + h.path)
+        place(h) { runCatching { c.rooms() }.getOrNull() }?.let(open) ?: openWeb(context, c.webAddress(h.path))
     }
     suspend fun search() {
         searched = false
