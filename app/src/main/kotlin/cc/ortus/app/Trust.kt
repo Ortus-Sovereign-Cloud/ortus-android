@@ -1,21 +1,31 @@
 package cc.ortus.app
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.ortus.e2e.DeviceRef
+import org.ortus.e2e.QrImage
 import org.ortus.e2e.VerificationView
 
 /** The 64 emoji of Matrix's verification, by number (screen readers name them). */
@@ -27,35 +37,56 @@ val SAS_EMOJI = listOf(
 )
 
 /**
- * Recovery on the phone: set up on a computer (the phone does not make the
- * recovery key); with it set up, the recovery key brings this phone's
- * history and vouches for it; recovered, it can verify the person's other
- * device by emoji.
+ * Recovery on the phone: not set up yet, set up here (the recovery key is
+ * shown once, to keep somewhere safe); set up, the recovery key brings this
+ * phone's history and vouches for it; recovered, it can verify the
+ * person's other device.
  */
 @Composable
 fun RecoveryDialog(model: Model, close: () -> Unit) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     var state by remember { mutableStateOf<org.ortus.e2e.RecoveryState?>(null) }
     var key by remember { mutableStateOf("") }
+    // The new recovery key: on screen until the person says it is saved (never kept).
+    var made by remember { mutableStateOf<String?>(null) }
     var note by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
     val me = model.chatMe
     val restored = stringResource(R.string.chat_recoveryRestored)
     val wrong = stringResource(R.string.chat_recoveryWrong)
+    val label = stringResource(R.string.chat_recoveryKey)
     LaunchedEffect(me) { if (me != null) state = runCatching { model.endToEnd()!!.recoveryState(me) }.getOrNull() }
+    val saved = { made = null; model.trustChanged++; close() }
     AlertDialog(
-        onDismissRequest = close,
+        // The new key is not lost by a tap outside or Back (nor while it is being made): only "I've saved it" closes.
+        onDismissRequest = { if (made == null && !busy) close() },
+        properties = DialogProperties(dismissOnBackPress = made == null && !busy, dismissOnClickOutside = made == null && !busy),
         modifier = Modifier.testTag("recovery"),
         title = { Text(stringResource(R.string.chat_recovery)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 val s = state
+                val k = made
                 when {
+                    k != null -> {
+                        Text(stringResource(R.string.chat_recoveryNewKeyLead))
+                        SelectionContainer {
+                            Text(k, fontFamily = FontFamily.Monospace, fontSize = 16.sp, modifier = Modifier.testTag("recoveryNewKey"))
+                        }
+                        TextButton({
+                            val clipboard = context.getSystemService(android.content.ClipboardManager::class.java)
+                            val clip = android.content.ClipData.newPlainText(label, k)
+                            // Android 13 and later: not shown in the clipboard's preview.
+                            clip.description.extras = android.os.PersistableBundle().apply { putBoolean("android.content.extra.IS_SENSITIVE", true) }
+                            clipboard?.setPrimaryClip(clip)
+                        }, Modifier.testTag("recoveryCopy")) { Text(stringResource(R.string.chat_recoveryCopy)) }
+                    }
                     s == null -> Text("…")
-                    !s.set -> Text(stringResource(R.string.chat_recoveryOnComputer))
+                    !s.set -> Text(stringResource(R.string.chat_recoveryNoneLead))
                     !s.here -> {
                         Text(stringResource(R.string.chat_recoveryEnterLead))
-                        OutlinedTextField(key, { key = it }, Modifier.fillMaxWidth().testTag("recoveryKey"), label = { Text(stringResource(R.string.chat_recoveryKey)) })
+                        OutlinedTextField(key, { key = it }, Modifier.fillMaxWidth().testTag("recoveryKey"), label = { Text(label) })
                     }
                     else -> Text(stringResource(R.string.chat_recoveryHere))
                 }
@@ -65,6 +96,22 @@ fun RecoveryDialog(model: Model, close: () -> Unit) {
         confirmButton = {
             val s = state
             when {
+                made != null -> Button(saved, Modifier.testTag("recoverySaved")) { Text(stringResource(R.string.chat_recoverySaved)) }
+                s != null && !s.set -> Button({
+                    scope.launch {
+                        busy = true
+                        note = null
+                        try {
+                            made = model.endToEnd()!!.setUpRecovery(me!!)
+                            state = model.endToEnd()!!.recoveryState(me)
+                        } catch (e: kotlinx.coroutines.CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            note = model.say(e)
+                        }
+                        busy = false
+                    }
+                }, enabled = !busy, modifier = Modifier.testTag("recoverySetUp")) { Text(stringResource(R.string.chat_recoverySetUp)) }
                 s != null && s.set && !s.here -> Button({
                     scope.launch {
                         busy = true
@@ -87,42 +134,143 @@ fun RecoveryDialog(model: Model, close: () -> Unit) {
                 else -> TextButton(close) { Text(stringResource(R.string.chat_close)) }
             }
         },
-        dismissButton = { TextButton(close) { Text(stringResource(R.string.chat_close)) } },
+        dismissButton = { if (made == null) TextButton(close, enabled = !busy) { Text(stringResource(R.string.chat_close)) } },
     )
 }
 
 /**
- * Verifications by emoji, for the whole app: looked for every few seconds
- * while the app is in front and this phone's keys are open; an incoming one
- * is asked about, emoji are compared, the end is said.
+ * A room's devices nobody vouched for: each by its person (their name when
+ * known, else their id) and its device id, with "Verify", which asks that
+ * device; the Verifications overlay takes over from there.
+ */
+@Composable
+fun UnverifiedDialog(model: Model, devices: List<DeviceRef>, people: Map<String, cc.ortus.kit.Person>, close: () -> Unit) {
+    val scope = rememberCoroutineScope()
+    var note by remember { mutableStateOf<String?>(null) }
+    var busy by remember { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = close,
+        modifier = Modifier.testTag("unverifiedList"),
+        title = { Text(stringResource(R.string.chat_unverifiedTitle)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(R.string.chat_unverifiedLead))
+                androidx.compose.foundation.lazy.LazyColumn(Modifier.heightIn(max = 360.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(devices.size) { i ->
+                        val d = devices[i]
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                            Column(Modifier.weight(1f)) {
+                                Text(people[d.user]?.name ?: d.user)
+                                Text(stringResource(R.string.chat_unverifiedDevice, d.device), fontSize = 12.sp)
+                            }
+                            OutlinedButton({
+                                val me = model.chatMe ?: return@OutlinedButton
+                                scope.launch {
+                                    busy = true
+                                    note = null
+                                    try {
+                                        model.endToEnd()!!.verifyDevice(me, d.user, d.device)
+                                        close()
+                                    } catch (e: kotlinx.coroutines.CancellationException) {
+                                        throw e
+                                    } catch (e: Exception) {
+                                        note = model.say(e)
+                                    }
+                                    busy = false
+                                }
+                            }, enabled = !busy, modifier = Modifier.testTag("verify-${d.device}")) { Text(stringResource(R.string.chat_verifyDevice)) }
+                        }
+                    }
+                }
+                note?.let { Text(it, modifier = Modifier.testTag("unverifiedNote").semantics { liveRegion = LiveRegionMode.Polite }) }
+            }
+        },
+        confirmButton = { TextButton(close) { Text(stringResource(R.string.chat_close)) } },
+    )
+}
+
+/**
+ * A verification QR code: dark modules on white, with a white quiet zone
+ * of four modules, in either theme; drawn sharp (one pixel a module, scaled
+ * without smoothing).
+ */
+@Composable
+fun QrPicture(image: QrImage, description: String, modifier: Modifier = Modifier) {
+    val bitmap = remember(image) {
+        val w = image.width.toInt()
+        val side = w + 8
+        val pixels = IntArray(side * side) { android.graphics.Color.WHITE }
+        for (y in 0 until w) for (x in 0 until w) if (image.modules[y * w + x]) pixels[(y + 4) * side + x + 4] = android.graphics.Color.BLACK
+        android.graphics.Bitmap.createBitmap(pixels, side, side, android.graphics.Bitmap.Config.ARGB_8888).asImageBitmap()
+    }
+    Image(bitmap, description, modifier.size(240.dp), filterQuality = FilterQuality.None)
+}
+
+/**
+ * Verifications, for the whole app: looked for every few seconds while the
+ * app is in front and this phone's keys are open; an incoming one is asked
+ * about; when both are ready the person chooses a QR code (scan the other
+ * device's, or show this phone's) or emoji; emoji are compared, a scan of
+ * this phone's code is confirmed, the end is said.
  */
 @Composable
 fun Verifications(model: Model) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     var shown by remember { mutableStateOf<VerificationView?>(null) }
     var dismissed by remember { mutableStateOf(setOf<String>()) }
+    // This phone's code, for the verification whose id it carries.
+    var qr by remember { mutableStateOf<Pair<String, QrImage>?>(null) }
+    var scanning by remember { mutableStateOf(false) }
+    var note by remember { mutableStateOf<String?>(null) }
+    val camera = remember { hasCamera(context) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
+    suspend fun refresh() {
+        val e2e = model.endToEnd()
+        val me = model.chatMe
+        if (e2e != null && me != null && e2e.isOpen) {
+            val list = runCatching { e2e.verifications(me) }.getOrDefault(emptyList())
+            val current = list.lastOrNull { it.id !in dismissed && it.state != "cancelled" } ?: list.lastOrNull { it.id == shown?.id }
+            if (current?.state == "done" && shown?.state != "done") model.trustChanged++
+            if (current?.id != shown?.id) note = null
+            shown = current?.takeIf { it.id !in dismissed }
+        }
+    }
     LaunchedEffect(Unit) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             while (true) {
-                val e2e = model.endToEnd()
-                val me = model.chatMe
-                if (e2e != null && me != null && e2e.isOpen) {
-                    val list = runCatching { e2e.verifications(me) }.getOrDefault(emptyList())
-                    val current = list.lastOrNull { it.id !in dismissed && it.state != "cancelled" } ?: list.lastOrNull { it.id == shown?.id }
-                    if (current?.state == "done" && shown?.state != "done") model.trustChanged++
-                    shown = current?.takeIf { it.id !in dismissed }
-                }
+                refresh()
                 delay(3_000)
             }
         }
     }
     val v = shown ?: return
     val me = model.chatMe ?: return
-    val close = { dismissed = dismissed + v.id; shown = null }
+    val e2e = model.endToEnd() ?: return
+    val close = { dismissed = dismissed + v.id; shown = null; scanning = false; note = null }
+    val wrongCode = stringResource(R.string.chat_verifyScanWrong)
+    /** One step of the verification: its error said, then where it stands now. */
+    fun act(step: suspend () -> Unit) {
+        scope.launch {
+            note = null
+            try {
+                step()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                note = model.say(e)
+            }
+            refresh()
+        }
+    }
+    val cancel = { act { e2e.cancelVerification(me, v.id) }; close() }
+    // This phone's code, once it is to be shown (also when the poll found it so).
+    LaunchedEffect(v.id, v.state) {
+        if (v.state == "qr" && qr?.first != v.id) runCatching { e2e.showQr(me, v.id) }.onSuccess { qr = v.id to it }.onFailure { note = model.say(it) }
+    }
     AlertDialog(
         onDismissRequest = {
-            if (v.state != "done" && v.state != "cancelled") scope.launch { runCatching { model.endToEnd()!!.cancelVerification(me, v.id) } }
+            if (v.state != "done" && v.state != "cancelled") scope.launch { runCatching { e2e.cancelVerification(me, v.id) } }
             close()
         },
         modifier = Modifier.testTag("verification"),
@@ -131,6 +279,21 @@ fun Verifications(model: Model) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) {
                 when (v.state) {
                     "incoming" -> Text(stringResource(R.string.chat_verifyIncoming))
+                    "ready" -> {
+                        Text(stringResource(R.string.chat_verifyChoose))
+                        if (v.canScan && camera) OutlinedButton({ scanning = true }, Modifier.fillMaxWidth().testTag("verifyScan")) { Text(stringResource(R.string.chat_verifyScan)) }
+                        if (v.canShow) OutlinedButton({
+                            act { val image = e2e.showQr(me, v.id); qr = v.id to image }
+                        }, Modifier.fillMaxWidth().testTag("verifyShow")) { Text(stringResource(R.string.chat_verifyShow)) }
+                        OutlinedButton({ act { e2e.startEmoji(me, v.id) } }, Modifier.fillMaxWidth().testTag("verifyByEmoji")) { Text(stringResource(R.string.chat_verifyEmoji)) }
+                    }
+                    "qr" -> {
+                        Text(stringResource(R.string.chat_verifyShowLead))
+                        qr?.takeIf { it.first == v.id }?.let { (_, image) ->
+                            QrPicture(image, stringResource(R.string.chat_verifyQr), Modifier.align(Alignment.CenterHorizontally).testTag("verifyQr"))
+                        } ?: Text("…")
+                    }
+                    "scanned" -> Text(stringResource(R.string.chat_verifyScanned))
                     "emoji" -> {
                         Text(stringResource(R.string.chat_verifyCompare))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.testTag("verifyEmoji")) {
@@ -141,21 +304,38 @@ fun Verifications(model: Model) {
                     "cancelled" -> Text(stringResource(R.string.chat_verifyCancelled))
                     else -> Text(stringResource(R.string.chat_verifyWaiting))
                 }
+                note?.let { Text(it, modifier = Modifier.testTag("verifyNote")) }
             }
         },
         confirmButton = {
             when (v.state) {
-                "incoming" -> Button({ scope.launch { runCatching { model.endToEnd()!!.acceptVerification(me, v.id) } } }, Modifier.testTag("verifyAccept")) { Text(stringResource(R.string.chat_verifyAccept)) }
-                "emoji" -> Button({ scope.launch { runCatching { model.endToEnd()!!.confirmVerification(me, v.id, true) } } }, Modifier.testTag("verifySame")) { Text(stringResource(R.string.chat_verifySame)) }
+                "incoming" -> Button({ act { e2e.acceptVerification(me, v.id) } }, Modifier.testTag("verifyAccept")) { Text(stringResource(R.string.chat_verifyAccept)) }
+                "emoji" -> Button({ act { e2e.confirmVerification(me, v.id, true) } }, Modifier.testTag("verifySame")) { Text(stringResource(R.string.chat_verifySame)) }
+                "qr" -> TextButton({ act { e2e.startEmoji(me, v.id) } }, Modifier.testTag("verifyEmojiInstead")) { Text(stringResource(R.string.chat_verifyEmojiInstead)) }
+                "scanned" -> Button({ act { e2e.confirmScanned(me, v.id, true) } }, Modifier.testTag("verifyScannedYes")) { Text(stringResource(R.string.chat_verifyYes)) }
+                "ready" -> TextButton(cancel, Modifier.testTag("verifyCancel")) { Text(stringResource(R.string.chat_verifyCancel)) }
                 else -> TextButton(close) { Text(stringResource(R.string.chat_close)) }
             }
         },
         dismissButton = {
             when (v.state) {
-                "incoming" -> TextButton({ scope.launch { runCatching { model.endToEnd()!!.cancelVerification(me, v.id) } }; close() }) { Text(stringResource(R.string.chat_verifyDecline)) }
-                "emoji" -> TextButton({ scope.launch { runCatching { model.endToEnd()!!.confirmVerification(me, v.id, false) } } }, Modifier.testTag("verifyDifferent")) { Text(stringResource(R.string.chat_verifyDifferent)) }
+                "incoming" -> TextButton({ scope.launch { runCatching { e2e.cancelVerification(me, v.id) } }; close() }) { Text(stringResource(R.string.chat_verifyDecline)) }
+                "emoji" -> TextButton({ act { e2e.confirmVerification(me, v.id, false) } }, Modifier.testTag("verifyDifferent")) { Text(stringResource(R.string.chat_verifyDifferent)) }
+                "scanned" -> TextButton({ act { e2e.confirmScanned(me, v.id, false) } }, Modifier.testTag("verifyScannedNo")) { Text(stringResource(R.string.chat_verifyNo)) }
+                "qr" -> TextButton(cancel, Modifier.testTag("verifyCancel")) { Text(stringResource(R.string.chat_verifyCancel)) }
                 else -> {}
             }
         },
     )
+    // The camera, over the dialog: the other device's code goes to the library as read.
+    if (scanning) VerificationScanner(found = { bytes ->
+        scanning = false
+        act {
+            try {
+                e2e.scanQr(me, v.id, bytes)
+            } catch (e: org.ortus.e2e.E2eException.Invalid) {
+                note = wrongCode
+            }
+        }
+    }, close = { scanning = false })
 }

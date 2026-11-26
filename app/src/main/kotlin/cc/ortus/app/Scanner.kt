@@ -46,7 +46,21 @@ fun hasCamera(context: android.content.Context): Boolean =
  * camera first; without it, closes.
  */
 @Composable
-fun CodeScanner(found: (String) -> Unit, close: () -> Unit) {
+fun CodeScanner(found: (String) -> Unit, close: () -> Unit) =
+    Scanner(read = { luma, w, h, stride -> QrCode.read(luma, w, h, stride)?.takeIf { cc.ortus.kit.InvitationLink.parse(it) != null } }, found = found, close = close)
+
+/**
+ * The camera, full screen, reading another device's verification code:
+ * `found` gets its data codewords (raw bytes: the code holds binary data,
+ * which its text would mangle). Asks for the camera first; without it, closes.
+ */
+@Composable
+fun VerificationScanner(found: (ByteArray) -> Unit, close: () -> Unit) =
+    Scanner(read = { luma, w, h, stride -> QrCode.readBytes(luma, w, h, stride) }, found = found, close = close)
+
+/** The camera, full screen, until `read` finds something in a frame (the Y plane: luma, width, height, row stride). */
+@Composable
+private fun <T : Any> Scanner(read: (ByteArray, Int, Int, Int) -> T?, found: (T) -> Unit, close: () -> Unit) {
     val context = LocalContext.current
     var allowed by remember { mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) }
     val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -55,7 +69,7 @@ fun CodeScanner(found: (String) -> Unit, close: () -> Unit) {
     LaunchedEffect(Unit) { if (!allowed) ask.launch(Manifest.permission.CAMERA) }
     Dialog(onDismissRequest = close, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Box(Modifier.fillMaxSize().testTag("scanner")) {
-            if (allowed) Camera(found)
+            if (allowed) Camera(read, found)
             TextButton(close, Modifier.align(Alignment.BottomCenter).padding(32.dp)) {
                 Text(stringResource(R.string.join_scanCancel), color = Color.White)
             }
@@ -64,7 +78,7 @@ fun CodeScanner(found: (String) -> Unit, close: () -> Unit) {
 }
 
 @Composable
-private fun Camera(found: (String) -> Unit) {
+private fun <T : Any> Camera(read: (ByteArray, Int, Int, Int) -> T?, found: (T) -> Unit) {
     val context = LocalContext.current
     val owner = LocalLifecycleOwner.current
     val worker = remember { Executors.newSingleThreadExecutor() }
@@ -82,11 +96,10 @@ private fun Camera(found: (String) -> Unit) {
                     val plane = it.planes[0]
                     val buffer = plane.buffer
                     val luma = ByteArray(buffer.remaining()).also { bytes -> buffer.get(bytes) }
-                    val invitation = QrCode.read(luma, it.width, it.height, plane.rowStride)
-                        ?.takeIf { text -> cc.ortus.kit.InvitationLink.parse(text) != null }
-                    if (invitation != null && !done) {
+                    val code = read(luma, it.width, it.height, plane.rowStride)
+                    if (code != null && !done) {
                         done = true
-                        ContextCompat.getMainExecutor(ctx).execute { found(invitation) }
+                        ContextCompat.getMainExecutor(ctx).execute { found(code) }
                     }
                 }
             }

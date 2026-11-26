@@ -136,7 +136,7 @@ The app is MIT OR Apache-2.0. These are the 129 libraries it carries (its releas
 
 ## The end-to-end library
 
-libortus_e2e_ffi (MIT OR Apache-2.0), from ortus-chat `phones/e2e` at the chat commit the pinned Ortus program names, and the 183 Rust crates inside it. The MPL-2.0 ones are allowed for this library only, unmodified (the owner's decision of 25 November 2026); their source is at crates.io under the versions named.
+libortus_e2e_ffi (MIT OR Apache-2.0), from ortus-chat `phones/e2e` at the chat commit the pinned Ortus program names, and the 185 Rust crates inside it. The MPL-2.0 ones are allowed for this library only, unmodified (the owner's decision of 25 November 2026); their source is at crates.io under the versions named.
 
 | Crate | Version | Licence |
 | --- | --- | --- |
@@ -237,6 +237,7 @@ libortus_e2e_ffi (MIT OR Apache-2.0), from ortus-chat `phones/e2e` at the chat c
 | matrix-sdk-base | 0.19.1 | Apache-2.0 |
 | matrix-sdk-common | 0.19.1 | Apache-2.0 |
 | matrix-sdk-crypto | 0.19.1 | Apache-2.0 |
+| matrix-sdk-qrcode | 0.19.1 | Apache-2.0 |
 | matrix-sdk-sqlite | 0.19.1 | Apache-2.0 |
 | matrix-sdk-store-encryption | 0.19.1 | Apache-2.0 |
 | memchr | 2.8.3 | Unlicense OR MIT |
@@ -253,6 +254,7 @@ libortus_e2e_ffi (MIT OR Apache-2.0), from ortus-chat `phones/e2e` at the chat c
 | potential_utf | 0.1.6 | Unicode-3.0 |
 | powerfmt | 0.2.1 | MIT OR Apache-2.0 |
 | prost | 0.14.6 | Apache-2.0 |
+| qrcode | 0.14.1 | MIT OR Apache-2.0 |
 | rand_core | 0.10.1 | MIT OR Apache-2.0 |
 | rand_core | 0.9.5 | MIT OR Apache-2.0 |
 | rand_xoshiro | 0.7.0 | MIT OR Apache-2.0 |

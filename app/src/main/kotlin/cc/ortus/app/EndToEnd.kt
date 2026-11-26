@@ -146,6 +146,24 @@ class EndToEnd(private val context: Context, private val client: Client) {
     suspend fun confirmVerification(me: String, id: String, same: Boolean) = on { open(me).confirmVerification(id, same) }
     suspend fun cancelVerification(me: String, id: String) = on { open(me).cancelVerification(id) }
 
+    /** Recovery set up from this phone (nobody set it up yet): the recovery key, shown once. */
+    suspend fun setUpRecovery(me: String): String = on { open(me).setUpRecovery() }
+
+    /** Asks one device (a row of `unverified`) to verify: its id. */
+    suspend fun verifyDevice(me: String, user: String, device: String): String = on { open(me).verifyDevice(user, device) }
+
+    /** Emoji, chosen over a QR code. */
+    suspend fun startEmoji(me: String, id: String) = on { open(me).startEmoji(id) }
+
+    /** The other device's code as the camera read it (its data codewords). */
+    suspend fun scanQr(me: String, id: String, scanned: ByteArray) = on { open(me).scanQr(id, scanned) }
+
+    /** This phone's code, for the other device to scan. */
+    suspend fun showQr(me: String, id: String): org.ortus.e2e.QrImage = on { open(me).showQr(id) }
+
+    /** Whether the other device said it scanned this phone's code. */
+    suspend fun confirmScanned(me: String, id: String, yes: Boolean) = on { open(me).confirmScanned(id, yes) }
+
     /** Signing out: the server drops this device, the phone its keys. */
     suspend fun forget(me: String?) = on {
         // Opened only if this phone has keys for the person: none, nothing to forget.

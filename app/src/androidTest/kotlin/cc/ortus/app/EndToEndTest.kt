@@ -102,10 +102,13 @@ class EndToEndTest {
                 compose.onAllNodesWithTag("sealedRoom").fetchSemanticsNodes().isNotEmpty() || compose.onAllNodesWithTag("locked").fetchSemanticsNodes().isNotEmpty()
             }
             check(compose.onAllNodesWithTag("locked").fetchSemanticsNodes().isEmpty()) { "the phone has no end-to-end library" }
-            // Recovery: not set up yet, so it says where it is set up.
+            // Recovery: not set up yet, so the phone sets it up and shows the key once.
             compose.onNodeWithTag("recoveryOpen").performClick()
-            waitFor("the recovery dialog") { compose.onAllNodesWithText("Recovery is set up on a computer", substring = true).fetchSemanticsNodes().isNotEmpty() }
-            compose.onAllNodesWithText("Close")[0].performClick()
+            waitFor("the recovery dialog's set-up button") { compose.onAllNodesWithTag("recoverySetUp").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithTag("recoverySetUp").performClick()
+            waitFor("the new recovery key") { compose.onAllNodesWithTag("recoveryNewKey").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithTag("recoverySaved").performClick()
+            waitFor("the recovery dialog to close") { compose.onAllNodesWithTag("recovery").fetchSemanticsNodes().isEmpty() }
             // The room is open once the server lists the phone's device.
             val phoneListed = { call(server, session, "GET", "/chat/rooms/$room/devices").second.contains("\"PHONE") }
             waitFor("the phone's device keys on the server") { phoneListed() }
