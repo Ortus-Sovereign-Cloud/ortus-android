@@ -165,6 +165,13 @@
     <string name="chat_locked">Les messages de ce salon sont chiffrés de bout en bout. Ouvrez-le sur un ordinateur pour lire et écrire.</string>
     <string name="chat_cannotOpen">Ce message ne peut pas être ouvert sur ce téléphone.</string>
     <string name="chat_sealed">Chiffré de bout en bout</string>
+    <string name="chat_thread">Fil</string>
+    <string name="chat_replyInThread">Répondre dans le fil</string>
+    <plurals name="chat_replies">
+        <item quantity="one">%d réponse</item>
+        <item quantity="many">%d réponses</item>
+        <item quantity="other">%d réponses</item>
+    </plurals>
     <string name="call_incoming">Appel entrant</string>
     <string name="call_answer">Répondre</string>
     <string name="call_decline">Refuser</string>

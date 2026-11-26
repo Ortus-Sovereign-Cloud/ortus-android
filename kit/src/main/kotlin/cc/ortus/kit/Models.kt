@@ -21,7 +21,7 @@ import kotlinx.serialization.json.add
     }
 }
 /** In an end-to-end room `text` is empty and `sealed` holds the message for the phone's keys. */
-@Serializable data class ChatMessage(val id: String, val sender: String, val text: String, val at: Long, val thread: String? = null, val deleted: Boolean? = null, val sealed: kotlinx.serialization.json.JsonObject? = null) {
+@Serializable data class ChatMessage(val id: String, val sender: String, val text: String, val at: Long, val thread: String? = null, val deleted: Boolean? = null, val sealed: kotlinx.serialization.json.JsonObject? = null, val replies: Int? = null) {
     /** The message as the end-to-end library opens it: id, sender, thread and sealed. */
     fun sealedJson(): String = buildJsonObject {
         put("id", id)

@@ -159,11 +159,18 @@ class SealedRoom(val room: String) : Exception("This room is end-to-end encrypte
 
 /** The rooms; the end-to-end ones are remembered, and never get a message in the clear. */
 suspend fun Client.rooms(): Rooms = call<Rooms>("GET", "/chat/rooms").also { r -> r.rooms.filter { it.encrypted == true }.forEach { sealedRooms.add(it.id) } }
-suspend fun Client.messages(room: String): Messages = call("GET", "/chat/rooms/$room/messages")
+/** A room's latest messages, or one thread's (its root and replies). */
+suspend fun Client.messages(room: String, thread: String? = null): Messages =
+    call("GET", "/chat/rooms/$room/messages" + (thread?.let { "?thread=" + java.net.URLEncoder.encode(it, "UTF-8") } ?: ""))
 /** Sends a message; its client id makes a resend from the outbox one message. */
-suspend fun Client.say(text: String, room: String) {
+suspend fun Client.say(text: String, room: String, thread: String? = null) {
     if (room in sealedRooms) throw SealedRoom(room)
-    raw("POST", "/chat/rooms/$room/messages", body("text" to text, "client_id" to java.util.UUID.randomUUID().toString()))
+    val b = buildJsonObject {
+        put("text", text)
+        put("client_id", java.util.UUID.randomUUID().toString())
+        thread?.let { put("thread", it) }
+    }
+    raw("POST", "/chat/rooms/$room/messages", b)
 }
 suspend fun Client.events(from: Long, to: Long): List<Event> = call<Events>("GET", "/calendar/events?from=$from&to=$to").events.sortedBy { it.start }
 suspend fun Client.answer(event: Event, answer: String) { raw("POST", "/calendar/events/${event.id}/rsvp", body("answer" to answer)) }

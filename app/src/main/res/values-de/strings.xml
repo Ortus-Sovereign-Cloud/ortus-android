@@ -164,6 +164,12 @@
     <string name="chat_locked">Nachrichten in diesem Raum sind Ende-zu-Ende-verschlüsselt. Öffnen Sie ihn am Computer, um zu lesen und zu schreiben.</string>
     <string name="chat_cannotOpen">Diese Nachricht lässt sich auf diesem Telefon nicht öffnen.</string>
     <string name="chat_sealed">Ende-zu-Ende-verschlüsselt</string>
+    <string name="chat_thread">Thread</string>
+    <string name="chat_replyInThread">Im Thread antworten</string>
+    <plurals name="chat_replies">
+        <item quantity="one">%d Antwort</item>
+        <item quantity="other">%d Antworten</item>
+    </plurals>
     <string name="call_incoming">Eingehender Anruf</string>
     <string name="call_answer">Annehmen</string>
     <string name="call_decline">Ablehnen</string>

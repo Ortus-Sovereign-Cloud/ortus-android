@@ -126,6 +126,14 @@ class EndToEndTest {
             val texts = (0 until messages.length()).map { messages.getJSONObject(it) }.filter { it.optString("id") != sent && it.has("sealed") }
                 .mapNotNull { runCatching { peer.decrypt(room, it.toString()).text }.getOrNull() }
             check("Received, thank you" in texts) { "the phone's message did not open on the other device: $texts" }
+
+            // The other device answers in a thread: the open room shows it by
+            // itself (no touch: it looks every few seconds), and the thread opens.
+            peer.send(room, "District 5 needs one too", sent)
+            waitFor("the reply's count, without reopening the room", timeout = 30_000) { compose.onAllNodesWithText("1 reply").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithTag("thread-$sent").performClick()
+            waitFor("the thread, opened") { compose.onAllNodesWithText("District 5 needs one too").fetchSemanticsNodes().isNotEmpty() }
+            check(compose.onAllNodesWithTag("chatThread").fetchSemanticsNodes().isNotEmpty()) { "not the thread screen" }
             peer.forget()
         }
     }

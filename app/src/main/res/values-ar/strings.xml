@@ -168,6 +168,16 @@
     <string name="chat_locked">الرسائل في هذه الغرفة مشفّرة من طرف إلى طرف. افتحها على حاسوب للقراءة والكتابة.</string>
     <string name="chat_cannotOpen">لا يمكن فتح هذه الرسالة على هذا الهاتف.</string>
     <string name="chat_sealed">مشفّر من طرف إلى طرف</string>
+    <string name="chat_thread">سلسلة</string>
+    <string name="chat_replyInThread">الرد في السلسلة</string>
+    <plurals name="chat_replies">
+        <item quantity="zero">لا ردود</item>
+        <item quantity="one">رد واحد</item>
+        <item quantity="two">ردّان</item>
+        <item quantity="few">%d ردود</item>
+        <item quantity="many">%d ردًا</item>
+        <item quantity="other">%d رد</item>
+    </plurals>
     <string name="call_incoming">مكالمة واردة</string>
     <string name="call_answer">رد</string>
     <string name="call_decline">رفض</string>

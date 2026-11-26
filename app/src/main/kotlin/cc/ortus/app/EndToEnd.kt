@@ -31,6 +31,8 @@ class EndToEnd(private val context: Context, private val client: Client) {
     private var library: OrtusE2e? = null
     /** What was opened, by message id: opening a message again is not needed. */
     private val opened = HashMap<String, String>()
+    /** What did not open: tried again only once new room keys came. */
+    private val refused = HashSet<String>()
 
     private suspend fun <T> on(block: () -> T): T = withContext(thread) { block() }
 
@@ -99,18 +101,24 @@ class EndToEnd(private val context: Context, private val client: Client) {
      */
     suspend fun read(me: String, room: String, messages: List<ChatMessage>): Map<String, String?> = on {
         val e2e = open(me)
-        runCatching { e2e.inbox() }.onFailure { android.util.Log.w("ortus-e2e", "inbox: $it") }
+        // Room keys and one-time keys only when something waits to open
+        // (a room on screen is read every few seconds).
+        if (messages.any { it.sealed != null && it.id !in opened }) {
+            runCatching { e2e.inbox() }
+                .onSuccess { if (it.roomKeys > 0u) refused.clear() }
+                .onFailure { android.util.Log.w("ortus-e2e", "inbox: $it") }
+        }
         messages.associate { m ->
-            m.id to (opened[m.id] ?: if (m.sealed == null) null else runCatching { e2e.decrypt(room, m.sealedJson()).text }
+            m.id to (opened[m.id] ?: if (m.sealed == null || m.id in refused) null else runCatching { e2e.decrypt(room, m.sealedJson()).text }
                 // Why it did not open (the library's reason; never any text).
-                .onFailure { android.util.Log.w("ortus-e2e", "${m.id} not opened: $it") }
+                .onFailure { android.util.Log.w("ortus-e2e", "${m.id} not opened: $it"); refused.add(m.id) }
                 .getOrNull()?.also { opened[m.id] = it })
         }
     }
 
     /** Seals and sends: the message's id. */
-    suspend fun send(me: String, room: String, text: String): String = on {
-        runCatching { open(me).send(room, text, null) }.onFailure { android.util.Log.w("ortus-e2e", "send: $it") }.getOrThrow()
+    suspend fun send(me: String, room: String, text: String, thread: String? = null): String = on {
+        runCatching { open(me).send(room, text, thread) }.onFailure { android.util.Log.w("ortus-e2e", "send: $it") }.getOrThrow()
     }
 
     /** Signing out: the server drops this device, the phone its keys. */
@@ -120,6 +128,7 @@ class EndToEnd(private val context: Context, private val client: Client) {
         runCatching { (library ?: me?.takeIf { has }?.let { open(it) })?.forget() }
         library = null
         opened.clear()
+        refused.clear()
         me?.let { parse(it).first }?.let { user ->
             File(context.noBackupFilesDir, "e2e/$user").deleteRecursively()
             Store.put(context, "e2e.device.$user", null)

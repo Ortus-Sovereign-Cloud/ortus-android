@@ -166,6 +166,14 @@
     <string name="chat_locked">Wiadomości w tym pokoju są szyfrowane end-to-end. Otwórz go na komputerze, aby czytać i pisać.</string>
     <string name="chat_cannotOpen">Tej wiadomości nie można otworzyć na tym telefonie.</string>
     <string name="chat_sealed">Szyfrowane end-to-end</string>
+    <string name="chat_thread">Wątek</string>
+    <string name="chat_replyInThread">Odpowiedz w wątku</string>
+    <plurals name="chat_replies">
+        <item quantity="one">%d odpowiedź</item>
+        <item quantity="few">%d odpowiedzi</item>
+        <item quantity="many">%d odpowiedzi</item>
+        <item quantity="other">%d odpowiedzi</item>
+    </plurals>
     <string name="call_incoming">Połączenie przychodzące</string>
     <string name="call_answer">Odbierz</string>
     <string name="call_decline">Odrzuć</string>

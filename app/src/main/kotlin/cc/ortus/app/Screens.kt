@@ -1,6 +1,8 @@
 package cc.ortus.app
 
 import androidx.compose.ui.semantics.semantics
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -46,6 +48,8 @@ import java.util.Date
 sealed class Place {
     data class Thread(val id: String) : Place()
     data class Channel(val room: Room, val title: String) : Place()
+    /** One thread of a room: the message it answers (`root`) and its replies. */
+    data class ChatThread(val room: Room, val title: String, val root: String) : Place()
     data class Folder(val id: String?, val title: String) : Place()
     data class Share(val item: DriveItem) : Place()
     data class Doc(val id: String) : Place()
@@ -110,6 +114,7 @@ fun Tabs(model: Model) {
             when (val top = stack.lastOrNull()) {
                 is Place.Thread -> ThreadScreen(model, top.id)
                 is Place.Channel -> ChannelScreen(model, top.room, top.title, open)
+                is Place.ChatThread -> ChatScreen(model, top.room, top.title, top.root, open)
                 is Place.Folder -> FolderScreen(model, top.id, top.title, open)
                 is Place.Share -> ShareScreen(model, top.item)
                 is Place.Doc -> DocScreen(model, top.id)
@@ -255,48 +260,7 @@ fun ChatsScreen(model: Model, open: (Place) -> Unit) {
 }
 
 @Composable
-fun ChannelScreen(model: Model, room: Room, title: String, open: (Place) -> Unit) {
-    // End-to-end rooms are opened and sealed on the phone (EndToEnd).
-    if (room.encrypted == true) {
-        SealedChannel(model, room, title)
-        return
-    }
-    var data by remember { mutableStateOf<Messages?>(null) }
-    var chatNote by remember { mutableStateOf<String?>(null) }
-    var text by remember { mutableStateOf("") }
-    val scope = rememberCoroutineScope()
-    suspend fun load() { runCatching { quickly({ model.client!!.messages(room.id) }) { data = it } } }
-    LaunchedEffect(room.id) { load() }
-    Column(Modifier.fillMaxSize()) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(title, fontWeight = FontWeight.Bold, color = Text1, fontSize = 18.sp, modifier = Modifier.weight(1f))
-            // The room's call (the web call page, signed in).
-            OutlinedButton({ open(Place.Call(room, title)) }, Modifier.testTag("call")) { Text(stringResource(R.string.call_start)) }
-        }
-        LazyColumn(Modifier.weight(1f).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(data?.messages?.filter { it.deleted != true && it.thread == null } ?: emptyList(), key = { it.id }) { m ->
-                val name = data?.people?.get(m.sender)?.name ?: m.sender
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Avatar(name, 32)
-                    Column { Text("$name · ${time(m.at)}", color = Text2, fontSize = 12.sp); Text(m.text, color = Text1) }
-                }
-            }
-        }
-        chatNote?.let { Text(it, color = Text2, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 12.dp).testTag("chatNote")) }
-        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(text, { text = it }, Modifier.weight(1f).testTag("message"), placeholder = { Text(stringResource(R.string.chat_message, title)) })
-            Button({ scope.launch {
-                val said = text
-                text = ""
-                runCatching { model.client!!.say(said, room.id) }.onFailure {
-                    // Queued offline: it goes by itself. Anything else: the words come back.
-                    if (it is cc.ortus.kit.Queued) chatNote = model.queuedText() else { text = said; chatNote = model.say(it) }
-                }
-                load()
-            } }, enabled = text.isNotBlank(), modifier = Modifier.padding(start = 8.dp).testTag("sendChat")) { Text(stringResource(R.string.thread_send)) }
-        }
-    }
-}
+fun ChannelScreen(model: Model, room: Room, title: String, open: (Place) -> Unit) = ChatScreen(model, room, title, null, open)
 
 @Composable
 fun CalendarScreen(model: Model, at: Long? = null) {
@@ -636,14 +600,20 @@ fun ComposeScreen(model: Model, done: () -> Unit) {
     }
 }
 
+/** How often an open room or thread looks for new messages (while on screen). */
+private const val CHAT_POLL_MS = 5_000L
+
 /**
- * An end-to-end room: its messages opened on the phone, a message that
- * cannot be opened said so (never its ciphertext), and what is written
- * sealed here. Without the library (or its keys), the room says to use a
- * computer, as before.
+ * A room, or one thread of it (`root`: the message it answers): plain
+ * rooms as the server gives them; end-to-end rooms opened and sealed on
+ * the phone (EndToEnd), a message that cannot be opened said so (never its
+ * ciphertext), and nothing sent in the clear. New messages are fetched
+ * every few seconds while the screen is on and the app in front. Without
+ * the end-to-end library (or its keys) a sealed room says to use a computer.
  */
 @Composable
-fun SealedChannel(model: Model, room: Room, title: String) {
+fun ChatScreen(model: Model, room: Room, title: String, root: String?, open: (Place) -> Unit) {
+    val sealed = room.encrypted == true
     var data by remember { mutableStateOf<Messages?>(null) }
     var texts by remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
     var unavailable by remember { mutableStateOf(false) }
@@ -651,20 +621,33 @@ fun SealedChannel(model: Model, room: Room, title: String) {
     var text by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     suspend fun load() {
+        val c = model.client ?: return
         try {
-            val c = model.client ?: return
+            if (!sealed) {
+                quickly({ c.messages(room.id, root) }) { data = it }
+                return
+            }
             val me = model.chatMe ?: c.rooms().me?.also { model.chatMe = it } ?: run { unavailable = true; return }
-            val got = c.messages(room.id)
+            val got = c.messages(room.id, root)
             texts = model.endToEnd()!!.read(me, room.id, got.messages)
             data = got
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Throwable) {
             // No library on this phone (a LinkageError), or its keys cannot be made.
-            if (e is LinkageError || e is org.ortus.e2e.E2eException.Store) unavailable = true else note = model.say(e)
+            if (sealed && (e is LinkageError || e is org.ortus.e2e.E2eException.Store)) unavailable = true
+            else if (data == null) note = model.say(e)
         }
     }
-    LaunchedEffect(room.id) { load() }
+    val lifecycle = androidx.compose.ui.platform.LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(room.id, root) {
+        lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.RESUMED) {
+            while (true) {
+                load()
+                kotlinx.coroutines.delay(CHAT_POLL_MS)
+            }
+        }
+    }
     if (unavailable) {
         Column(Modifier.fillMaxSize().padding(24.dp).testTag("locked"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(title, fontWeight = FontWeight.Bold, color = Text1, fontSize = 18.sp, modifier = Modifier.semantics { heading() })
@@ -672,40 +655,60 @@ fun SealedChannel(model: Model, room: Room, title: String) {
         }
         return
     }
-    Column(Modifier.fillMaxSize().testTag("sealedRoom")) {
-        Column(Modifier.padding(16.dp)) {
-            Text(title, fontWeight = FontWeight.Bold, color = Text1, fontSize = 18.sp, modifier = Modifier.semantics { heading() })
-            Text(stringResource(R.string.chat_sealed), color = Text2, fontSize = 12.sp)
+    val cannot = stringResource(R.string.chat_cannotOpen)
+    // A thread: its root first, then the replies; a room: the messages not in a thread.
+    val shown = data?.messages?.filter { it.deleted != true && (if (root == null) it.thread == null else it.id == root || it.thread == root) } ?: emptyList()
+    Column(Modifier.fillMaxSize().testTag(if (root != null) "chatThread" else if (sealed) "sealedRoom" else "chatRoom")) {
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(if (root != null) stringResource(R.string.chat_thread) else title, fontWeight = FontWeight.Bold, color = Text1, fontSize = 18.sp, modifier = Modifier.semantics { heading() })
+                if (root != null) Text(title, color = Text2, fontSize = 12.sp)
+                if (sealed) Text(stringResource(R.string.chat_sealed), color = Text2, fontSize = 12.sp)
+            }
+            // The room's call (the web call page, signed in); an end-to-end room has none.
+            if (root == null && !sealed) OutlinedButton({ open(Place.Call(room, title)) }, Modifier.testTag("call")) { Text(stringResource(R.string.call_start)) }
         }
-        val cannot = stringResource(R.string.chat_cannotOpen)
         LazyColumn(Modifier.weight(1f).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(data?.messages?.filter { it.deleted != true && it.thread == null } ?: emptyList(), key = { it.id }) { m ->
+            items(shown, key = { it.id }) { m ->
                 val name = data?.people?.get(m.sender)?.name ?: m.sender
-                val shown = texts[m.id]
+                val body = if (sealed) texts[m.id] else m.text
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Avatar(name, 32)
                     Column {
                         Text("$name · ${time(m.at)}", color = Text2, fontSize = 12.sp)
-                        if (shown != null) Text(shown, color = Text1, modifier = Modifier.testTag("opened"))
+                        if (body != null) Text(body, color = Text1, modifier = Modifier.testTag("opened"))
                         else Text(cannot, color = Text2, fontSize = 14.sp, modifier = Modifier.testTag("cannotOpen"))
+                        if (root == null) {
+                            val n = m.replies ?: 0
+                            TextButton({ open(Place.ChatThread(room, title, m.id)) }, Modifier.testTag("thread-${m.id}")) {
+                                Text(if (n > 0) pluralStringResource(R.plurals.chat_replies, n, n) else stringResource(R.string.chat_replyInThread), fontSize = 13.sp)
+                            }
+                        }
                     }
                 }
             }
         }
         note?.let { Text(it, color = Text2, fontSize = 13.sp, modifier = Modifier.padding(horizontal = 12.dp).testTag("chatNote").semantics { liveRegion = LiveRegionMode.Polite }) }
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(text, { text = it }, Modifier.weight(1f).testTag("message"), placeholder = { Text(stringResource(R.string.chat_message, title)) })
+            OutlinedTextField(text, { text = it }, Modifier.weight(1f).testTag("message"), placeholder = { Text(if (root != null) stringResource(R.string.chat_replyInThread) else stringResource(R.string.chat_message, title)) })
             Button({ scope.launch {
                 val said = text
                 text = ""
                 note = null
                 try {
-                    val me = model.chatMe ?: return@launch
-                    model.endToEnd()!!.send(me, room.id, said)
+                    if (sealed) {
+                        val me = model.chatMe ?: return@launch
+                        model.endToEnd()!!.send(me, room.id, said, root)
+                    } else {
+                        model.client!!.say(said, room.id, root)
+                    }
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
+                } catch (e: cc.ortus.kit.Queued) {
+                    // Queued offline: it goes by itself.
+                    note = model.queuedText()
                 } catch (e: Throwable) {
-                    // Not sent (never in the clear): the words come back.
+                    // Not sent (in a sealed room, never in the clear): the words come back.
                     text = said
                     note = model.say(e)
                 }
