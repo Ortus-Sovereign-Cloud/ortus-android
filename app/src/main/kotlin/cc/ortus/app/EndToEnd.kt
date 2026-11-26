@@ -36,6 +36,9 @@ class EndToEnd(private val context: Context, private val client: Client) {
 
     private suspend fun <T> on(block: () -> T): T = withContext(thread) { block() }
 
+    /** Whether this phone's keys were opened this session (a sealed room was). */
+    val isOpen: Boolean get() = library != null
+
     /** The library's HTTP, signed in as the person: never answered from the phone's cache nor queued offline. */
     private class Http(private val client: Client) : Transport {
         override fun http(method: String, path: String, body: String?): HttpResponse = try {
@@ -120,6 +123,28 @@ class EndToEnd(private val context: Context, private val client: Client) {
     suspend fun send(me: String, room: String, text: String, thread: String? = null): String = on {
         runCatching { open(me).send(room, text, thread) }.onFailure { android.util.Log.w("ortus-e2e", "send: $it") }.getOrThrow()
     }
+
+    /** Where recovery stands: set up for the person, opened on this phone. */
+    suspend fun recoveryState(me: String): org.ortus.e2e.RecoveryState = on { open(me).recoveryState() }
+
+    /** Recovery with the recovery key: how many room keys came back. */
+    suspend fun recover(me: String, key: String): Int = on {
+        val n = open(me).recover(key).toInt()
+        opened.clear()
+        refused.clear()
+        n
+    }
+
+    /** A room's devices nobody vouched for. */
+    suspend fun unverified(me: String, room: String): List<org.ortus.e2e.DeviceRef> = on { open(me).unverified(room) }
+
+    /** What came for this device, and how each verification stands (polled while on screen). */
+    suspend fun verifications(me: String): List<org.ortus.e2e.VerificationView> = on { open(me).verifications() }
+
+    suspend fun verifyOwnDevices(me: String): String = on { open(me).verifyOwnDevices() }
+    suspend fun acceptVerification(me: String, id: String) = on { open(me).acceptVerification(id) }
+    suspend fun confirmVerification(me: String, id: String, same: Boolean) = on { open(me).confirmVerification(id, same) }
+    suspend fun cancelVerification(me: String, id: String) = on { open(me).cancelVerification(id) }
 
     /** Signing out: the server drops this device, the phone its keys. */
     suspend fun forget(me: String?) = on {

@@ -85,6 +85,8 @@ class Model(private val activity: FragmentActivity) {
     }
     /** The person's Matrix id, `me` of the rooms (end-to-end rooms need it). */
     var chatMe: String? = null
+    /** Bumped when a verification finished: rooms read who is vouched for again. */
+    var trustChanged by mutableStateOf(0)
     private val context: Context get() = activity
 
     init {

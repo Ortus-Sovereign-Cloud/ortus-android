@@ -56,8 +56,7 @@ def main():
         print("licences: .deps/e2e/crates.txt is missing: run ci/e2e-lib.sh", file=sys.stderr)
         return 1
     rows = [line.rstrip("\n").split("|") for line in open(crates) if line.strip()]
-    rev = open(os.path.join(ROOT, ".deps", "e2e", "rev")).read().strip()
-    print(f"\n## The end-to-end library\n\nlibortus_e2e_ffi (MIT OR Apache-2.0), from ortus-chat `phones/e2e` at {rev}, and the {len(rows)} Rust crates inside it. The MPL-2.0 ones are allowed for this library only, unmodified (the owner's decision of 25 November 2026); their source is at crates.io under the versions named.\n")
+    print(f"\n## The end-to-end library\n\nlibortus_e2e_ffi (MIT OR Apache-2.0), from ortus-chat `phones/e2e` at the chat commit the pinned Ortus program names, and the {len(rows)} Rust crates inside it. The MPL-2.0 ones are allowed for this library only, unmodified (the owner's decision of 25 November 2026); their source is at crates.io under the versions named.\n")
     print("| Crate | Version | Licence |\n| --- | --- | --- |")
     for name, version, lic in rows:
         print(f"| {name} | {version} | {lic} |")

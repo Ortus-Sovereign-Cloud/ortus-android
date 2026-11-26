@@ -136,7 +136,7 @@ The app is MIT OR Apache-2.0. These are the 129 libraries it carries (its releas
 
 ## The end-to-end library
 
-libortus_e2e_ffi (MIT OR Apache-2.0), from ortus-chat `phones/e2e` at bb172b22371a73f31c1b184d6ea956c0dcc9b9bc, and the 183 Rust crates inside it. The MPL-2.0 ones are allowed for this library only, unmodified (the owner's decision of 25 November 2026); their source is at crates.io under the versions named.
+libortus_e2e_ffi (MIT OR Apache-2.0), from ortus-chat `phones/e2e` at the chat commit the pinned Ortus program names, and the 183 Rust crates inside it. The MPL-2.0 ones are allowed for this library only, unmodified (the owner's decision of 25 November 2026); their source is at crates.io under the versions named.
 
 | Crate | Version | Licence |
 | --- | --- | --- |

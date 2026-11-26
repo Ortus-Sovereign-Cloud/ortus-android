@@ -78,6 +78,8 @@ fun Tabs(model: Model) {
     var tab by model::tab
     val stack = remember { mutableStateListOf<Place>() }
     LaunchedEffect(Unit) { model.refresh() }
+    // Verifications by emoji, wherever one is in the app.
+    Verifications(model)
     // The bell counts again when a push arrives (and once signed in).
     LaunchedEffect(Unit) { Pushes.arrived.collect { model.countUnread() } }
     // A call answered from its ringing: straight into it.
@@ -619,7 +621,14 @@ fun ChatScreen(model: Model, room: Room, title: String, root: String?, open: (Pl
     var unavailable by remember { mutableStateOf(false) }
     var note by remember { mutableStateOf<String?>(null) }
     var text by remember { mutableStateOf("") }
+    var unverified by remember { mutableStateOf(0) }
+    var recovering by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    // Who is not vouched for: read on opening, and after a verification or recovery.
+    LaunchedEffect(room.id, model.trustChanged, sealed) {
+        val me = model.chatMe
+        if (sealed && me != null) unverified = runCatching { model.endToEnd()!!.unverified(me, room.id).size }.getOrDefault(0)
+    }
     suspend fun load() {
         val c = model.client ?: return
         try {
@@ -658,13 +667,16 @@ fun ChatScreen(model: Model, room: Room, title: String, root: String?, open: (Pl
     val cannot = stringResource(R.string.chat_cannotOpen)
     // A thread: its root first, then the replies; a room: the messages not in a thread.
     val shown = data?.messages?.filter { it.deleted != true && (if (root == null) it.thread == null else it.id == root || it.thread == root) } ?: emptyList()
+    if (recovering) RecoveryDialog(model) { recovering = false }
     Column(Modifier.fillMaxSize().testTag(if (root != null) "chatThread" else if (sealed) "sealedRoom" else "chatRoom")) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(if (root != null) stringResource(R.string.chat_thread) else title, fontWeight = FontWeight.Bold, color = Text1, fontSize = 18.sp, modifier = Modifier.semantics { heading() })
                 if (root != null) Text(title, color = Text2, fontSize = 12.sp)
                 if (sealed) Text(stringResource(R.string.chat_sealed), color = Text2, fontSize = 12.sp)
+                if (sealed && unverified > 0) Text("⚠ " + stringResource(R.string.chat_unverified, unverified), color = androidx.compose.ui.graphics.Color(0xFFF5A35B), fontSize = 12.sp, modifier = Modifier.testTag("unverified"))
             }
+            if (sealed && root == null) TextButton({ recovering = true }, Modifier.testTag("recoveryOpen")) { Text(stringResource(R.string.chat_recovery)) }
             // The room's call (the web call page, signed in); an end-to-end room has none.
             if (root == null && !sealed) OutlinedButton({ open(Place.Call(room, title)) }, Modifier.testTag("call")) { Text(stringResource(R.string.call_start)) }
         }
