@@ -173,6 +173,14 @@
     <string name="chat_recoveryRestored">Recovered: %1$d room keys back.</string>
     <string name="chat_recoveryWrong">That is not your recovery key.</string>
     <string name="chat_recoveryHere">Recovery is set up, and this phone is vouched for.</string>
+    <string name="chat_fromBackup">From the backup: the sender could not be confirmed.</string>
+    <string name="chat_recoveryEscrowInfo">Your organisation can recover your history. Escrow key %1$s, set by %2$s (%3$s).</string>
+    <string name="chat_escrowSignerYou">you</string>
+    <string name="chat_escrowSignerVerified">verified by you</string>
+    <string name="chat_escrowSignerUnverified">not verified by you</string>
+    <string name="chat_recoveryEscrowChanged">The organisation\'s escrow key changed since you last set up recovery.</string>
+    <string name="chat_recoveryEscrowUnsigned">The organisation\'s escrow key is not signed by an administrator: ask them to make it again.</string>
+    <string name="chat_recoveryEscrowNotShown">The organisation\'s escrow key is not the one you were shown: look at it again.</string>
     <string name="chat_verifyMine">Verify my other device</string>
     <string name="chat_unverified">%1$d unverified devices</string>
     <string name="chat_verifyTitle">Verify a device</string>

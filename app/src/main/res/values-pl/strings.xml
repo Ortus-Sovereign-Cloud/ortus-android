@@ -175,6 +175,14 @@
     <string name="chat_recoveryRestored">Odzyskano: %1$d kluczy pokojów.</string>
     <string name="chat_recoveryWrong">To nie jest Twój klucz odzyskiwania.</string>
     <string name="chat_recoveryHere">Odzyskiwanie jest skonfigurowane, a ten telefon potwierdzony.</string>
+    <string name="chat_fromBackup">Z kopii zapasowej: nie udało się potwierdzić nadawcy.</string>
+    <string name="chat_recoveryEscrowInfo">Twoja organizacja może odzyskać Twoją historię. Klucz depozytowy %1$s, ustawiony przez: %2$s (%3$s).</string>
+    <string name="chat_escrowSignerYou">Ty</string>
+    <string name="chat_escrowSignerVerified">zweryfikowany przez Ciebie</string>
+    <string name="chat_escrowSignerUnverified">niezweryfikowany przez Ciebie</string>
+    <string name="chat_recoveryEscrowChanged">Klucz depozytowy organizacji zmienił się od Twojego ostatniego ustawienia odzyskiwania.</string>
+    <string name="chat_recoveryEscrowUnsigned">Klucz depozytowy organizacji nie jest podpisany przez administratora: poproś o utworzenie go ponownie.</string>
+    <string name="chat_recoveryEscrowNotShown">Klucz depozytowy organizacji nie jest tym, który Ci pokazano: sprawdź go ponownie.</string>
     <string name="chat_verifyMine">Zweryfikuj moje drugie urządzenie</string>
     <string name="chat_unverified">Niezweryfikowane urządzenia: %1$d</string>
     <string name="chat_verifyTitle">Weryfikacja urządzenia</string>

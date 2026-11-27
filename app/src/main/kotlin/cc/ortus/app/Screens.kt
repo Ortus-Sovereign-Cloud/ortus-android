@@ -621,7 +621,7 @@ private const val CHAT_POLL_MS = 5_000L
 fun ChatScreen(model: Model, room: Room, title: String, root: String?, open: (Place) -> Unit) {
     val sealed = room.encrypted == true
     var data by remember { mutableStateOf<Messages?>(null) }
-    var texts by remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
+    var texts by remember { mutableStateOf<Map<String, org.ortus.e2e.Opened?>>(emptyMap()) }
     var unavailable by remember { mutableStateOf(false) }
     var note by remember { mutableStateOf<String?>(null) }
     var text by remember { mutableStateOf("") }
@@ -671,6 +671,7 @@ fun ChatScreen(model: Model, room: Room, title: String, root: String?, open: (Pl
         return
     }
     val cannot = stringResource(R.string.chat_cannotOpen)
+    val fromBackup = stringResource(R.string.chat_fromBackup)
     // A thread: its root first, then the replies; a room: the messages not in a thread.
     val shown = data?.messages?.filter { it.deleted != true && (if (root == null) it.thread == null else it.id == root || it.thread == root) } ?: emptyList()
     if (recovering) RecoveryDialog(model) { recovering = false }
@@ -691,13 +692,15 @@ fun ChatScreen(model: Model, room: Room, title: String, root: String?, open: (Pl
         LazyColumn(Modifier.weight(1f).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             items(shown, key = { it.id }) { m ->
                 val name = data?.people?.get(m.sender)?.name ?: m.sender
-                val body = if (sealed) texts[m.id] else m.text
+                val body = if (sealed) texts[m.id]?.text else m.text
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Avatar(name, 32)
                     Column {
                         Text("$name · ${time(m.at)}", color = Text2, fontSize = 12.sp)
                         if (body != null) Text(body, color = Text1, modifier = Modifier.testTag("opened"))
                         else Text(cannot, color = Text2, fontSize = 14.sp, modifier = Modifier.testTag("cannotOpen"))
+                        // Its room key came from the backup, not from the sender.
+                        if (sealed && texts[m.id]?.fromBackup == true) Text(fromBackup, color = Text2, fontSize = 12.sp, modifier = Modifier.testTag("fromBackup"))
                         if (root == null) {
                             val n = m.replies ?: 0
                             TextButton({ open(Place.ChatThread(room, title, m.id)) }, Modifier.testTag("thread-${m.id}")) {

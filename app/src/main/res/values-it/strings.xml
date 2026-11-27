@@ -175,6 +175,14 @@
     <string name="chat_recoveryRestored">Recuperate: %1$d chiavi di stanza.</string>
     <string name="chat_recoveryWrong">Questa non è la sua chiave di recupero.</string>
     <string name="chat_recoveryHere">Il recupero è configurato e questo telefono è confermato.</string>
+    <string name="chat_fromBackup">Dal backup: non è stato possibile confermare il mittente.</string>
+    <string name="chat_recoveryEscrowInfo">La Sua organizzazione può recuperare la Sua cronologia. Chiave di deposito %1$s, impostata da %2$s (%3$s).</string>
+    <string name="chat_escrowSignerYou">Lei</string>
+    <string name="chat_escrowSignerVerified">verificato da Lei</string>
+    <string name="chat_escrowSignerUnverified">non verificato da Lei</string>
+    <string name="chat_recoveryEscrowChanged">La chiave di deposito dell’organizzazione è cambiata dall’ultima volta che ha impostato il recupero.</string>
+    <string name="chat_recoveryEscrowUnsigned">La chiave di deposito dell’organizzazione non è firmata da un amministratore: chieda di crearla di nuovo.</string>
+    <string name="chat_recoveryEscrowNotShown">La chiave di deposito dell’organizzazione non è quella che Le è stata mostrata: la guardi di nuovo.</string>
     <string name="chat_verifyMine">Verifica il mio altro dispositivo</string>
     <string name="chat_unverified">Dispositivi non verificati: %1$d</string>
     <string name="chat_verifyTitle">Verifica un dispositivo</string>

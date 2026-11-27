@@ -177,6 +177,14 @@
     <string name="chat_recoveryRestored">تم الاسترداد: %1$d من مفاتيح الغرف.</string>
     <string name="chat_recoveryWrong">هذا ليس مفتاح الاسترداد الخاص بك.</string>
     <string name="chat_recoveryHere">الاسترداد مضبوط، وهذا الهاتف موثّق.</string>
+    <string name="chat_fromBackup">من النسخة الاحتياطية: تعذّر تأكيد المرسل.</string>
+    <string name="chat_recoveryEscrowInfo">تستطيع مؤسستك استعادة سجلك. مفتاح الضمان %1$s، ضبطه %2$s (%3$s).</string>
+    <string name="chat_escrowSignerYou">أنت</string>
+    <string name="chat_escrowSignerVerified">تحققت منه</string>
+    <string name="chat_escrowSignerUnverified">لم تتحقق منه</string>
+    <string name="chat_recoveryEscrowChanged">تغيّر مفتاح الضمان الخاص بالمؤسسة منذ آخر مرة أعددت فيها الاستعادة.</string>
+    <string name="chat_recoveryEscrowUnsigned">مفتاح الضمان الخاص بالمؤسسة غير موقّع من مسؤول: اطلب منه إنشاءه من جديد.</string>
+    <string name="chat_recoveryEscrowNotShown">مفتاح الضمان الخاص بالمؤسسة ليس المفتاح الذي عُرض عليك: انظر إليه مرة أخرى.</string>
     <string name="chat_verifyMine">توثيق جهازي الآخر</string>
     <string name="chat_unverified">أجهزة غير موثّقة: %1$d</string>
     <string name="chat_verifyTitle">توثيق جهاز</string>

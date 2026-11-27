@@ -7,6 +7,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.ortus.e2e.E2eException
 import org.ortus.e2e.HttpResponse
+import org.ortus.e2e.Opened
 import org.ortus.e2e.OrtusE2e
 import org.ortus.e2e.Transport
 import org.ortus.e2e.TransportException
@@ -29,8 +30,13 @@ import java.util.concurrent.Executors
 class EndToEnd(private val context: Context, private val client: Client) {
     private val thread = Executors.newSingleThreadExecutor { Thread(it, "ortus-e2e").apply { isDaemon = true } }.asCoroutineDispatcher()
     private var library: OrtusE2e? = null
-    /** What was opened, by message id: opening a message again is not needed. */
-    private val opened = HashMap<String, String>()
+    /**
+     * What was opened, by message id: opening a message again is not needed,
+     * except one whose room key came from the backup (its sender could not
+     * be confirmed): opened again when new room keys come, as the sender's
+     * own key may confirm it then.
+     */
+    private val opened = HashMap<String, Opened>()
     /** What did not open: tried again only once new room keys came. */
     private val refused = HashSet<String>()
 
@@ -98,21 +104,23 @@ class EndToEnd(private val context: Context, private val client: Client) {
     }
 
     /**
-     * Each message with its text, or null when it cannot be opened (a room
-     * key that has not come, a sender refused). Room keys waiting for this
-     * device are taken in first.
+     * Each message opened (its text, and whether its room key came from the
+     * backup), or null when it cannot be opened (a room key that has not
+     * come, a sender refused). Room keys waiting for this device are taken
+     * in first.
      */
-    suspend fun read(me: String, room: String, messages: List<ChatMessage>): Map<String, String?> = on {
+    suspend fun read(me: String, room: String, messages: List<ChatMessage>): Map<String, Opened?> = on {
         val e2e = open(me)
-        // Room keys and one-time keys only when something waits to open
-        // (a room on screen is read every few seconds).
-        if (messages.any { it.sealed != null && it.id !in opened }) {
+        // Room keys and one-time keys only when something waits to open, or
+        // waits for its sender to be confirmed (a room on screen is read
+        // every few seconds).
+        if (messages.any { it.sealed != null && opened[it.id]?.fromBackup != false }) {
             runCatching { e2e.inbox() }
-                .onSuccess { if (it.roomKeys > 0u) refused.clear() }
+                .onSuccess { if (it.roomKeys > 0u) { refused.clear(); opened.values.removeAll { o -> o.fromBackup } } }
                 .onFailure { android.util.Log.w("ortus-e2e", "inbox: $it") }
         }
         messages.associate { m ->
-            m.id to (opened[m.id] ?: if (m.sealed == null || m.id in refused) null else runCatching { e2e.decrypt(room, m.sealedJson()).text }
+            m.id to (opened[m.id] ?: if (m.sealed == null || m.id in refused) null else runCatching { e2e.decrypt(room, m.sealedJson()) }
                 // Why it did not open (the library's reason; never any text).
                 .onFailure { android.util.Log.w("ortus-e2e", "${m.id} not opened: $it"); refused.add(m.id) }
                 .getOrNull()?.also { opened[m.id] = it })
@@ -146,8 +154,19 @@ class EndToEnd(private val context: Context, private val client: Client) {
     suspend fun confirmVerification(me: String, id: String, same: Boolean) = on { open(me).confirmVerification(id, same) }
     suspend fun cancelVerification(me: String, id: String) = on { open(me).cancelVerification(id) }
 
-    /** Recovery set up from this phone (nobody set it up yet): the recovery key, shown once. */
-    suspend fun setUpRecovery(me: String): String = on { open(me).setUpRecovery() }
+    /**
+     * The organisation's escrow key, shown before recovery is set up: null
+     * when there is none; E2eException.Invalid when no administrator signed
+     * it (set-up is refused).
+     */
+    suspend fun escrowInfo(me: String): org.ortus.e2e.EscrowInfo? = on { open(me).escrowInfo() }
+
+    /**
+     * Recovery set up from this phone (nobody set it up yet): the recovery
+     * key, shown once. [acceptedEscrowKey] is the escrow key the person was
+     * shown (`escrowInfo`); with an escrow, another one or none is refused.
+     */
+    suspend fun setUpRecovery(me: String, acceptedEscrowKey: String?): String = on { open(me).setUpRecovery(acceptedEscrowKey) }
 
     /** Asks one device (a row of `unverified`) to verify: its id. */
     suspend fun verifyDevice(me: String, user: String, device: String): String = on { open(me).verifyDevice(user, device) }

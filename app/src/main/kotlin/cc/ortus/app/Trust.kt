@@ -28,6 +28,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import cc.ortus.kit.EscrowSigner
 import cc.ortus.kit.VerificationParty
 import cc.ortus.kit.nameOf
 import org.ortus.e2e.DeviceRef
@@ -42,9 +43,15 @@ val SAS_EMOJI = listOf(
     "🔨", "☎️", "🏁", "🚂", "🚲", "✈️", "🚀", "🏆", "⚽", "🎸", "🎺", "🔔", "⚓", "🎧", "📁", "📌",
 )
 
+/** The end-to-end library's refusals of an escrow key (its words, said here in the person's language). */
+const val ESCROW_UNSIGNED = "The organisation's escrow key is not signed by an administrator: ask them to make it again."
+const val ESCROW_NOT_ACCEPTED = "The organisation's escrow key is not the one you were shown: look at it again."
+
 /**
  * Recovery on the phone: not set up yet, set up here (the recovery key is
- * shown once, to keep somewhere safe); set up, the recovery key brings this
+ * shown once, to keep somewhere safe; first, the organisation's escrow key
+ * that can recover the person's history too: its fingerprint, who set it
+ * and whether the person verified them); set up, the recovery key brings this
  * phone's history and vouches for it; recovered, it can verify the
  * person's other device.
  */
@@ -62,7 +69,35 @@ fun RecoveryDialog(model: Model, close: () -> Unit) {
     val restored = stringResource(R.string.chat_recoveryRestored)
     val wrong = stringResource(R.string.chat_recoveryWrong)
     val label = stringResource(R.string.chat_recoveryKey)
-    LaunchedEffect(me) { if (me != null) state = runCatching { model.endToEnd()!!.recoveryState(me) }.getOrNull() }
+    val unsigned = stringResource(R.string.chat_recoveryEscrowUnsigned)
+    val notShown = stringResource(R.string.chat_recoveryEscrowNotShown)
+    // The organisation's escrow key, as shown to the person: set-up seals the
+    // recovery key to this one only. Set-up is offered once it is known
+    // (none, or a signed one), never after an error.
+    var escrow by remember { mutableStateOf<org.ortus.e2e.EscrowInfo?>(null) }
+    var escrowKnown by remember { mutableStateOf(false) }
+    fun escrowError(e: Exception): String = when {
+        e is org.ortus.e2e.E2eException.Invalid && e.detail == ESCROW_UNSIGNED -> unsigned
+        e is org.ortus.e2e.E2eException.Invalid && e.detail == ESCROW_NOT_ACCEPTED -> notShown
+        e is org.ortus.e2e.E2eException.Invalid -> e.detail
+        else -> model.say(e)
+    }
+    suspend fun loadEscrow() {
+        escrow = null
+        escrowKnown = false
+        try {
+            escrow = model.endToEnd()!!.escrowInfo(me!!)
+            escrowKnown = true
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            note = escrowError(e)
+        }
+    }
+    LaunchedEffect(me) {
+        if (me != null) state = runCatching { model.endToEnd()!!.recoveryState(me) }.getOrNull()
+        if (state?.set == false) loadEscrow()
+    }
     val saved = { made = null; model.trustChanged++; close() }
     // A recovery key on screen (the new one, or one being typed): no
     // screenshots, screen recording or recents thumbnail of it.
@@ -91,7 +126,20 @@ fun RecoveryDialog(model: Model, close: () -> Unit) {
                         TextButton({ copySecret(context, label, k) }, Modifier.testTag("recoveryCopy")) { Text(stringResource(R.string.chat_recoveryCopy)) }
                     }
                     s == null -> Text("…")
-                    !s.set -> Text(stringResource(R.string.chat_recoveryNoneLead))
+                    !s.set -> {
+                        Text(stringResource(R.string.chat_recoveryNoneLead))
+                        escrow?.let { e ->
+                            val signer = EscrowSigner.of(e.signer, e.signerStatus, me, model.chatPeople)
+                            val you = stringResource(R.string.chat_escrowSignerYou)
+                            val status = when (signer.status) {
+                                EscrowSigner.Status.You -> you
+                                EscrowSigner.Status.Verified -> stringResource(R.string.chat_escrowSignerVerified)
+                                EscrowSigner.Status.Unverified -> stringResource(R.string.chat_escrowSignerUnverified)
+                            }
+                            Text(stringResource(R.string.chat_recoveryEscrowInfo, e.fingerprint, if (signer.isMe) you else signer.name, status), modifier = Modifier.testTag("recoveryEscrow"))
+                            if (e.changed) Text(stringResource(R.string.chat_recoveryEscrowChanged), modifier = Modifier.testTag("recoveryEscrowChanged"))
+                        }
+                    }
                     !s.here -> {
                         Text(stringResource(R.string.chat_recoveryEnterLead))
                         // No autocorrect, suggestions or learning of what is typed: it unlocks everything.
@@ -109,17 +157,20 @@ fun RecoveryDialog(model: Model, close: () -> Unit) {
             val s = state
             when {
                 made != null -> Button(saved, Modifier.testTag("recoverySaved")) { Text(stringResource(R.string.chat_recoverySaved)) }
-                s != null && !s.set -> Button({
+                s != null && !s.set && escrowKnown -> Button({
                     scope.launch {
                         busy = true
                         note = null
                         try {
-                            made = model.endToEnd()!!.setUpRecovery(me!!)
+                            made = model.endToEnd()!!.setUpRecovery(me!!, escrow?.key)
                             state = model.endToEnd()!!.recoveryState(me)
                         } catch (e: kotlinx.coroutines.CancellationException) {
                             throw e
                         } catch (e: Exception) {
-                            note = model.say(e)
+                            val said = escrowError(e)
+                            // The escrow changed meanwhile: the one set-up would use now is shown.
+                            if (e is org.ortus.e2e.E2eException.Invalid && e.detail == ESCROW_NOT_ACCEPTED) loadEscrow()
+                            note = said
                         }
                         busy = false
                     }

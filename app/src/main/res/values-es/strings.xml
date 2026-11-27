@@ -175,6 +175,14 @@
     <string name="chat_recoveryRestored">Recuperado: %1$d claves de sala.</string>
     <string name="chat_recoveryWrong">Esa no es su clave de recuperación.</string>
     <string name="chat_recoveryHere">La recuperación está configurada y este teléfono, confirmado.</string>
+    <string name="chat_fromBackup">De la copia de seguridad: no se pudo confirmar el remitente.</string>
+    <string name="chat_recoveryEscrowInfo">Su organización puede recuperar su historial. Clave de custodia %1$s, definida por %2$s (%3$s).</string>
+    <string name="chat_escrowSignerYou">usted</string>
+    <string name="chat_escrowSignerVerified">verificado por usted</string>
+    <string name="chat_escrowSignerUnverified">no verificado por usted</string>
+    <string name="chat_recoveryEscrowChanged">La clave de custodia de la organización cambió desde la última vez que configuró la recuperación.</string>
+    <string name="chat_recoveryEscrowUnsigned">La clave de custodia de la organización no está firmada por un administrador: pídale que la vuelva a crear.</string>
+    <string name="chat_recoveryEscrowNotShown">La clave de custodia de la organización no es la que se le mostró: vuelva a mirarla.</string>
     <string name="chat_verifyMine">Verificar mi otro dispositivo</string>
     <string name="chat_unverified">Dispositivos sin verificar: %1$d</string>
     <string name="chat_verifyTitle">Verificar un dispositivo</string>

@@ -175,6 +175,14 @@
     <string name="chat_recoveryRestored">Відновлено ключів кімнат: %1$d.</string>
     <string name="chat_recoveryWrong">Це не ваш ключ відновлення.</string>
     <string name="chat_recoveryHere">Відновлення налаштоване, і цей телефон засвідчено.</string>
+    <string name="chat_fromBackup">З резервної копії: відправника не вдалося підтвердити.</string>
+    <string name="chat_recoveryEscrowInfo">Ваша організація може відновити вашу історію. Депозитний ключ %1$s, задав: %2$s (%3$s).</string>
+    <string name="chat_escrowSignerYou">ви</string>
+    <string name="chat_escrowSignerVerified">перевірено вами</string>
+    <string name="chat_escrowSignerUnverified">не перевірено вами</string>
+    <string name="chat_recoveryEscrowChanged">Депозитний ключ організації змінився відтоді, як ви востаннє налаштовували відновлення.</string>
+    <string name="chat_recoveryEscrowUnsigned">Депозитний ключ організації не підписаний адміністратором: попросіть створити його знову.</string>
+    <string name="chat_recoveryEscrowNotShown">Депозитний ключ організації не той, що вам показали: перегляньте його ще раз.</string>
     <string name="chat_verifyMine">Перевірити мій інший пристрій</string>
     <string name="chat_unverified">Неперевірених пристроїв: %1$d</string>
     <string name="chat_verifyTitle">Перевірка пристрою</string>

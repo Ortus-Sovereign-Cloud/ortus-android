@@ -33,4 +33,14 @@ class VerificationPartyTest {
         assertEquals("LAPTOP", mine.device)
         assertNull(VerificationParty.of(me, "", me, people).device)
     }
+
+    @Test fun escrowSignerAsRecoverySetUpSaysIt() {
+        assertEquals(EscrowSigner(false, "Taras", EscrowSigner.Status.Verified), EscrowSigner.of("@taras:ministry.example", "verified", me, people))
+        assertEquals(EscrowSigner(false, "@nobody:ministry.example", EscrowSigner.Status.Unverified), EscrowSigner.of("@nobody:ministry.example", "unverified", me, people))
+        val mine = EscrowSigner.of(me, "you", me, people)
+        assertTrue(mine.isMe)
+        assertEquals(EscrowSigner.Status.You, mine.status)
+        // A status this phone does not know is not taken as verified.
+        assertEquals(EscrowSigner.Status.Unverified, EscrowSigner.of("@taras:ministry.example", "trusted", me, people).status)
+    }
 }

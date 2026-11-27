@@ -173,6 +173,14 @@
     <string name="chat_recoveryRestored">Wiederhergestellt: %1$d Raumschlüssel.</string>
     <string name="chat_recoveryWrong">Das ist nicht Ihr Wiederherstellungsschlüssel.</string>
     <string name="chat_recoveryHere">Die Wiederherstellung ist eingerichtet, und dieses Telefon ist bestätigt.</string>
+    <string name="chat_fromBackup">Aus der Sicherung: Der Absender konnte nicht bestätigt werden.</string>
+    <string name="chat_recoveryEscrowInfo">Ihre Organisation kann Ihren Verlauf wiederherstellen. Treuhandschlüssel %1$s, gesetzt von %2$s (%3$s).</string>
+    <string name="chat_escrowSignerYou">Ihnen</string>
+    <string name="chat_escrowSignerVerified">von Ihnen verifiziert</string>
+    <string name="chat_escrowSignerUnverified">nicht von Ihnen verifiziert</string>
+    <string name="chat_recoveryEscrowChanged">Der Treuhandschlüssel der Organisation hat sich seit Ihrer letzten Einrichtung der Wiederherstellung geändert.</string>
+    <string name="chat_recoveryEscrowUnsigned">Der Treuhandschlüssel der Organisation ist nicht von einer Administratorin signiert: Bitten Sie darum, ihn neu zu erstellen.</string>
+    <string name="chat_recoveryEscrowNotShown">Der Treuhandschlüssel der Organisation ist nicht der, der Ihnen gezeigt wurde: Sehen Sie ihn sich erneut an.</string>
     <string name="chat_verifyMine">Mein anderes Gerät verifizieren</string>
     <string name="chat_unverified">Nicht verifizierte Geräte: %1$d</string>
     <string name="chat_verifyTitle">Gerät verifizieren</string>

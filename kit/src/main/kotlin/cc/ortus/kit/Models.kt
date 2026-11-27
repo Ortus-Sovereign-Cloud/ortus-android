@@ -57,6 +57,23 @@ data class VerificationParty(val name: String?, val user: String, val device: St
     }
 }
 
+/**
+ * Who set the organisation's escrow key, as recovery set-up says it (the
+ * web's words): the person themself ("you"), else their name when known,
+ * else their id; and whether the person verified them.
+ */
+data class EscrowSigner(val isMe: Boolean, val name: String, val status: Status) {
+    enum class Status { You, Verified, Unverified }
+    companion object {
+        /** `status` as the end-to-end library says it: you, verified or unverified. */
+        fun of(signer: String, status: String, me: String?, people: Map<String, Person>): EscrowSigner {
+            val party = VerificationParty.of(signer, null, me, people)
+            val s = when (status) { "you" -> Status.You; "verified" -> Status.Verified; else -> Status.Unverified }
+            return EscrowSigner(party.isMe, party.name ?: signer, s)
+        }
+    }
+}
+
 @Serializable data class Event(val id: String, val summary: String, val start: Long, val end: Long, val location: String? = null, val answer: String? = null, val mine: Boolean? = null) {
     val waiting get() = mine != true && answer == "NEEDS-ACTION"
 }
