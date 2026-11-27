@@ -185,6 +185,9 @@
     <string name="chat_verifyDifferent">They don\'t match</string>
     <string name="chat_verifyDone">Verified.</string>
     <string name="chat_verifyCancelled">Verification stopped.</string>
+    <string name="chat_verifyWith">Verifying with %1$s</string>
+    <string name="chat_verifyYou">This is you, on another of your devices</string>
+    <string name="chat_verifyYouDevice">This is you, device %1$s</string>
     <string name="chat_recoverySetUp">Set up recovery</string>
     <string name="chat_recoveryNewKeyLead">This is your recovery key. It\'s shown only once: save it in a password manager or write it down, and keep it somewhere safe. Anyone who has it can read your end-to-end messages.</string>
     <string name="chat_recoveryCopy">Copy</string>

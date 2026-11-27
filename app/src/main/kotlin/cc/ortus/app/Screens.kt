@@ -244,7 +244,7 @@ fun ChatsScreen(model: Model, open: (Place) -> Unit) {
     var data by remember { mutableStateOf<Rooms?>(null) }
     var failure by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
-    suspend fun load() { failure = model.loadList({ data?.rooms?.isNotEmpty() == true }) { quickly({ model.client!!.rooms() }) { data = it; it.me?.let { me -> model.chatMe = me } } } }
+    suspend fun load() { failure = model.loadList({ data?.rooms?.isNotEmpty() == true }) { quickly({ model.client!!.rooms() }) { data = it; model.know(it.people); it.me?.let { me -> model.chatMe = me } } } }
     LaunchedEffect(Unit) { load() }
     LazyColumn {
         item { Title(stringResource(R.string.tab_chat)) }
@@ -645,6 +645,7 @@ fun ChatScreen(model: Model, room: Room, title: String, root: String?, open: (Pl
             val got = c.messages(room.id, root)
             texts = model.endToEnd()!!.read(me, room.id, got.messages)
             data = got
+            model.know(got.people)
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Throwable) {

@@ -107,8 +107,12 @@ class EndToEndTest {
             waitFor("the recovery dialog's set-up button") { compose.onAllNodesWithTag("recoverySetUp").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithTag("recoverySetUp").performClick()
             waitFor("the new recovery key") { compose.onAllNodesWithTag("recoveryNewKey").fetchSemanticsNodes().isNotEmpty() }
+            // While the key is on screen it cannot be captured; after, the screen can again.
+            val secure = { var on = false; it.onActivity { a -> on = a.window.attributes.flags and android.view.WindowManager.LayoutParams.FLAG_SECURE != 0 }; on }
+            check(secure()) { "the recovery key's screen can be captured" }
             compose.onNodeWithTag("recoverySaved").performClick()
             waitFor("the recovery dialog to close") { compose.onAllNodesWithTag("recovery").fetchSemanticsNodes().isEmpty() }
+            check(!secure()) { "the screen stays secure after the recovery key" }
             // The room is open once the server lists the phone's device.
             val phoneListed = { call(server, session, "GET", "/chat/rooms/$room/devices").second.contains("\"PHONE") }
             waitFor("the phone's device keys on the server") { phoneListed() }
@@ -141,6 +145,14 @@ class EndToEndTest {
             compose.onNodeWithTag("thread-$sent").performClick()
             waitFor("the thread, opened") { compose.onAllNodesWithText("District 5 needs one too").fetchSemanticsNodes().isNotEmpty() }
             check(compose.onAllNodesWithTag("chatThread").fetchSemanticsNodes().isNotEmpty()) { "not the thread screen" }
+
+            // The other device asks to verify: the phone says who asks (the person themself, that device).
+            val phoneDevice = Regex("\"(PHONE[A-Za-z0-9_-]*)\"").find(call(server, session, "GET", "/chat/rooms/$room/devices").second)?.groupValues?.get(1)
+                ?: throw AssertionError("the phone's device id")
+            peer.verifyDevice(me, phoneDevice)
+            waitFor("the incoming verification, with who asks", timeout = 30_000) { compose.onAllNodesWithTag("verifyWho").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithTag("verifyWho").assertTextContains("TESTPEER", substring = true)
+            compose.onNodeWithTag("verifyDecline").performClick()
             peer.forget()
         }
     }

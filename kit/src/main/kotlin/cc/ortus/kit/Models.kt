@@ -32,6 +32,31 @@ import kotlinx.serialization.json.add
 }
 @Serializable data class Messages(val messages: List<ChatMessage>, val people: Map<String, Person> = emptyMap())
 
+/**
+ * A person's name by their Matrix id (`@user:server`, as the end-to-end
+ * library names them) or their bare id; null when unknown.
+ */
+fun Map<String, Person>.nameOf(user: String): String? {
+    get(user)?.let { return it.name }
+    val bare = user.removePrefix("@")
+    get(bare)?.let { return it.name }
+    return bare.substringBefore(':', "").takeIf { it.isNotEmpty() }?.let { get(it)?.name }
+}
+
+/**
+ * Who a verification is with, as its sheet says it: another person (by
+ * name when known, always by id) or the person themself, on which device
+ * (null until the library knows it).
+ */
+data class VerificationParty(val name: String?, val user: String, val device: String?, val isMe: Boolean) {
+    companion object {
+        fun of(user: String, device: String?, me: String?, people: Map<String, Person>): VerificationParty {
+            val isMe = me != null && me.removePrefix("@") == user.removePrefix("@")
+            return VerificationParty(if (isMe) null else people.nameOf(user), user, device?.takeIf { it.isNotEmpty() }, isMe)
+        }
+    }
+}
+
 @Serializable data class Event(val id: String, val summary: String, val start: Long, val end: Long, val location: String? = null, val answer: String? = null, val mine: Boolean? = null) {
     val waiting get() = mine != true && answer == "NEEDS-ACTION"
 }

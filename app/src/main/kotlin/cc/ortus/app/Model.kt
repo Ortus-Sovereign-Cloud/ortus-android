@@ -85,6 +85,9 @@ class Model(private val activity: FragmentActivity) {
     }
     /** The person's Matrix id, `me` of the rooms (end-to-end rooms need it). */
     var chatMe: String? = null
+    /** People the chat has named so far, by id: who a verification is with. */
+    var chatPeople: Map<String, cc.ortus.kit.Person> = emptyMap()
+    fun know(people: Map<String, cc.ortus.kit.Person>) { if (people.isNotEmpty()) chatPeople = chatPeople + people }
     /** Bumped when a verification finished: rooms read who is vouched for again. */
     var trustChanged by mutableStateOf(0)
     private val context: Context get() = activity
@@ -367,6 +370,7 @@ class Model(private val activity: FragmentActivity) {
             endToEnd()?.forget(me)
         }
         chatMe = null
+        chatPeople = emptyMap()
         client?.let { c -> runCatching { c.raw("POST", "/session/sign-out", kotlinx.serialization.json.JsonObject(emptyMap())) } }
         client?.let { cache(it.server).clear(); outbox(it.server).clear() }
         Store.put(context, "session", null)

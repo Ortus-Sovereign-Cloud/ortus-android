@@ -185,6 +185,9 @@
     <string name="chat_verifyDifferent">Sie stimmen nicht überein</string>
     <string name="chat_verifyDone">Verifiziert.</string>
     <string name="chat_verifyCancelled">Verifizierung abgebrochen.</string>
+    <string name="chat_verifyWith">Verifizierung mit %1$s</string>
+    <string name="chat_verifyYou">Das sind Sie, auf einem anderen Ihrer Geräte</string>
+    <string name="chat_verifyYouDevice">Das sind Sie, Gerät %1$s</string>
     <string name="chat_recoverySetUp">Wiederherstellung einrichten</string>
     <string name="chat_recoveryNewKeyLead">Das ist Ihr Wiederherstellungsschlüssel. Er wird nur einmal angezeigt: Speichern Sie ihn in einem Passwortmanager oder schreiben Sie ihn auf, und bewahren Sie ihn sicher auf. Wer ihn hat, kann Ihre Ende-zu-Ende-Nachrichten lesen.</string>
     <string name="chat_recoveryCopy">Kopieren</string>

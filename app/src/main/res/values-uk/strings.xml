@@ -187,6 +187,9 @@
     <string name="chat_verifyDifferent">Не збігаються</string>
     <string name="chat_verifyDone">Перевірено.</string>
     <string name="chat_verifyCancelled">Перевірку зупинено.</string>
+    <string name="chat_verifyWith">Перевірка з: %1$s</string>
+    <string name="chat_verifyYou">Це ви, на іншому вашому пристрої</string>
+    <string name="chat_verifyYouDevice">Це ви, пристрій %1$s</string>
     <string name="chat_recoverySetUp">Налаштувати відновлення</string>
     <string name="chat_recoveryNewKeyLead">Це ваш ключ відновлення. Його показують лише раз: збережіть його в менеджері паролів або запишіть і тримайте в надійному місці. Будь-хто, хто його має, може читати ваші наскрізно зашифровані повідомлення.</string>
     <string name="chat_recoveryCopy">Копіювати</string>

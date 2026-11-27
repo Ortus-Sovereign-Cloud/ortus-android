@@ -187,6 +187,9 @@
     <string name="chat_verifyDifferent">Non corrispondono</string>
     <string name="chat_verifyDone">Verificato.</string>
     <string name="chat_verifyCancelled">Verifica interrotta.</string>
+    <string name="chat_verifyWith">Verifica con %1$s</string>
+    <string name="chat_verifyYou">È lei, su un altro dei suoi dispositivi</string>
+    <string name="chat_verifyYouDevice">È lei, dispositivo %1$s</string>
     <string name="chat_recoverySetUp">Configura il recupero</string>
     <string name="chat_recoveryNewKeyLead">Questa è la sua chiave di recupero. Viene mostrata una sola volta: la salvi in un gestore di password o la scriva, e la conservi in un luogo sicuro. Chiunque la possieda può leggere i suoi messaggi cifrati end-to-end.</string>
     <string name="chat_recoveryCopy">Copia</string>

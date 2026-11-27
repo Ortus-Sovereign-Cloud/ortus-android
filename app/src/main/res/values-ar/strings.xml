@@ -189,6 +189,9 @@
     <string name="chat_verifyDifferent">غير متطابقة</string>
     <string name="chat_verifyDone">تم التوثيق.</string>
     <string name="chat_verifyCancelled">توقف التوثيق.</string>
+    <string name="chat_verifyWith">التحقق مع %1$s</string>
+    <string name="chat_verifyYou">هذا أنت، على جهاز آخر من أجهزتك</string>
+    <string name="chat_verifyYouDevice">هذا أنت، الجهاز %1$s</string>
     <string name="chat_recoverySetUp">ضبط الاسترداد</string>
     <string name="chat_recoveryNewKeyLead">هذا مفتاح الاسترداد الخاص بك. يُعرض مرة واحدة فقط: احفظه في مدير كلمات المرور أو اكتبه، واحتفظ به في مكان آمن. كل من يملكه يستطيع قراءة رسائلك المشفّرة من طرف إلى طرف.</string>
     <string name="chat_recoveryCopy">نسخ</string>

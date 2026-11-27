@@ -16,6 +16,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.window.SecureFlagPolicy
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -24,6 +28,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import cc.ortus.kit.VerificationParty
+import cc.ortus.kit.nameOf
 import org.ortus.e2e.DeviceRef
 import org.ortus.e2e.QrImage
 import org.ortus.e2e.VerificationView
@@ -58,10 +64,18 @@ fun RecoveryDialog(model: Model, close: () -> Unit) {
     val label = stringResource(R.string.chat_recoveryKey)
     LaunchedEffect(me) { if (me != null) state = runCatching { model.endToEnd()!!.recoveryState(me) }.getOrNull() }
     val saved = { made = null; model.trustChanged++; close() }
+    // A recovery key on screen (the new one, or one being typed): no
+    // screenshots, screen recording or recents thumbnail of it.
+    val secret = made != null || state?.let { it.set && !it.here } == true
+    SecureWindow(secret)
     AlertDialog(
         // The new key is not lost by a tap outside or Back (nor while it is being made): only "I've saved it" closes.
         onDismissRequest = { if (made == null && !busy) close() },
-        properties = DialogProperties(dismissOnBackPress = made == null && !busy, dismissOnClickOutside = made == null && !busy),
+        properties = DialogProperties(
+            dismissOnBackPress = made == null && !busy,
+            dismissOnClickOutside = made == null && !busy,
+            securePolicy = if (secret) SecureFlagPolicy.SecureOn else SecureFlagPolicy.Inherit,
+        ),
         modifier = Modifier.testTag("recovery"),
         title = { Text(stringResource(R.string.chat_recovery)) },
         text = {
@@ -74,19 +88,17 @@ fun RecoveryDialog(model: Model, close: () -> Unit) {
                         SelectionContainer {
                             Text(k, fontFamily = FontFamily.Monospace, fontSize = 16.sp, modifier = Modifier.testTag("recoveryNewKey"))
                         }
-                        TextButton({
-                            val clipboard = context.getSystemService(android.content.ClipboardManager::class.java)
-                            val clip = android.content.ClipData.newPlainText(label, k)
-                            // Android 13 and later: not shown in the clipboard's preview.
-                            clip.description.extras = android.os.PersistableBundle().apply { putBoolean("android.content.extra.IS_SENSITIVE", true) }
-                            clipboard?.setPrimaryClip(clip)
-                        }, Modifier.testTag("recoveryCopy")) { Text(stringResource(R.string.chat_recoveryCopy)) }
+                        TextButton({ copySecret(context, label, k) }, Modifier.testTag("recoveryCopy")) { Text(stringResource(R.string.chat_recoveryCopy)) }
                     }
                     s == null -> Text("…")
                     !s.set -> Text(stringResource(R.string.chat_recoveryNoneLead))
                     !s.here -> {
                         Text(stringResource(R.string.chat_recoveryEnterLead))
-                        OutlinedTextField(key, { key = it }, Modifier.fillMaxWidth().testTag("recoveryKey"), label = { Text(label) })
+                        // No autocorrect, suggestions or learning of what is typed: it unlocks everything.
+                        OutlinedTextField(
+                            key, { key = it }, Modifier.fillMaxWidth().testTag("recoveryKey"), label = { Text(label) },
+                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, autoCorrectEnabled = false, keyboardType = KeyboardType.Password),
+                        )
                     }
                     else -> Text(stringResource(R.string.chat_recoveryHere))
                 }
@@ -138,6 +150,41 @@ fun RecoveryDialog(model: Model, close: () -> Unit) {
     )
 }
 
+/** How long a copied recovery key stays on the clipboard. */
+const val SECRET_ON_CLIPBOARD_MS = 120_000L
+
+/**
+ * A secret on the clipboard: marked sensitive (not shown in the clipboard's
+ * preview, Android 13 and later), and taken off again after two minutes
+ * unless something else was copied since.
+ */
+fun copySecret(context: android.content.Context, label: String, secret: String) {
+    val clipboard = context.getSystemService(android.content.ClipboardManager::class.java) ?: return
+    val clip = android.content.ClipData.newPlainText(label, secret)
+    val sensitive = if (android.os.Build.VERSION.SDK_INT >= 33) android.content.ClipDescription.EXTRA_IS_SENSITIVE else "android.content.extra.IS_SENSITIVE"
+    clip.description.extras = android.os.PersistableBundle().apply { putBoolean(sensitive, true) }
+    clipboard.setPrimaryClip(clip)
+    // Not tied to the dialog, which closes long before. In the background
+    // the clipboard may not be readable: then it is cleared anyway.
+    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+        val now = runCatching { clipboard.primaryClipDescription }.getOrNull()
+        if (now == null || now.label == label) runCatching { clipboard.clearPrimaryClip() }
+    }, SECRET_ON_CLIPBOARD_MS)
+}
+
+/** The activity's window kept out of screenshots, recordings and recents while [on]. */
+@Composable
+fun SecureWindow(on: Boolean) {
+    val context = LocalContext.current
+    DisposableEffect(on) {
+        var c: android.content.Context? = context
+        while (c is android.content.ContextWrapper && c !is android.app.Activity) c = c.baseContext
+        val window = (c as? android.app.Activity)?.window
+        if (on) window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose { if (on) window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE) }
+    }
+}
+
 /**
  * A room's devices nobody vouched for: each by its person (their name when
  * known, else their id) and its device id, with "Verify", which asks that
@@ -160,7 +207,7 @@ fun UnverifiedDialog(model: Model, devices: List<DeviceRef>, people: Map<String,
                         val d = devices[i]
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                             Column(Modifier.weight(1f)) {
-                                Text(people[d.user]?.name ?: d.user)
+                                Text(people.nameOf(d.user) ?: d.user)
                                 Text(stringResource(R.string.chat_unverifiedDevice, d.device), fontSize = 12.sp)
                             }
                             OutlinedButton({
@@ -187,6 +234,20 @@ fun UnverifiedDialog(model: Model, devices: List<DeviceRef>, people: Map<String,
         },
         confirmButton = { TextButton(close) { Text(stringResource(R.string.chat_close)) } },
     )
+}
+
+/** Who a verification is with: another person by name (when known) and id, or "this is you"; and the device. */
+@Composable
+fun VerificationWho(party: VerificationParty) {
+    Column(Modifier.testTag("verifyWho").semantics(mergeDescendants = true) {}) {
+        if (party.isMe) {
+            Text(party.device?.let { stringResource(R.string.chat_verifyYouDevice, it) } ?: stringResource(R.string.chat_verifyYou))
+        } else {
+            Text(stringResource(R.string.chat_verifyWith, party.name ?: party.user))
+            if (party.name != null) Text(party.user, fontSize = 12.sp)
+            party.device?.let { Text(stringResource(R.string.chat_unverifiedDevice, it), fontSize = 12.sp) }
+        }
+    }
 }
 
 /**
@@ -277,6 +338,8 @@ fun Verifications(model: Model) {
         title = { Text(stringResource(R.string.chat_verifyTitle)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) {
+                // Who asks, on every step: the person (or oneself) and the device.
+                VerificationWho(VerificationParty.of(v.user, v.device, me, model.chatPeople))
                 when (v.state) {
                     "incoming" -> Text(stringResource(R.string.chat_verifyIncoming))
                     "ready" -> {
@@ -319,7 +382,7 @@ fun Verifications(model: Model) {
         },
         dismissButton = {
             when (v.state) {
-                "incoming" -> TextButton({ scope.launch { runCatching { e2e.cancelVerification(me, v.id) } }; close() }) { Text(stringResource(R.string.chat_verifyDecline)) }
+                "incoming" -> TextButton({ scope.launch { runCatching { e2e.cancelVerification(me, v.id) } }; close() }, Modifier.testTag("verifyDecline")) { Text(stringResource(R.string.chat_verifyDecline)) }
                 "emoji" -> TextButton({ act { e2e.confirmVerification(me, v.id, false) } }, Modifier.testTag("verifyDifferent")) { Text(stringResource(R.string.chat_verifyDifferent)) }
                 "scanned" -> TextButton({ act { e2e.confirmScanned(me, v.id, false) } }, Modifier.testTag("verifyScannedNo")) { Text(stringResource(R.string.chat_verifyNo)) }
                 "qr" -> TextButton(cancel, Modifier.testTag("verifyCancel")) { Text(stringResource(R.string.chat_verifyCancel)) }
