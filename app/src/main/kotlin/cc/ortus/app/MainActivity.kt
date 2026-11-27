@@ -69,6 +69,17 @@ class MainActivity : FragmentActivity() {
         model?.answer(intent)
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        model?.let { outState.putInt("tab", it.tab) }
+    }
+
+    /** Said in the log: the screen is made again, and for which configuration changes (a test's failure says why). */
+    override fun onDestroy() {
+        if (isChangingConfigurations) android.util.Log.i("ortus", "the screen is made again: configuration changes 0x" + Integer.toHexString(changingConfigurations))
+        super.onDestroy()
+    }
+
     /** The installation an organisation's device management set, if any. */
     private fun managedServer(): String? =
         (getSystemService(RESTRICTIONS_SERVICE) as? android.content.RestrictionsManager)
@@ -87,6 +98,8 @@ class MainActivity : FragmentActivity() {
         if (first) intent?.dataString?.let { model.open(it) }
         if (first) intent?.getStringExtra("path")?.let { model.tab = cc.ortus.kit.Push.tab(it) }
         if (first) model.answer(intent)
+        // Made again: the open tab as it was (the screens keep the rest).
+        else model.tab = savedInstanceState!!.getInt("tab", model.tab)
         setContent {
             MaterialTheme(colorScheme = darkColorScheme(primary = Accent, background = Background, surface = Surface, onBackground = Text1, onSurface = Text1)) {
                 Surface(Modifier.fillMaxSize(), color = Background) {

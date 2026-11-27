@@ -113,8 +113,10 @@ jobs:
           api-level: 34
           arch: x86_64
           target: google_apis
-          # On a failure, the app's own log lines say why.
-          script: ./gradlew :app:connectedDebugAndroidTest || (adb logcat -d | grep -iE 'ortus|AndroidRuntime|DEBUG|libc|webrtc|jingle|rtc_|Check failed|Fatal' | grep -v ' I DEBUG' | tail -n 400; exit 1)
+          # On a failure, the app's own log lines say why; the whole log
+          # (the system's too: a screen made again, an activity stopped)
+          # goes with the reports.
+          script: ./gradlew :app:connectedDebugAndroidTest || (mkdir -p app/build/reports && adb logcat -d -b main,system,crash > app/build/reports/logcat.txt; adb logcat -d | grep -iE 'ortus|AndroidRuntime|DEBUG|libc|webrtc|jingle|rtc_|Check failed|Fatal' | grep -v ' I DEBUG' | tail -n 400; exit 1)
       # On a failure, whether the test server still answers, and its log.
       - if: failure()
         run: |

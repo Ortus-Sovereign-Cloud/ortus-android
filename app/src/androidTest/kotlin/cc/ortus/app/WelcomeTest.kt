@@ -79,6 +79,7 @@ class WelcomeTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val intent = Intent(context, MainActivity::class.java).putExtra("reset", true).putExtra("server", server).putExtra("code", code)
         ActivityScenario.launch<MainActivity>(intent).use {
+            waitFor("the join screen") { compose.onAllNodesWithText("Continue").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("Continue").performClick()
             waitFor("the welcome screen") { compose.onAllNodesWithTag("welcome").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithTag("makeKey").performClick()
@@ -152,14 +153,17 @@ class WelcomeTest {
     @Test fun aPhoneSignInCodeFromTheWeb() {
         val server = args.getString("ortusServer").orEmpty()
         val session = args.getString("ortusOwnerSession").orEmpty()
-        need(server, session)
+        val totp = args.getString("ortusOwnerTotp").orEmpty()
+        need(server, session, totp)
         val c = java.net.URL("$server/api/v1/me/phone-link").openConnection() as java.net.HttpURLConnection
         c.requestMethod = "POST"
         c.doOutput = true
-        c.setRequestProperty("Authorization", "Bearer $session")
+        // A session of the last ten minutes: made now (CI's own is older by the time this runs).
+        c.setRequestProperty("Authorization", "Bearer ${Owner.freshSession(server, totp, session)}")
         c.setRequestProperty("Content-Type", "application/json")
         c.setRequestProperty("X-Requested-With", "ortus")
         c.outputStream.use { it.write("{}".toByteArray()) }
+        check(c.responseCode == 200, "the phone sign-in code: ${c.responseCode} ${c.errorStream?.bufferedReader()?.readText()}")
         val link = org.json.JSONObject(c.inputStream.bufferedReader().readText()).getString("link")
         val code = link.substringAfterLast("p=")
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -209,6 +213,7 @@ class WelcomeTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val intent = Intent(context, MainActivity::class.java).putExtra("reset", true).putExtra("server", server).putExtra("code", code)
         ActivityScenario.launch<MainActivity>(intent).use {
+            waitFor("the join screen") { compose.onAllNodesWithText("Continue").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText("Continue").performClick()
             waitFor("the welcome screen") { compose.onAllNodesWithTag("makeKey").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithTag("makeKey").performClick()
@@ -238,18 +243,20 @@ class WelcomeTest {
             // Both copy: nothing fails again (a wrong password fails in seconds).
             androidx.test.espresso.Espresso.pressBack()
             check(admin { compose.onAllNodesWithText("All systems normal").fetchSemanticsNodes().isNotEmpty() }, "the imports still fail")
-            Thread.sleep(15_000)
-            androidx.test.espresso.Espresso.pressBack()
-            check(admin { compose.onAllNodesWithText("All systems normal").fetchSemanticsNodes().isNotEmpty() }, "an import failed again")
             // And the mail came: both accounts copied, each with its old
-            // mail (asked of the server, as the owner).
+            // mail (asked of the server, as the owner). An import that
+            // failed again would stay failed, never done.
+            val copied = "olha.old@ministry.example:done:1,petro.old@ministry.example:done:1"
             var states = ""
             for (i in 0 until 90) {
                 states = importStates(server, owner)
-                if (states == "olha.old@ministry.example:done:1,petro.old@ministry.example:done:1") break
+                if (states == copied) break
                 Thread.sleep(1000)
             }
-            check(states == "olha.old@ministry.example:done:1,petro.old@ministry.example:done:1", "the imports: $states")
+            check(states == copied, "the imports: $states")
+            // Once copied, Admin says so too.
+            androidx.test.espresso.Espresso.pressBack()
+            check(admin { compose.onAllNodesWithText("All systems normal").fetchSemanticsNodes().isNotEmpty() }, "an import failed again")
         }
     }
 
@@ -260,7 +267,16 @@ class WelcomeTest {
     @Test fun joinScreenInArabic() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val locales = context.getSystemService(android.app.LocaleManager::class.java)
+        // The app's language reaches its process a moment later: the screen
+        // is launched in Arabic (not made again in it under the test), and
+        // the next test's screen is not made again when English comes back.
+        val language = { context.resources.configuration.locales[0].language }
+        fun languageIs(ar: Boolean) {
+            val until = android.os.SystemClock.uptimeMillis() + 10_000
+            while ((language() == "ar") != ar && android.os.SystemClock.uptimeMillis() < until) android.os.SystemClock.sleep(20)
+        }
         InstrumentationRegistry.getInstrumentation().runOnMainSync { locales.applicationLocales = android.os.LocaleList.forLanguageTags("ar") }
+        languageIs(true)
         try {
             val intent = Intent(context, MainActivity::class.java).putExtra("reset", true)
             ActivityScenario.launch<MainActivity>(intent).use {
@@ -272,6 +288,7 @@ class WelcomeTest {
             }
         } finally {
             InstrumentationRegistry.getInstrumentation().runOnMainSync { locales.applicationLocales = android.os.LocaleList.getEmptyLocaleList() }
+            languageIs(false)
         }
     }
 }

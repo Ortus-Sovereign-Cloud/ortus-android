@@ -46,6 +46,11 @@ class EndToEndTest {
         return status to text
     }
 
+    /** The activity the test launched, to tell when the system made the screen again. */
+    private var scenario: ActivityScenario<MainActivity>? = null
+    private var launched: Int? = null
+    private fun activityNow(): Int? = runCatching { var id: Int? = null; scenario?.onActivity { id = System.identityHashCode(it) }; id }.getOrNull()
+
     private fun waitFor(what: String, timeout: Long = 60_000, ready: () -> Boolean) {
         runCatching { compose.waitUntil(timeout) { ready() } }
         if (!ready()) {
@@ -54,14 +59,22 @@ class EndToEndTest {
                     n.config.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text } + n.children.flatMap { walk(it) }
                 walk(root)
             }
-            throw AssertionError("waited for $what; the screen shows: ${shown.joinToString(" | ").take(1500)}")
+            // Whether the screen was made again meanwhile, and the app's and the system's words about it.
+            val remade = launched != null && activityNow() != launched
+            val log = InstrumentationRegistry.getInstrumentation().uiAutomation
+                .executeShellCommand("logcat -d -t 300 ortus:V AndroidRuntime:E ActivityTaskManager:I WindowManager:W *:S").let { fd ->
+                    android.os.ParcelFileDescriptor.AutoCloseInputStream(fd).bufferedReader().readText()
+                }
+            throw AssertionError("waited for $what; the screen shows: ${shown.joinToString(" | ").take(1500)}" +
+                (if (remade) "; the activity was made again" else "") + "\nlog:\n$log")
         }
     }
 
     @Test fun anEndToEndRoomOpensAndSends() {
         val server = args.getString("ortusServer").orEmpty()
         val session = args.getString("ortusOwnerSession").orEmpty()
-        if (args.getString("ortusLive") == "1" && (server.isEmpty() || session.isEmpty())) throw AssertionError("ORTUS_SERVER and the owner's session are not set")
+        val totp = args.getString("ortusOwnerTotp").orEmpty()
+        if (args.getString("ortusLive") == "1" && (server.isEmpty() || session.isEmpty() || totp.isEmpty())) throw AssertionError("ORTUS_SERVER, the owner's session and authenticator are not set")
         assumeTrue(server.isNotEmpty() && session.isNotEmpty())
 
         // End-to-end rooms allowed, and one made.
@@ -73,8 +86,9 @@ class EndToEndTest {
         val user = me.removePrefix("@").substringBefore(':')
         val serverName = me.substringAfter(':')
 
-        // The phone, signed in as the owner with a phone sign-in code.
-        val (_, linked) = call(server, session, "POST", "/me/phone-link", "{}")
+        // The phone, signed in as the owner with a phone sign-in code (of a session just made).
+        val (linkStatus, linked) = call(server, Owner.freshSession(server, totp, session), "POST", "/me/phone-link", "{}")
+        check(linkStatus == 200) { "the phone sign-in code: $linkStatus $linked" }
         val code = JSONObject(linked).getString("link").substringAfterLast("p=")
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val open = android.net.Uri.Builder().scheme("ortus").authority("signin")
@@ -89,6 +103,8 @@ class EndToEndTest {
         val store = File(context.cacheDir, "e2e-peer").apply { deleteRecursively(); mkdirs() }
 
         ActivityScenario.launch<MainActivity>(intent).use {
+            scenario = it
+            launched = activityNow()
             waitFor("the link's installation to confirm") { compose.onAllNodesWithTag("confirmLink").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithTag("confirmLink").performClick()
             waitFor("the welcome screen") { compose.onAllNodesWithTag("welcome").fetchSemanticsNodes().isNotEmpty() }
@@ -116,6 +132,8 @@ class EndToEndTest {
             // The room is open once the server lists the phone's device.
             val phoneListed = { call(server, session, "GET", "/chat/rooms/$room/devices").second.contains("\"PHONE") }
             waitFor("the phone's device keys on the server") { phoneListed() }
+            // Its keys published: the room opened on the phone (the check above ran as soon as the room was on screen).
+            check(compose.onAllNodesWithTag("locked").fetchSemanticsNodes().isEmpty()) { "the phone has no end-to-end library" }
 
             // The other device writes; the phone opens it.
             val peer = OrtusE2e.open(store.path, "peer passphrase", user, "TESTPEER", serverName, transport)

@@ -83,8 +83,12 @@ class Model(private val activity: FragmentActivity) {
         }
         return e2e
     }
-    /** The person's Matrix id, `me` of the rooms (end-to-end rooms need it). */
-    var chatMe: String? = null
+    /**
+     * The person's Matrix id, `me` of the rooms (end-to-end rooms need it).
+     * State: a dialog open before it is known (the screen made again, the
+     * room opened straight from the saved state) goes on once it is.
+     */
+    var chatMe by mutableStateOf<String?>(null)
     /** People the chat has named so far, by id: who a verification is with. */
     var chatPeople: Map<String, cc.ortus.kit.Person> = emptyMap()
     fun know(people: Map<String, cc.ortus.kit.Person>) { if (people.isNotEmpty()) chatPeople = chatPeople + people }

@@ -61,8 +61,11 @@ fun RecoveryDialog(model: Model, close: () -> Unit) {
     val context = LocalContext.current
     var state by remember { mutableStateOf<org.ortus.e2e.RecoveryState?>(null) }
     var key by remember { mutableStateOf("") }
-    // The new recovery key: on screen until the person says it is saved (never kept).
-    var made by remember { mutableStateOf<String?>(null) }
+    // The new recovery key: on screen until the person says it is saved.
+    // Never written anywhere: held in this process only, so that the
+    // screen made again (a configuration change) still shows it.
+    val once: ShownOnce = androidx.lifecycle.viewmodel.compose.viewModel()
+    var made by once::key
     var note by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
     val me = model.chatMe
@@ -199,6 +202,11 @@ fun RecoveryDialog(model: Model, close: () -> Unit) {
         },
         dismissButton = { if (made == null) TextButton(close, enabled = !busy) { Text(stringResource(R.string.chat_close)) } },
     )
+}
+
+/** The new recovery key while it is on screen: in memory, kept across the screen made again, gone with the activity. */
+class ShownOnce : androidx.lifecycle.ViewModel() {
+    var key by mutableStateOf<String?>(null)
 }
 
 /** How long a copied recovery key stays on the clipboard. */

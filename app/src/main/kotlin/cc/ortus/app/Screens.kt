@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cc.ortus.kit.*
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.put
 import java.text.DateFormat
 import java.util.Date
 
@@ -63,6 +64,59 @@ sealed class Place {
     data object Admin : Place()
 }
 
+/**
+ * A place as text, for the screen's saved state: the system makes the
+ * screen again (a configuration change it does not leave to the app, or
+ * the app ended in the background) and the person is where they were.
+ */
+fun Place.saved(): String = kotlinx.serialization.json.buildJsonObject {
+    fun room(r: Room) = put("room", json.encodeToJsonElement(Room.serializer(), r))
+    when (val p = this@saved) {
+        is Place.Thread -> { put("k", "thread"); put("id", p.id) }
+        is Place.Channel -> { put("k", "channel"); room(p.room); put("title", p.title) }
+        is Place.ChatThread -> { put("k", "chatThread"); room(p.room); put("title", p.title); put("root", p.root) }
+        is Place.Folder -> { put("k", "folder"); put("id", p.id); put("title", p.title) }
+        is Place.Share -> { put("k", "share"); put("item", json.encodeToJsonElement(DriveItem.serializer(), p.item)) }
+        is Place.Doc -> { put("k", "doc"); put("id", p.id) }
+        Place.Compose -> put("k", "compose")
+        // A call is not joined again by itself (after hours in the background, say).
+        is Place.Call -> put("k", "call")
+        is Place.Day -> { put("k", "day"); put("at", p.at) }
+        Place.ForYou -> put("k", "forYou")
+        Place.Notifications -> put("k", "notifications")
+        Place.Search -> put("k", "search")
+        Place.Admin -> put("k", "admin")
+    }
+}.toString()
+
+/** The place [saved] wrote, or null (a call, or what this version does not know): never throws. */
+fun restorePlace(text: String): Place? = runCatching {
+    val o = json.parseToJsonElement(text) as kotlinx.serialization.json.JsonObject
+    fun s(k: String) = (o[k] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content
+    fun room() = json.decodeFromJsonElement(Room.serializer(), o.getValue("room"))
+    when (s("k")) {
+        "thread" -> Place.Thread(s("id")!!)
+        "channel" -> Place.Channel(room(), s("title")!!)
+        "chatThread" -> Place.ChatThread(room(), s("title")!!, s("root")!!)
+        "folder" -> Place.Folder(s("id"), s("title")!!)
+        "share" -> Place.Share(json.decodeFromJsonElement(DriveItem.serializer(), o.getValue("item")))
+        "doc" -> Place.Doc(s("id")!!)
+        "compose" -> Place.Compose
+        "day" -> Place.Day((o["at"] as kotlinx.serialization.json.JsonPrimitive).content.toLong())
+        "forYou" -> Place.ForYou
+        "notifications" -> Place.Notifications
+        "search" -> Place.Search
+        "admin" -> Place.Admin
+        else -> null
+    }
+}.getOrNull()
+
+/** Where a tab has gone, kept in the saved state (see [saved]). */
+val PlacesSaver = androidx.compose.runtime.saveable.listSaver<androidx.compose.runtime.snapshots.SnapshotStateList<Place>, String>(
+    save = { places -> places.map { it.saved() } },
+    restore = { saved -> mutableStateListOf<Place>().apply { addAll(saved.mapNotNull(::restorePlace)) } },
+)
+
 fun initials(name: String): String = name.split(" ").filter { it.isNotEmpty() }.take(2).joinToString("") { it.take(1) }.ifEmpty { name.take(2) }.uppercase()
 fun time(ms: Long): String = DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(ms))
 
@@ -76,7 +130,8 @@ fun time(ms: Long): String = DateFormat.getTimeInstance(DateFormat.SHORT).format
 @Composable
 fun Tabs(model: Model) {
     var tab by model::tab
-    val stack = remember { mutableStateListOf<Place>() }
+    // Kept when the screen is made again (the tab is kept by the activity).
+    val stack = androidx.compose.runtime.saveable.rememberSaveable(saver = PlacesSaver) { mutableStateListOf<Place>() }
     LaunchedEffect(Unit) { model.refresh() }
     // Verifications by emoji, wherever one is in the app.
     Verifications(model)
@@ -626,11 +681,12 @@ fun ChatScreen(model: Model, room: Room, title: String, root: String?, open: (Pl
     var note by remember { mutableStateOf<String?>(null) }
     var text by remember { mutableStateOf("") }
     var unverified by remember { mutableStateOf<List<org.ortus.e2e.DeviceRef>>(emptyList()) }
-    var recovering by remember { mutableStateOf(false) }
-    var listing by remember { mutableStateOf(false) }
+    // An open dialog stays open when the screen is made again.
+    var recovering by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    var listing by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     // Who is not vouched for: read on opening, and after a verification or recovery.
-    LaunchedEffect(room.id, model.trustChanged, sealed) {
+    LaunchedEffect(room.id, model.trustChanged, sealed, model.chatMe) {
         val me = model.chatMe
         if (sealed && me != null) unverified = runCatching { model.endToEnd()!!.unverified(me, room.id) }.getOrDefault(emptyList())
     }
