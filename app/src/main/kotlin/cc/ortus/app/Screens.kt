@@ -498,16 +498,14 @@ fun AdminScreen(model: Model) {
     suspend fun load() { failure = model.loadList({ imports.isNotEmpty() }) { imports = model.client!!.imports() } }
     LaunchedEffect(Unit) { load() }
     val failed = imports.flatMap { it.accounts }.filter { it.failed }
-    // What an action did is shown at the top: the list comes back to it
-    // (after a retry far down, it would be out of sight), and it is read out.
-    val list = androidx.compose.foundation.lazy.rememberLazyListState()
-    LaunchedEffect(note) { if (note != null) list.requestScrollToItem(0) }
-    LazyColumn(Modifier.padding(16.dp), state = list, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    // What an action did stays in sight below the list (a retry far down
+    // would scroll a note in the list away), and it is read out.
+    Column(Modifier.fillMaxSize()) {
+    LazyColumn(Modifier.weight(1f).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text(stringResource(R.string.admin_title), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Text1) }
         if (failure != null) item { ListStatus(failure, false, R.string.admin_normal) { scope.launch { load() } } }
         else item { Text(stringResource(if (failed.isEmpty()) R.string.admin_normal else R.string.admin_needs), fontWeight = FontWeight.SemiBold, color = Text1, modifier = Modifier.semantics { heading() }) }
         // What the last action did, where it is seen (not under the list).
-        note?.let { item { Text(it, color = Text2, modifier = Modifier.testTag("note").semantics { liveRegion = LiveRegionMode.Polite }) } }
         if (failed.isNotEmpty()) {
             item { Text(stringResource(R.string.admin_failed, failed.size), color = Text1) }
             item { Button({ scope.launch { note = runCatching { model.client!!.askOwners(failed); asked }.getOrElse { model.say(it) }; load() } }, Modifier.testTag("askOwners")) { Text(stringResource(R.string.admin_askOwners)) } }
@@ -526,6 +524,8 @@ fun AdminScreen(model: Model) {
         item { OutlinedTextField(name, { name = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.admin_name)) }) }
         item { OutlinedTextField(email, { email = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.share_address)) }) }
         item { Button({ scope.launch { note = runCatching { model.client!!.invite(name, email); name = ""; email = ""; invited }.getOrElse { model.say(it) } } }, enabled = name.isNotBlank() && email.contains("@")) { Text(stringResource(R.string.admin_inviteButton)) } }
+    }
+    note?.let { Text(it, color = Text2, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp).testTag("note").semantics { liveRegion = LiveRegionMode.Polite }) }
     }
 }
 
