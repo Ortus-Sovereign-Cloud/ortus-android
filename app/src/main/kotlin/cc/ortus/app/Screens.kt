@@ -501,7 +501,7 @@ fun AdminScreen(model: Model) {
     // What an action did is shown at the top: the list comes back to it
     // (after a retry far down, it would be out of sight), and it is read out.
     val list = androidx.compose.foundation.lazy.rememberLazyListState()
-    LaunchedEffect(note) { if (note != null) list.scrollToItem(0) }
+    LaunchedEffect(note) { if (note != null) list.requestScrollToItem(0) }
     LazyColumn(Modifier.padding(16.dp), state = list, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text(stringResource(R.string.admin_title), fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Text1) }
         if (failure != null) item { ListStatus(failure, false, R.string.admin_normal) { scope.launch { load() } } }
