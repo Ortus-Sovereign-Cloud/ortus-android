@@ -84,7 +84,8 @@ class NativeCall(private val context: Context, private val client: Client, priva
     private var audioTrack: org.webrtc.AudioTrack? = null
     private var session: String? = null
     private var info: CallInfo? = null
-    private val videos = mutableMapOf<String, VideoTrack>()
+    /** Each other session's video tracks, by the sender's mid (camera and screen). */
+    private val videos = mutableMapOf<String, MutableMap<String, VideoTrack>>()
     private val joiner = CallParts.Joiner()
     private val audio = context.getSystemService(AudioManager::class.java)
 
@@ -205,7 +206,7 @@ class NativeCall(private val context: Context, private val client: Client, priva
             val who = streams.firstOrNull()?.id ?: return
             val track = receiver.track()
             main.post {
-                if (track is VideoTrack) videos[who] = track
+                if (track is VideoTrack) videos.getOrPut(who) { mutableMapOf() }[track.id()] = track
                 refresh(who)
             }
         }
@@ -217,7 +218,11 @@ class NativeCall(private val context: Context, private val client: Client, priva
         val call = info
         val known = call?.sessions?.map { it.session }?.filter { it != me }.orEmpty()
         val all = (known + listOfNotNull(extra) + videos.keys).distinct().filter { it != me }
-        remotes = all.map { s -> Remote(s, call?.nameOf(s) ?: "…", videos[s]) }
+        remotes = all.map { s ->
+            val mine = videos[s].orEmpty()
+            val camera = call?.cameraOf(s, mine.keys) ?: mine.keys.minOrNull()
+            Remote(s, call?.nameOf(s) ?: "…", camera?.let { mine[it] })
+        }
     }
 
     fun toggleMute() {

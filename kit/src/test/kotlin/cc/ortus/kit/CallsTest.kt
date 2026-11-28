@@ -22,6 +22,16 @@ class CallsTest {
         assertEquals("hi", CallParts.Joiner().take(CallParts.split("hi")[0]))
     }
 
+    @Test fun theCameraIsNeverTheScreen() {
+        val call = CallInfo("c", "r", listOf(CallSession("s1", "u1"), CallSession("s2", "u2", screen = "2")))
+        // A browser sends its camera (mid 1) and its screen (mid 2), shared or not.
+        assertEquals("1", call.cameraOf("s1", listOf("2", "1")))
+        assertEquals("1", call.cameraOf("s2", listOf("2", "1")))
+        assertEquals("10", call.cameraOf("s1", listOf("10", "9x")))
+        assertNull(call.cameraOf("s2", listOf("2")))
+        assertNull(call.cameraOf("s1", emptyList()))
+    }
+
     @Test fun offersAndAnswers() {
         assertEquals("v=0" to 3, CallParts.offer("""{"type":"offer","sdp":"v=0","n":3}"""))
         assertNull(CallParts.offer("""{"type":"answer","sdp":"v=0"}"""))

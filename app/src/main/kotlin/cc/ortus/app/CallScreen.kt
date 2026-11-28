@@ -133,7 +133,8 @@ private fun Control(icon: androidx.compose.ui.graphics.vector.ImageVector, label
 @Composable
 private fun Tile(name: String?, track: VideoTrack?, mirror: Boolean, modifier: Modifier) {
     Box(modifier.clip(RoundedCornerShape(12.dp)).background(Surface2), contentAlignment = Alignment.Center) {
-        if (track != null) {
+        // A new track (the camera after the screen's) needs a new renderer.
+        if (track != null) key(track) {
             AndroidView(
                 factory = { c ->
                     SurfaceViewRenderer(c).apply {

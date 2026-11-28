@@ -19,11 +19,22 @@ import java.net.URLEncoder
  * state report every 10 s keeps the session; leave.
  */
 @Serializable data class IceServer(val urls: List<String>, val username: String? = null, val credential: String? = null)
-@Serializable data class CallSession(val session: String, val user: String, val muted: Boolean? = null, val camera: Boolean? = null)
+/** One person in the call; `screen` is the mid of the video they share, when they share one. */
+@Serializable data class CallSession(val session: String, val user: String, val muted: Boolean? = null, val camera: Boolean? = null, val screen: String? = null)
 @Serializable data class CallPerson(val name: String)
 @Serializable data class CallInfo(val id: String, val room: String, val sessions: List<CallSession> = emptyList(), val people: Map<String, CallPerson> = emptyMap()) {
     /** The name of whoever a session (a remote stream's id) belongs to. */
     fun nameOf(session: String): String? = sessions.firstOrNull { it.session == session }?.let { people[it.user]?.name }
+
+    /**
+     * Of a session's video tracks (by the sender's mid, as the node names
+     * them), the camera's: never the screen's, and else the first mid (every
+     * client adds its camera before its screen).
+     */
+    fun cameraOf(session: String, mids: Collection<String>): String? {
+        val screen = sessions.firstOrNull { it.session == session }?.screen
+        return mids.filter { it != screen }.minWithOrNull(compareBy<String>({ it.toIntOrNull() ?: Int.MAX_VALUE }, { it }))
+    }
 }
 @Serializable data class Joined(val call: CallInfo, val session: String, val ice_servers: List<IceServer> = emptyList())
 
